@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="regStatusType">
+   <typeAlias alias="regStatusTypeModel" type="com.ca.cacore.ams.model.bo.RegStatusTypeModel"/>
+   <!-- 查询规章状态所有内容 -->
+   <select id="getRegStatusType"  resultClass="regStatusTypeModel">
+		select * from rms_regulation_status
+	</select>
+</sqlMap>

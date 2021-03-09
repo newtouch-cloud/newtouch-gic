@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DividendAndAuthType">
+	<typeAlias alias="productAuthTypeModel"	type="com.ca.cacore.ibs.model.bo.ProductAuthTypeModel" />
+	<select id="queryAuthType" resultClass="productAuthTypeModel">
+		select * from CBS_Product_AuthType
+	</select>
+	<select id="queryDividenType" resultClass="productAuthTypeModel">
+		select * from CBS_Product_DividendType
+	</select>
+</sqlMap>

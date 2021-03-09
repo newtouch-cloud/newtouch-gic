@@ -1,0 +1,31 @@
+[
+		{ id:1005, pId:10, name:"保单新业务"},
+		    { id:100501, pId:1005, name:"投保单录入",open_url:"/cbs/policyLife/policyLifeAdd.do"},
+			{ id:100502, pId:1005, name:"保单录入",open_url:"/cbs/contractLife/contactLifeAdd.do"},
+			{ id:100503, pId:1005, name:"保单回执录入",open_url:"/cbs/policyLifeAck/goPolicyLifeAckAdd.do"},
+			{ id:100504, pId:1005, name:"保单回执信息维护",open_url:"/cbs/policyLifeAck/goPolicyLifeAckList.do"},
+			{ id:100505, pId:1005, name:"问题件录入",open_url:"/PolicyLifeProblem/goPolicyLifeProblemAdd.do"},
+		    { id:100505, pId:1005, name:"保全问题件管理", open_url:"/CBS/PolicyLifeProblem/goPolicyLifeProblemQuery.do"},
+
+		{ id:1006, pId:10, name:"投保单管理"},
+		 	    { id:10060103, pId:1006, name:"投保单查询",open_url:"/cbs/policyLifeManage/goPolicylifeQuery.do"},
+				{ id:10060101, pId:1006, name:"投保单维护",open_url:"/cbs/policyLifeManage/goPolicyLifeForModifyQuery.do"},
+				{ id:10060102, pId:1006, name:"投保单状态变更",open_url:"/cbs/policyLifeManage/goPolicyLifeForStatusQuery.do"},
+		{ id:100603, pId:10, name:"保单管理"}, 
+		    { id:111110, pId:100603, name:"保单查询",open_url:"/cbs/contractLifeManage/goContractlifeQuery.do"},
+			{ id:111111, pId:100603, name:"保单维护",open_url:"/cbs/contractLifeManage/goContractLifeForModifyQuery.do"},
+			{ id:111112, pId:100603, name:"保单状态变更",open_url:"/cbs/contractLifeManage/goContractLifeStatusQuery.do"},
+			{ id:111113, pId:100603, name:"保单回访管理"},
+		      { id:111114, pId:111113, name:"保单回访录入",open_url:"/policyAnswer/goPolicyAnswerAdd.do"},
+			  { id:111114, pId:111113, name:"保单回访信息维护",open_url:"/cbs/policyAnswer/goPolicyAnswerQuery.do"},
+		{ id:100604, pId:10, name:"保单费用管理"},
+			{ id:10065401, pId:100604, name:"保单费用明细查询",open_url:"/CBS/contractCost/queryContractCost.do"},
+			{ id:10065402, pId:100604, name:"保单费用结算查询",open_url:"/CBS/contractCost/querycontractSettlement.do"},
+		{ id:100605, pId:10, name:"保单续期管理"},
+			{ id:10060401, pId:100605, name:"保单分配",open_url:"/CBS/ContractAllot/queryPolicy.do"},
+			{ id:10060402, pId:100605, name:"保单分配轨迹查询",open_url:"/CBS/ContractAllotHis/queryContList.do"},
+		{ id:100606, pId:10, name:"保单影像管理"},
+			{ id:10060501, pId:100606, name:"保单影像件上传",open_url:"/cbs/policyImage/goPolicyImageUpload.do"},
+			{ id:10060502, pId:100606, name:"保单影像件查询",open_url:"/cbs/policyImage/queryPolicyImage.do"}
+		
+]

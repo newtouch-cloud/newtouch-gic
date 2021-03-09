@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="UserMgmt">
+   <typeAlias alias="userMgMtVOModel" type="com.ca.cacore.ams.model.vo.UserMgMtVOModel"/>
+   <!-- 查询规章状态所有内容 -->
+   <select id="queryOptPathInfo" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+		select * from t_operator_path where opt_no=#opt_no#
+		<isNotEmpty  property="session_id">
+		 and session_id=#session_id# 
+		</isNotEmpty>
+   </select>
+   
+   <select id="queryUserInfo" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+	select dept_no,opt_name, opt_no, opt_password,person_type
+	    from t_operator
+	   where 1=1
+	 <isNotEmpty  property="opt_no">
+		 and opt_no = #opt_no#
+	 </isNotEmpty>
+   </select>
+   
+   <update id="updateOptPathInfo" parameterClass="userMgMtVOModel" >
+		update t_operator_path
+		   set session_id = #session_id#,
+		       status     =#status#,
+		       modifydate = sysdate,
+		       modifyuser = #opt_no#
+		 where opt_no = #opt_no# 
+	</update> 
+	
+	<update id="updatePassWord" parameterClass="userMgMtVOModel" >
+		update t_operator_path
+		   set opt_password = #opt_password#,
+		       start_date  =#start_date#,
+		       end_date   =#end_date#,
+		       modifydate = sysdate,
+		       modifyuser = #opt_no#
+		 where opt_no = #opt_no# 
+	</update> 
+	
+	<insert id="addUserInfo" parameterClass="userMgMtVOModel">
+		insert into t_operator (
+				serno,
+				opt_no,
+				opt_name,
+				opt_password,
+				opt_type,
+				dept_no,
+				opt_sex,
+				opt_status,
+				start_date,
+				end_date,
+				crt_date,
+				mdf_date,
+				crt_user,
+				mdf_user,
+				data_flag,
+				person_type,
+				is4sub
+		) values (
+				serno.nextval,
+				#opt_no#,
+				#opt_name#,
+				#opt_password#,
+				#opt_type#,
+				#dept_no#,
+				#opt_sex#,
+				#opt_status#,
+				#start_date_new#,
+				#end_date_new#,
+				#crt_date#,
+				#mdf_date#,
+				#crt_user#,
+				#mdf_user#,
+				#data_flag#,
+				#person_type#,
+				#is4sub#
+		)
+	</insert>
+	
+	<insert id="addOptPathInfo" parameterClass="userMgMtVOModel">
+		insert into t_operator_path (
+				seq_id,
+				opt_no,
+				opt_name,
+				opt_password,
+				status,
+				start_date,
+				end_date,
+				createdate,
+				modifydate,
+				createuser,
+				modifyuser
+		) values (
+				seq_id.nextval,
+				#opt_no#,
+				#opt_name#,
+				#opt_password#,
+				#status#,
+				#start_date#,
+				#end_date#,
+				sysdate,
+				sysdate,
+				#crt_user#,
+				#mdf_user#
+		)
+	</insert>
+	
+	<insert id="addOperatorRolesInfo" parameterClass="userMgMtVOModel">
+		insert into t_operator_roles (
+				serno,
+				opt_no,
+				role_no,
+				start_date,
+				end_date,
+				crt_date,
+				mdf_date,
+				crt_user,
+				mdf_user,
+				data_flag
+		) values (
+				serno.nextval,
+				#opt_no#,
+				#role_no#,
+				#start_date_new#,
+				#end_date_new#,
+				#crt_date#,
+				#mdf_date#,
+				#crt_user#,
+				#mdf_user#,
+				#data_flag#
+		)
+	</insert>
+	
+	<insert id="addDataAuthInfo" parameterClass="userMgMtVOModel">
+		insert into t_data_auth (
+				serno,
+				object_no,
+				object_type,
+				data_auth_no,
+				data_auth_type,
+				data_auth_child,
+				is_display,
+				start_date,
+				end_date,
+				crt_date,
+				mdf_date,
+				crt_user,
+				mdf_user,
+				data_flag
+		) values (
+				serno.nextval,
+				#object_no#,
+				#object_type#,
+				#data_auth_no#,
+				#data_auth_type#,
+				#data_auth_child#,
+				#is_display#,
+				#start_date_new#,
+				#end_date_new#,
+				#crt_date#,
+				#mdf_date#,
+				#crt_user#,
+				#mdf_user#,
+				#data_flag#
+		)
+	</insert>
+	
+	 <select id="queryBranchList" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+		 select branch_id, branch_name
+     from sys_branch
+    where substr(branch_id, 0, 4) = #branch_id#
+    and branch_level='4'
+   </select>
+   
+   <select id="statisticalDataYearSalesOrProtocolYear" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+	 select nvl(count(policyno),0) policyno_count,
+	        nvl(sum(netpremium),0) netpremium_count,
+	        nvl(sum(fnum),0) fnum_count 
+	    from cbs_smc_cmain
+	  where 1=1
+	  and handlercode=#opt_no#
+	  and to_date(to_char(signdate,'yyyy'),'yyyy')=to_date(to_char(sysdate,'yyyy'),'yyyy') 
+   </select>
+   
+   <select id="statisticalDataYearSalesOrProtocolMonth" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+	 select nvl(count(policyno),0) policyno_count,
+	        nvl(sum(netpremium),0) netpremium_count,
+	        nvl(sum(fnum),0) fnum_count 
+	    from cbs_smc_cmain
+	  where 1=1
+	  and handlercode=#opt_no#
+	  and to_date(to_char(signdate,'yyyy-mm'),'yyyy-mm')=to_date(to_char(sysdate,'yyyy-mm'),'yyyy-mm') 
+   </select>
+   
+   <select id="querySalesInfo" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+	  select branch_id, sales_id, sales_name
+       from smis_sales
+      where 1 = 1
+	   <isNotEmpty  property="branch_id">
+        and branch_id = #branch_id#
+	   </isNotEmpty>
+	    <isNotEmpty  property="sales_status">
+        and sales_status =#sales_status#
+	   </isNotEmpty>
+	    <isNotEmpty  property="opt_no">
+	     and branch_id in (select tda.data_auth_no  from t_data_auth tda where tda.is_half_check is null and tda.object_no =#opt_no#)
+	   </isNotEmpty>
+   </select>
+   
+   <select id="querySalesInfoFenGongSi" parameterClass="userMgMtVOModel" resultClass="userMgMtVOModel">
+	  select branch_id, sales_id, sales_name
+       from smis_sales
+      where 1 = 1
+	   <isNotEmpty  property="branch_id">
+        and substr(branch_id,0,4) = #branch_id#
+	   </isNotEmpty>
+	    <isNotEmpty  property="sales_status">
+        and sales_status =#sales_status#
+	   </isNotEmpty>
+	    <isNotEmpty  property="opt_no">
+	     and branch_id in (select tda.data_auth_no  from t_data_auth tda where tda.is_half_check is null and tda.object_no =#opt_no#)
+	   </isNotEmpty>
+   </select>
+</sqlMap>

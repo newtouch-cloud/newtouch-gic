@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+	<display-name>CACore</display-name>
+
+
+	<!-- 服务器运行参数  start-->
+	<!-- weblogic url 中文编码 
+	<context-param>
+		<param-name>weblogic.httpd.inputCharset./*</param-name>
+		<param-value>UTF-8</param-value>
+	</context-param>
+	-->
+	<context-param><!-- Spring配置文件的地址 --> 
+		<param-name>contextConfigLocation</param-name><param-value>classpath:rootAppContext.xml</param-value>
+	</context-param>
+	<context-param><!-- 获取webroot文件夹的路径 -->
+		<param-name>webAppRootKey</param-name><param-value>WebRoot</param-value>
+	</context-param>
+	<!-- 服务器运行参数  end-->
+	
+	
+	
+	<!-- 服务器拦截器设置  start-->
+	<filter><!-- 中文乱码过滤器 -->
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param><param-name>encoding</param-name><param-value>UTF-8</param-value></init-param>
+		<init-param><param-name>forceEncoding</param-name><param-value>true</param-value></init-param>
+	</filter>
+	<filter-mapping><!--  过滤器的匹配 URL -->
+		<filter-name>characterEncodingFilter</filter-name><url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<!-- 监控过滤器 -->
+	<!-- 
+	<filter>
+		<filter-name>MonitorFilter</filter-name>
+		<filter-class>com.newtouch.component.s10monitor.mlog.MonitorFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>MonitorFilter</filter-name><url-pattern>*.controller</url-pattern>
+	</filter-mapping>
+	 -->
+	<!-- 服务器拦截器设置  end-->
+	
+	<!-- 初始化查询对象用_开始 -->
+	<filter>
+		<filter-name>AuthFilter</filter-name>
+		<filter-class>
+			com.newtouch.core.auth.AuthFilter
+		</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>AuthFilter</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+	<!-- 初始化查询对象用_结束 -->
+	
+	<listener><!-- Introspector 缓存清除监听器 -->
+		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+	</listener>
+	<listener><!-- ContextLoaderListener 加载Spring配置文件 -->
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- 日志监听 -->
+	<!--
+	<listener>
+		 <listener-class>com.newtouch.component.s10monitor.mlog.MonitorListener</listener-class>
+	</listener>
+	-->
+	<!-- 服务器监听器 end -->
+	
+	
+	
+	<!-- 服务器Servlet start -->
+	<servlet><!-- spring mvc -->
+		<servlet-name>spring</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:rootServletContext.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>spring</servlet-name>
+		<url-pattern>*.do</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>spring</servlet-name>
+		<url-pattern>*.controller</url-pattern>
+	</servlet-mapping>
+	
+	 <servlet>
+	    <servlet-name>upLoadify</servlet-name>
+	    <servlet-class>com.newtouch.component.c3fileUpload.FileUpload</servlet-class>
+	 </servlet>
+	 <servlet-mapping>
+	    <servlet-name>upLoadify</servlet-name>
+	    <url-pattern>/uploadify</url-pattern>
+	 </servlet-mapping>
+	 
+	 <servlet>
+	    <servlet-name>UploadPhotoServlet</servlet-name>
+	    <servlet-class>com.newtouch.component.c3fileUpload.UploadPhotoServlet</servlet-class>
+	 </servlet>
+	 <servlet-mapping>
+	    <servlet-name>UploadPhotoServlet</servlet-name>
+	    <url-pattern>/UploadPhotoServlet</url-pattern>
+	 </servlet-mapping>
+	 
+	 <servlet>
+	    <servlet-name>PolicyImageUploadServlet</servlet-name>
+	    <servlet-class>com.ca.cacore.ibs.webapp.controller.PolicyImageUploadServlet</servlet-class>
+	 </servlet>
+	 <servlet-mapping>
+	    <servlet-name>PolicyImageUploadServlet</servlet-name>
+	    <url-pattern>/PolicyImageUploadServlet</url-pattern>
+	 </servlet-mapping>
+	 
+	 <!-- axis2  start-->
+	<servlet>  
+        <servlet-name>AxisServlet</servlet-name>  
+        <servlet-class>org.apache.axis2.transport.http.AxisServlet</servlet-class>  
+        <load-on-startup>1</load-on-startup>  
+    </servlet> 
+    <servlet-mapping>  
+        <servlet-name>AxisServlet</servlet-name>  
+        <url-pattern>/services/*</url-pattern>  
+    </servlet-mapping>
+	<!-- axis2  end-->
+	 
+	 <!-- <servlet>
+		<servlet-name>AxisServlet</servlet-name> 
+		<servlet-class>org.apache.axis.transport.http.AxisServlet </servlet-class> 
+	 </servlet>
+	 <servlet-mapping> 
+		<servlet-name>AxisServlet</servlet-name> 
+		<url-pattern>/services/*</url-pattern> 
+	 </servlet-mapping> -->
+	
+	 <servlet> 
+		<servlet-name>AdminServlet</servlet-name> 
+		<servlet-class> org.apache.axis.transport.http.AdminServlet </servlet-class> 
+		<load-on-startup>100</load-on-startup> 
+	 </servlet> 
+	<!-- 服务器Servlet end -->
+	
+
+
+	<!-- 服务器Session失效时间 start -->
+	<session-config>
+		<session-timeout>60</session-timeout>
+	</session-config>
+	<!-- 服务器Session失效时间 end -->
+	
+	
+	<!-- 服务器默认界面 start -->
+	<welcome-file-list><!-- 欢迎首界面 -->
+		<welcome-file>/login.jsp</welcome-file>
+	</welcome-file-list>
+	<error-page><!-- 配置错误页面-->
+		<error-code>500</error-code>
+		<location>/WEB-INF/jsp/newtouch/core/error/500.jsp</location>
+	</error-page>
+	<error-page><!-- 配置错误页面-->
+		<error-code>404</error-code>
+		<location>/WEB-INF/jsp/newtouch/core/error/404.jsp</location>
+	</error-page>
+	<!-- 错误定制页面 
+		<error-page>
+			<exception-type>java.lang.Exception</exception-type>
+			<location>/WEB-INF/jsp/error.jsp</location>
+		</error-page>
+	-->
+	<!-- 服务器默认界面 end -->
+	
+	
+	
+	<login-config>
+		<auth-method>BASIC</auth-method>
+	</login-config>
+	
+	
+	
+	<mime-mapping> 
+		<extension>wsdl</extension> 
+		<mime-type>text/xml</mime-type> 
+	</mime-mapping> 
+	<mime-mapping> 
+		<extension>xsd</extension> 
+		<mime-type>text/xml</mime-type> 
+	</mime-mapping>
+
+
+
+	<!-- 配置tomcat集群session 共享element-->
+	<distributable/>
+</web-app>

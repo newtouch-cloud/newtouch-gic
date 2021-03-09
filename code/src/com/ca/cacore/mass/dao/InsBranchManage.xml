@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="insBranchManage">
+	<typeAlias alias="insBranchVOModel"	type="com.ca.cacore.mass.model.bo.CompanyBranchModel" />
+	<typeAlias alias="branchTreeModel" type="com.ca.cacore.manage.model.bo.BranchTreeModel"/>
+	<sql id="query_head">
+		select * from (select row_.*, rownum rownum_ from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 查询所有保险公司机构信息 -->
+	<sql id="queryAll">
+	SELECT T.SEQ_ID,
+       T.BRANCH_PARENTID,
+       CBD.BRANCH_NAME   BRANCH_PARENTNAME,
+       T.BRANCH_ID,
+       T.BRANCH_NAME,
+       T.BRANCH_LEVEL,
+       T.BRANCH_ABBR,
+       T.STATUS,
+       T.DELEGATE,
+       T.ADDRESS,
+       T.FOUND_DATE,
+       T.ZIP,
+       T.TELEPHONE,
+       T.FAX,
+       T.EMAIL,
+       T.REMARK,
+       T.BRANCH_SORT,
+       SE.ENUM_NAME      BRANCH_SORTNAME,
+       T.BLENG_BRANCHID  BLENG_BRANCHID
+  FROM (SELECT A.SEQ_ID,
+               A.BRANCH_PARENTID,
+               A.BRANCH_ID,
+               A.BRANCH_NAME,
+               A.BRANCH_LEVEL,
+               A.STATUS,
+               A.BRANCH_SORT,
+               A.BLENG_BRANCHID,
+               A.BRANCH_ABBR,
+               A.DELEGATE,
+               A.ADDRESS,
+               A.FOUND_DATE,
+               A.ZIP,
+               A.TELEPHONE,
+               A.FAX,
+               A.EMAIL,
+               A.REMARK,
+               A.MODIFYDATE,
+               A.CREATEDATE
+          FROM CPY_BRANCH A
+         WHERE A.INS_TYPE IS NULL
+        UNION
+        SELECT B.SEQ_ID,
+               B.BRANCH_PARENTID,
+               B.BRANCH_ID,
+               B.BRANCH_NAME,
+               B.BRANCH_LEVEL,
+               B.STATUS,
+               B.BRANCH_SORT,
+               B.BLENG_BRANCHID,
+               B.BRANCH_ABBR,
+               B.DELEGATE,
+               B.ADDRESS,
+               B.FOUND_DATE,
+               B.ZIP,
+               B.TELEPHONE,
+               B.FAX,
+               B.EMAIL,
+               B.REMARK,
+               B.MODIFYDATE,
+               B.CREATEDATE
+          FROM CPY_BRANCH B
+         WHERE NOT EXISTS
+         (SELECT 1
+                  FROM CPY_BRANCH A
+                 WHERE A.INS_TYPE IS NULL
+                   AND A.BRANCH_ID = B.BRANCH_ID)
+           AND B.BRANCH_ID IN (SELECT A.BRANCH_ID
+                                 FROM (SELECT D.BRANCH_ID
+                                         FROM CPY_BRANCH D
+                                        WHERE (D.INS_TYPE in ( 'P','L'))
+                                        <![CDATA[
+                                          AND nvl(D.BRANCH_PARENTID,'0') <> D.BRANCH_ID
+                                        ]]>	
+                                          AND D.BRANCH_ID NOT IN
+                                              (SELECT C.BRANCH_ID
+                                                 FROM CPY_BRANCH C
+                                                WHERE C.INS_TYPE IS NULL)) A
+                                GROUP BY A.BRANCH_ID
+                               HAVING COUNT(1) = 1)
+           AND nvl(B.BRANCH_PARENTID,'0') != B.BRANCH_ID
+        UNION
+        SELECT W.SEQ_ID,
+               W.BRANCH_PARENTID,
+               W.BRANCH_ID,
+               W.BRANCH_NAME,
+               W.BRANCH_LEVEL,
+               W.STATUS,
+               W.BRANCH_SORT,
+               W.BLENG_BRANCHID,
+               W.BRANCH_ABBR,
+               W.DELEGATE,
+               W.ADDRESS,
+               W.FOUND_DATE,
+               W.ZIP,
+               W.TELEPHONE,
+               W.FAX,
+               W.EMAIL,
+               W.REMARK,
+               W.MODIFYDATE,
+               W.CREATEDATE
+          FROM (SELECT V.*,
+                       DENSE_RANK() OVER(PARTITION BY V.BRANCH_ID ORDER BY V.BRANCH_LEVEL) RANK
+                  FROM (SELECT *
+                          FROM CPY_BRANCH B
+                         WHERE NOT EXISTS
+                         (SELECT 1
+                                  FROM CPY_BRANCH A
+                                 WHERE A.INS_TYPE IS NULL
+                                   AND A.BRANCH_ID = B.BRANCH_ID)
+                           AND B.BRANCH_ID IN
+                               (SELECT A.BRANCH_ID
+                                  FROM (SELECT D.BRANCH_ID
+                                          FROM CPY_BRANCH D
+                                         WHERE (D.INS_TYPE in ( 'P','L'))
+                                           <![CDATA[
+                                           AND D.BRANCH_PARENTID <> D.BRANCH_ID
+                                           ]]>	
+                                           AND D.BRANCH_ID NOT IN
+                                               (SELECT C.BRANCH_ID
+                                                  FROM CPY_BRANCH C
+                                                 WHERE C.INS_TYPE IS NULL)) A
+                                 GROUP BY A.BRANCH_ID
+                                HAVING COUNT(1) > 1)
+                           <![CDATA[
+                           AND nvl(B.BRANCH_PARENTID,'0') <> B.BRANCH_ID 
+                           ]]>) V) W
+         WHERE W.RANK = 1) T
+  LEFT JOIN (SELECT A.SEQ_ID,
+                    A.BRANCH_PARENTID,
+                    A.BRANCH_ID,
+                    A.BRANCH_NAME,
+                    A.BRANCH_LEVEL,
+                    A.STATUS
+               FROM CPY_BRANCH A
+              WHERE A.INS_TYPE IS NULL
+             UNION
+             SELECT B.SEQ_ID,
+                    B.BRANCH_PARENTID,
+                    B.BRANCH_ID,
+                    B.BRANCH_NAME,
+                    B.BRANCH_LEVEL,
+                    B.STATUS
+               FROM CPY_BRANCH B
+              WHERE NOT EXISTS
+              (SELECT 1
+                       FROM CPY_BRANCH A
+                      WHERE A.INS_TYPE IS NULL
+                        AND A.BRANCH_ID = B.BRANCH_ID)
+                AND B.BRANCH_ID IN
+                    (SELECT A.BRANCH_ID
+                       FROM (SELECT D.BRANCH_ID
+                               FROM CPY_BRANCH D
+                              WHERE (D.INS_TYPE in ( 'P','L'))
+                              <![CDATA[
+                                AND nvl(D.BRANCH_PARENTID,'0') <> D.BRANCH_ID
+                                ]]>	
+                                AND D.BRANCH_ID NOT IN
+                                    (SELECT C.BRANCH_ID
+                                       FROM CPY_BRANCH C
+                                      WHERE C.INS_TYPE IS NULL)) A
+                      GROUP BY A.BRANCH_ID
+                     HAVING COUNT(1) = 1)
+                AND nvl(B.BRANCH_PARENTID,'0') != B.BRANCH_ID
+             UNION
+             SELECT W.SEQ_ID,
+                    W.BRANCH_PARENTID,
+                    W.BRANCH_ID,
+                    W.BRANCH_NAME,
+                    W.BRANCH_LEVEL,
+                    W.STATUS
+               FROM (SELECT V.*,
+                            DENSE_RANK() OVER(PARTITION BY V.BRANCH_ID ORDER BY V.BRANCH_LEVEL) RANK
+                       FROM (SELECT *
+                               FROM CPY_BRANCH B
+                              WHERE NOT EXISTS
+                              (SELECT 1
+                                       FROM CPY_BRANCH A
+                                      WHERE A.INS_TYPE IS NULL
+                                        AND A.BRANCH_ID = B.BRANCH_ID)
+                                AND B.BRANCH_ID IN
+                                    (SELECT A.BRANCH_ID
+                                       FROM (SELECT D.BRANCH_ID
+                                               FROM CPY_BRANCH D
+                                              WHERE (D.INS_TYPE in ( 'P','L'))
+                                              <![CDATA[
+                                                AND nvl(D.BRANCH_PARENTID,'0') <>
+                                                    D.BRANCH_ID
+                                                  ]]>	  
+                                                AND D.BRANCH_ID NOT IN
+                                                    (SELECT C.BRANCH_ID
+                                                       FROM CPY_BRANCH C
+                                                      WHERE C.INS_TYPE IS NULL)) A
+                                      GROUP BY A.BRANCH_ID
+                                     HAVING COUNT(1) > 1)
+                                <![CDATA[
+                                AND nvl(B.BRANCH_PARENTID,'0') <> B.BRANCH_ID ]]>	) V) W
+              WHERE W.RANK = 1) CBD
+    ON T.BRANCH_PARENTID = CBD.BRANCH_ID
+   AND CBD.BRANCH_LEVEL = T.BRANCH_LEVEL - 1
+  LEFT JOIN SYS_ENUM SE
+    ON T.BRANCH_SORT = SE.ENUM_CODE
+   AND SE.UP_ENUM = 'branchsort'
+ WHERE 1 = 1
+  <!-- LEFT JOIN SYS_BRANCH SY
+    ON T.BLENG_BRANCHID = SY.BRANCH_ID -->
+  	<isNotEmpty  property="createDateL" >
+        and t.found_date >= #createDateL#
+  	</isNotEmpty>
+  	<isNotEmpty  property="createDateG" >
+        and #createDateG# >=t.found_date
+  	</isNotEmpty>
+  	<isNotEmpty prepend="and" property="branch_id">
+		t.branch_id in(select branch_id from cpy_branch cpy 
+        where cpy.status = '1' start with cpy.branch_id=#branch_id# 
+        connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+	</isNotEmpty>
+	<isNotEmpty  property="branch_nameA">
+		and t.branch_name like '%$branch_nameA$%'
+	</isNotEmpty>
+   	AND T.BLENG_BRANCHID IN
+       (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+ ORDER BY T.MODIFYDATE DESC, T.CREATEDATE DESC
+	<!-- SELECT 
+			t.seq_id
+			,t.branch_parentid
+			,cbd.branch_name branch_parentname 
+			,t.branch_id
+			,t.branch_name
+			,t.branch_level
+			,t.branch_abbr
+			,t.status
+			,t.delegate
+			,t.address
+			,t.found_date
+			,t.zip
+			,t.telephone
+			,t.fax
+			,t.email
+			,t.remark
+			,t.branch_sort
+			,se.enum_name branch_sortname
+			,t.bleng_branchid bleng_branchid
+			,sy.branch_name bleng_branchname
+		from cpy_branch t
+		left join cpy_branch cbd 
+		on t.branch_parentid = cbd.branch_id 
+		and cbd.branch_level = t.branch_level - 1 and cbd.status ='1'
+		 LEFT JOIN sys_enum se
+        ON t.branch_sort=se.enum_code AND se.up_enum='branchsort'   zddxiu
+        left join SYS_BRANCH sy
+        on t.bleng_branchid=sy.BRANCH_ID
+		where 1=1 and t.status ='1'
+		<isNotEmpty  property="createDateL" >
+        	and t.found_date >= #createDateL#
+        </isNotEmpty>
+        <isNotEmpty  property="createDateG" >
+         	and #createDateG# >=t.found_date
+        </isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			 t.branch_id in(select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#branch_id# 
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty  property="branch_nameA">
+			and t.branch_name like '%$branch_nameA$%'
+		</isNotEmpty>
+		by zdd02 20190620
+		and t.bleng_branchid IN  (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+           order by t.modifydate DESC, t.createdate DESC -->
+		<!-- order by  length(t.branch_id) ,t.branch_id  -->
+		<!-- by zdd02 20190620 -->
+    </sql>
+	
+	<select id="insBranchQuery" parameterClass="insBranchVOModel" resultClass="insBranchVOModel">
+		<include refid="query_head"/>
+		<include refid="queryAll"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="insBranchQuery_count" parameterClass="insBranchVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryAll"/>
+		)
+	</select>
+	<select id = "getInsBranch" parameterClass="insBranchVOModel" resultClass="insBranchVOModel">
+		SELECT t.seq_id,
+               t.branch_parentid,
+               cbd.branch_name branch_parentname,
+               t.branch_id branch_no ,
+               t.branch_name branch_cpyname,
+               t.branch_level,
+               t.branch_abbr,
+               case
+                 when t.status = '0' then
+                  '无效'
+                 when t.status = '1' then
+                  '有效'
+               end statusA,
+               t.status,
+               t.delegate,
+               t.address,
+               t.found_date,
+               t.zip,
+               t.telephone,
+               t.fax,
+               t.email,
+               t.remark,
+               t.province_code,
+               t.city_code,
+               t.area_code,
+               t.bleng_branchid,
+               cbd.bleng_branchid sysbranch_id,
+               tai.area_name province,
+               tac.area_name city,
+               tax.area_name area,
+               s.branch_name bname,
+               s.branch_name sales_org_name,
+               s. branch_id,
+               s.branch_name,
+               t.branch_sort,
+			   se.enum_name branch_sortname
+           from cpy_branch t
+          left join cpy_branch cbd
+            on t.branch_parentid = cbd.branch_id
+           <isNotEmpty prepend="and" property="cpy_branch_level">
+           	cbd.branch_level = #cpy_branch_level#-1
+           </isNotEmpty>
+           and cbd.status = '1' 
+           left join t_area_info tai  
+           on t.province_code = tai.area_code
+           left join t_area_info tac  
+           on t.city_code = tac.area_code
+           left join sys_branch s
+           on s.branch_id = t.bleng_branchid
+           left join t_area_info tax  
+           on t.area_code = tax.area_code
+           LEFT JOIN sys_enum se
+           ON t.branch_sort=se.enum_code AND se.up_enum='branchsort'   <!-- zddxiu -->
+           where  1=1     <!-- by zdd02 20190615 -->
+           <isNotEmpty prepend="and" property="seq_id">
+           t.seq_id = #seq_id#
+           </isNotEmpty>
+           <isNotEmpty prepend="and" property="branch_parentid">
+           cbd.branch_id = #branch_parentid#
+           </isNotEmpty>
+           <!--  <isNotNull prepend="and" property="branch_no">
+            t.branch_id=#branch_no#
+            </isNotNull> -->
+	</select>
+	<update id="insBranchModify" parameterClass="insBranchVOModel">
+        UPDATE cpy_branch
+		set
+           branch_name=#branch_cpyname#
+          ,branch_abbr=#branch_abbr#
+          ,status=#status#
+          ,delegate=#delegate#
+          ,address=#address#
+          ,fax=#fax#
+          ,zip=#zip#
+          ,email=#email#
+          ,remark=#remark#
+          ,modifyuser=#modifyUser#
+          ,modifydate=sysdate
+          ,telephone=#telephone#
+          ,province_code=#province_code#
+          ,city_code=#city_code#
+          <!--,bleng_branchid=#branch_id#-->
+          ,area_code=#area_code#
+          ,found_date=#found_date#
+        WHERE seq_id=#seq_id#
+	</update>
+    <!--修改字典表-->
+
+    <update id="insBranchModifySysE" parameterClass="insBranchVOModel">
+        UPDATE Sys_Enum
+        set
+        <!--ENUM_CODE=#branch_cpyid#,-->
+        ENUM_NAME=#branch_cpyname#,
+        UP_ENUM='headoffice',
+        CRT_DATE=SYSDATE,
+        MDF_DATE=SYSDATE
+        WHERE  ENUM_CODE =(
+        select cpy_branch.branch_id from cpy_branch,Sys_Enum
+        where Sys_Enum.ENUM_CODE = cpy_branch.branch_id and cpy_branch.seq_id=#seq_id#)
+    </update>
+	<!-- 新增保险公司机构 -->
+	<insert id="insBranchAdd" parameterClass="insBranchVOModel">
+		insert into cpy_branch 
+		( <!-- seq_id, -->
+          branch_id,
+          branch_name,
+          branch_abbr, 
+          branch_parentid, 
+          branch_level, 
+          delegate,
+          address,   
+          fax,  
+          zip,        
+          found_date,      
+          status,         
+          remark,
+          createuser,
+          createdate,   
+          modifyuser,      
+          modifydate,  
+          telephone,
+          province_code,
+          city_code,
+          area_code,
+          bleng_branchid,
+          branch_sort,
+          ins_type,   <!-- zdd0724 -->
+          cpy_serno 
+          )
+        values(
+       <!--  (select max(seq_id)+1 from cpy_branch), -->
+          #branch_cpyid#,
+          #branch_cpyname#,
+          #branch_abbr#,
+          #branch_parentid#,
+          #cpy_branch_level#,
+          #delegate#,
+          #address#,    
+          #fax#,         
+          #zip#,         
+          #found_date#,         
+          #status#,        
+          #remark#,                
+          #createUser#, 
+          sysdate,       
+          #modifyUser#,    
+          sysdate,      
+          #telephone#,
+          #province_code#,
+          #city_code#,
+          #area_code#,
+          #bleng_branchid#,   <!-- zddxiu -->
+           #branch_sort#,
+           #branch_sortname#,
+           #cpy_serno#
+           )
+	</insert>
+	<!-- 查询保险公司名称是否已经存在 -->
+	<select id="checkInsbName" parameterClass="insBranchVOModel" resultClass="insBranchVOModel">
+		select * from cpy_branch  
+		where branch_name = #branch_name# and seq_id != #seq_id#
+	</select>
+    <!-- 异步查询保险公司机构树  yanqiguang by 2018.7.17-->
+	<select id="queryCpyBranchTree"  resultClass="branchTreeModel" parameterClass="java.util.HashMap" >
+        select id,name,isParent,branch_level blevel,seq_id
+        from (
+        select distinct branch_id id, branch_name name,branch_level,seq_id,
+        (case (select count(*) from cpy_branch where branch_parentid=t.branch_id
+        <isNotNull prepend="and" property="parentorg_level">
+            branch_level=TO_NUMBER(#parentorg_level#)+1
+        </isNotNull>
+        )  when 0 then 'false' else 'true' end ) isParent
+        from cpy_branch t where t.status ='1'
+        <isNotNull prepend="and" property="org_id">
+             t.branch_id=#org_id#
+        </isNotNull>
+        <!-- zddxiu start -->
+        <isEqual property="parentorg_id" compareValue="gen">
+          and  t.branch_parentid is null
+        </isEqual>
+        <isNotEqual property="parentorg_id" compareValue="gen">
+	        <isNotNull prepend="and" property="parentorg_id">
+	             t.branch_parentid=#parentorg_id#
+	        </isNotNull>
+        </isNotEqual>
+        <!-- zddxiu end -->
+        <isNotNull prepend="and" property="parentorg_level">
+             t.branch_level=#parentorg_level#
+        </isNotNull>
+        )
+        order by id
+	</select>
+<select id="checkpower0626" parameterClass="String" resultClass="Integer">
+                        SELECT COUNT(1)
+                          FROM SYS_BRANCH TT
+                         WHERE TT.STATUS = '1'  AND tt.branch_id='0001'
+                         START WITH TT.BRANCH_ID IN
+                                    (SELECT TDA.DATA_AUTH_NO
+                                       FROM T_DATA_AUTH TDA
+                                      WHERE TDA.IS_HALF_CHECK IS NULL
+                                        AND TDA.OBJECT_NO = #emp_id#
+                                        AND OBJECT_TYPE = 'USER')
+                        CONNECT BY PRIOR TT.BRANCH_ID = TT.BRANCH_PARENTID
+</select>
+
+<select id="querySalesFirmBranchTree2"  resultClass="branchTreeModel">
+       SELECT s.enum_code id,s.enum_name name,s.enum_order  branch_level FROM Sys_Enum s WHERE s.up_enum='headoffice'
+       </select>
+       <!-- zddxiu -->
+ <select id="getbranchSort" resultClass="insBranchVOModel"> 
+    SELECT se.enum_code branch_sort,se.enum_name branch_sortname FROM Sys_Enum se WHERE se.up_enum='branchsort'
+ </select>
+ <select id="getfirstLeavelsort" resultClass="String"  parameterClass="String">
+ SELECT cb.branch_sort FROM cpy_branch cb
+    WHERE cb.branch_level='1'
+    START WITH cb.branch_id=#branch_id#
+    CONNECT BY PRIOR cb.branch_parentid =cb.branch_id
+ </select>
+ 
+ <select id="selectMaxOneLevel" resultClass="String" >
+ 
+ </select>
+
+ <select id="queryIdbyUserName" parameterClass="String" resultClass="String">
+     select t.DATA_AUTH_NO from T_DATA_AUTH t,SYS_BRANCH s where t.DATA_AUTH_NO=s.BRANCH_ID and t.OBJECT_NO=#userName# order by s.BRANCH_LEVEL desc
+ </select>
+
+ <insert id="insBranchAddSysE" parameterClass="insBranchVOModel">
+     insert into Sys_Enum (SERNO, ENUM_NO,
+		 ENUM_CODE, 
+		 ENUM_NAME, 
+		 UP_ENUM, 
+		 ENUM_ORDER, 
+		 DEPT_TYPE, 
+		 MEMO, 
+		 CRT_DATE, 
+		 MDF_DATE, 
+		 CRT_USER, 
+		 MDF_USER, 
+		 DATA_FLAG, 
+		 PATCH_MEMO)
+		values ((SELECT MAX(to_number(serno))+1  FROM  Sys_Enum), 
+		(SELECT MAX(to_number(serno))+1  FROM  Sys_Enum), 
+		#branch_cpyid#,
+		#branch_cpyname#, 
+		'headoffice', 
+		null, 
+		#branch_sort#,<!-- '00',  -->
+		null, 
+		SYSDATE, 
+		SYSDATE, 
+		#createUser#, 
+		#createUser#, 
+		'1', 
+		null)
+ </insert>
+ 
+ <select id="queryBranchTreeChild" parameterClass="branchModel" resultClass="branchTreeModel">
+		SELECT DISTINCT
+		branch_id id,
+		branch_name name,
+		branch_parentid pid,
+		branch_level,
+		(case (select count(*) from sys_branch where branch_parentid=t.branch_id  )  when 0 then 'false' else 'true' end ) isParent
+		FROM
+		sys_branch t
+		where
+		t.status = '1' and branch_id=#branch_id# and t.branch_id in $branch_list$
+		order by name
+	</select>
+	<select id="queryBranchTreeParent" parameterClass="branchModel" resultClass="branchTreeModel">
+		select id,name,pid,branch_level blevel,isParent  from (
+		select distinct branch_id id, branch_name name, branch_parentid pid ,branch_level,
+		(case (select count(*) from sys_branch where branch_id=t.branch_id  )  when 0 then 'false' else 'true' end ) isParent
+		from sys_branch t   where
+		t.status = '1' and
+		t.branch_id	in (
+		select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no =  #emp_id# and object_type='USER' ))
+		order by name
+	</select>
+	
+	<select id="getIsPOrLZ" resultClass="String">
+	 SELECT se.enum_code FROM Sys_Enum se WHERE se.up_enum='branchsort' AND se.enum_order='1'
+	</select>
+	
+	<select id="findIsExist" parameterClass="insBranchVOModel" resultClass="int">
+		select count(*) from cpy_branch where branch_id = #branch_cpyid# and status = '1'
+	</select>
+</sqlMap>

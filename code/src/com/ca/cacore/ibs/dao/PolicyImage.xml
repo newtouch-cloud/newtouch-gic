@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+   <!--2013-12-18 张晨 --> 
+<sqlMap namespace="policyImage">
+
+   <typeAlias alias="PolicyImageModel" type="com.ca.cacore.ibs.model.bo.PolicyImageModel"/>
+   <typeAlias alias="PolicyImageVoModel" type="com.ca.cacore.ibs.model.vo.PolicyImageVoModel"/>
+   <typeAlias alias="ImageBusTypeModel" type="com.ca.cacore.ibs.model.bo.ImageBusTypeModel"/>
+   
+	<!-- 根据保险公司机构id和所属投保单号id查找机构代码机构名称及投保人 -->
+	<select id="validateBranchAndPolicy" parameterClass="PolicyImageModel" resultClass="PolicyImageModel">
+	select 
+	   cpl.send_code,
+	   cpl.policy_id,
+	   ssb.branch_id,
+	   ssb.branch_name,
+	   ccu.name app_name
+	from 
+	   cbs_policylife cpl
+	   left join crm_customer ccu on cpl.holder_id = ccu.customer_id
+	   left join sys_branch ssb on cpl.branch_id = ssb.branch_id
+	where 
+	   cpl.insbranch_id=#insBranch_id#  and
+	   cpl.policy_code=#policy_code#   
+	
+	</select>
+	
+	<!-- 根据保险公司机构id和所属保单号id查找机构代码机构名称及投保人 -->
+	<select id="validateBranchAndContract" parameterClass="PolicyImageModel" resultClass="PolicyImageModel">
+	select 
+	   ccl.send_code,
+	   ccl.policy_id,
+	   ssb.branch_id,
+	   ssb.branch_name,
+	   ccu.name app_name
+	from cbs_contractlife ccl
+	   left join crm_customer ccu on ccl.holder_id = ccu.customer_id
+	   left join sys_branch ssb on ccl.branch_id = ssb.branch_id
+	where 
+	   ccl.insbranch_id=#insBranch_id#  and
+	   ccl.policy_code=#policy_code#
+	</select>
+	
+	<insert id="addPolicyImage" parameterClass="PolicyImageModel">
+	insert into img_image
+		(seq_id,file_id,bus_type,send_code,policy_id,
+		 seq_num,scan_time,file_path,file_name,remark,
+		 createUser,createDate,modifyUser,modifyDate)
+		values(
+		   seq_id.nextval,#file_id#,#bus_type#,#send_code#,#policy_id#,
+		   #seq_num#,sysdate,#file_path#,#file_name#,#remark#,
+		   #createUser#,sysdate,#modifyUser#,sysdate)
+	</insert>
+	
+	<!-- 通过file_id查找影像信息 -->
+	<select id="getFileByFileId" parameterClass="PolicyImageModel" resultClass="PolicyImageModel">
+	      select 
+  			  seq_id,
+  			  file_path
+		  from img_image 
+		  where file_id=#file_id#
+	</select>
+	
+	<!-- 检查对应file_id的文件是否存在 -->
+	<select id="checkFileByFileId" parameterClass="PolicyImageModel" resultClass="int" >
+		select 
+			count(seq_id)
+		from img_image
+		where 
+			file_id=#file_id# 
+		and send_code='未关联'	
+	</select>
+	
+	<!-- 通过seq_id删除保存的影像信息 -->
+	<delete id="deletePolicyImageInfo" parameterClass="PolicyImageModel" >
+	    delete from IMG_Image where seq_id=#seq_id# 
+	</delete>
+
+	<!-- 插入变更信息到保单服务人员变更历史表 -->
+	<update id="concernPolicyImage" parameterClass="PolicyImageModel">
+	    update img_image 
+	    set
+	      send_code=#send_code#,
+	      policy_id=#policy_id#,
+	      bus_type=#bus_type#,
+	      seq_num=#seq_num#,
+	      modifyUser=#modifyUser#,
+		  modifyDate=sysdate
+	    where
+	      file_id=#file_id#  
+	    
+	</update>
+	
+	<!-- 影像件上传时一起更新保单表 -->
+	<update id="updatePolicy" parameterClass="PolicyImageModel">
+	    update cbs_policylife 
+	    set
+	      scan_time=sysdate,
+	      modifyUser=#modifyUser#,
+		  modifyDate=sysdate
+	    where
+	      policy_id=#policy_id#  
+	    
+	</update>
+	
+	<!-- 插入变更信息到保单服务人员变更历史表 -->
+	<update id="updateContract" parameterClass="PolicyImageModel">
+	    update cbs_contractlife 
+	    set
+	      scan_time=sysdate,
+	      modifyUser=#modifyUser#,
+		  modifyDate=sysdate
+	    where
+	      policy_id=#policy_id#
+	    
+	</update>
+	
+	   
+    <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 查询所有没有每天添加影像件的投保单信息 -->
+	<sql id="query_add_policy">
+	 select distinct
+		cpl.seq_id,
+    	cpl.branch_id,
+    	branch.branch_name,
+    	insbranch.insbranch_name,
+    	cpl.policy_code,
+    	cpl.policy_id,
+    	ssa.sales_name agent_name,
+    	sse.sales_name service_name,
+    	holder.app_name,
+    	insured.insurant_name,
+    	cpl.hold_date,
+    	status.status_name,
+    	cpl.scan_time 
+      from 
+    	cbs_policylife cpl
+    	left join sys_branch branch
+    		on branch.branch_id = cpl.branch_id
+    	left join cbs_policylife_product cclp
+    		on cclp.policy_id = cpl.policy_id
+    	left join pdt_product_llife ppl
+    		on ppl.product_id = cclp.product_id
+    	left join smis_sales ssa
+    		on ssa.sales_id = cpl.agent_id
+    	left join smis_sales sse
+    		on sse.sales_id = cpl.service_id
+    	left join cbs_policylife_holder holder
+    		on holder.policy_id=cpl.policy_id
+    	left join cbs_policylife_insured insured
+    		on insured.customer_id = cpl.insurant_id
+    	left join cbs_policy_status status
+    		on status.status_code = cpl.status
+    	left join sys_insbranch insbranch
+    		on insbranch.insbranch_id = cpl.insbranch_id
+	    where cpl.policy_id not in (select policy_id from img_image where bus_type = 1 )
+			and cpl.branch_id in (select tda.data_auth_no
+                          			from t_data_auth tda
+                         			where tda.is_half_check is null
+                           			and tda.object_no = #emp_id#)
+		<isNotEmpty property="branch_id">
+			and branch.branch_allpath  like  '%$branch_id$%'
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			and cpl.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			and cpl.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			and ssa.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			and holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+			order by cpl.hold_date desc
+	</sql>
+
+	<!-- 查询所有的投保单信息 -->
+	<sql id="query_all_policy">
+	 select distinct
+		cpl.seq_id,
+    	cpl.branch_id,
+    	branch.branch_name,
+    	insbranch.insbranch_name,
+    	cpl.policy_code,
+    	cpl.policy_id,
+    	ssa.sales_name agent_name,
+    	sse.sales_name service_name,
+    	holder.app_name,
+    	insured.insurant_name,
+    	cpl.hold_date,
+    	status.status_name,
+    	cpl.scan_time 
+      from 
+    	cbs_policylife cpl
+    	left join sys_branch branch
+    		on branch.branch_id = cpl.branch_id
+    	left join cbs_policylife_product cclp
+    		on cclp.policy_id = cpl.policy_id
+    	left join pdt_product_llife ppl
+    		on ppl.product_id = cclp.product_id
+    	left join smis_sales ssa
+    		on ssa.sales_id = cpl.agent_id
+    	left join smis_sales sse
+    		on sse.sales_id = cpl.service_id
+    	left join cbs_policylife_holder holder
+    		on holder.policy_id=cpl.policy_id
+    	left join cbs_policylife_insured insured
+    		on insured.customer_id = cpl.insurant_id
+    	left join cbs_policy_status status
+    		on status.status_code = cpl.status
+    	left join sys_insbranch insbranch
+    		on insbranch.insbranch_id = cpl.insbranch_id
+	    left join img_image img 
+    		on img.policy_id = 	cpl.policy_id
+	    where img.bus_type = 1
+	    	and cpl.branch_id in (select tda.data_auth_no
+                          			from t_data_auth tda
+                         			where tda.is_half_check is null
+                           			and tda.object_no = #emp_id#)
+		<isNotEmpty property="branch_id">
+			and branch.branch_allpath  like  '%$branch_id$%'
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			and cpl.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			and cpl.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			and ssa.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			and holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+			order by cpl.hold_date desc
+	</sql>
+  	
+    <!-- 查询投保单信息列表 -->
+	<select id="queryPolicyImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		<include refid="query_head"/>
+		<include refid="query_all_policy"/>
+		<include refid="query_foot"/>
+	</select>
+	
+		<!-- 查询投保单总数 -->
+	<select id="queryPolicyImage_count" parameterClass="PolicyImageVoModel" resultClass="int">
+		select count(seq_id) from (
+		<include refid="query_all_policy" />
+		)
+	</select>
+	
+	<!-- 查询没有影像件投保单信息列表 -->
+	<select id="queryAddPolicyImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		<include refid="query_head"/>
+		<include refid="query_add_policy"/>
+		<include refid="query_foot"/>
+	</select>
+	
+		<!-- 查询没有影像件投保单总数 -->
+	<select id="queryAddPolicyImage_count" parameterClass="PolicyImageVoModel" resultClass="int">
+		select count(seq_id) from (
+		<include refid="query_add_policy" />
+		)
+	</select>
+	
+		<!-- 查询所有没有添加影像件的保单信息 -->
+	<sql id="query_add_contract">
+	 select distinct
+		ccl.seq_id,
+    	ccl.branch_id,
+    	branch.branch_name,
+    	insbranch.insbranch_name,
+    	ccl.policy_code,
+    	ccl.policy_id,
+    	ssa.sales_name agent_name,
+    	sse.sales_name service_name,
+    	holder.app_name,
+    	insured.insurant_name,
+    	ccl.hold_date,
+    	ccl.validate_date,
+    	status.status_name,
+    	ccl.scan_time    
+      from 
+    	cbs_contractlife ccl
+    	left join sys_branch branch
+    		on branch.branch_id = ccl.branch_id
+    	left join smis_sales ssa
+    		on ssa.sales_id = ccl.agent_id
+    	left join smis_sales sse
+    		on sse.sales_id = ccl.service_id
+    	left join cbs_contractlife_holder holder
+    		on holder.policy_id=ccl.policy_id
+    	left join cbs_contractlife_insured insured
+    		on insured.customer_id = ccl.insurant_id
+    	left join cbs_contractlife_status status
+    		on status.status_code = ccl.status
+    	left join sys_insbranch insbranch
+    		on insbranch.insbranch_id = ccl.insbranch_id
+	  where ccl.policy_id not in (select policy_id from img_image where bus_type = 2 )
+		and ccl.branch_id in (select tda.data_auth_no
+                          			from t_data_auth tda
+                         			where tda.is_half_check is null
+                           			and tda.object_no = #emp_id#)
+		<isNotEmpty property="branch_id">
+			and branch.branch_allpath  like  '%$branch_id$%'
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			and ccl.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			and ccl.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			and ssa.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			and holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+			order by ccl.hold_date desc
+	</sql>
+	
+		<!-- 查询所有已经添加影像件的保单信息 -->
+	<sql id="query_all_contract">
+	 select distinct
+		ccl.seq_id,
+    	ccl.branch_id,
+    	branch.branch_name,
+    	insbranch.insbranch_name,
+    	ccl.policy_code,
+    	ccl.policy_id,
+    	ssa.sales_name agent_name,
+    	sse.sales_name service_name,
+    	holder.app_name,
+    	insured.insurant_name,
+    	ccl.hold_date,
+    	ccl.validate_date,
+    	status.status_name,
+    	ccl.scan_time    
+      from 
+    	cbs_contractlife ccl
+    	left join sys_branch branch
+    		on branch.branch_id = ccl.branch_id
+    	left join smis_sales ssa
+    		on ssa.sales_id = ccl.agent_id
+    	left join smis_sales sse
+    		on sse.sales_id = ccl.service_id
+    	left join cbs_contractlife_holder holder
+    		on holder.policy_id=ccl.policy_id
+    	left join cbs_contractlife_insured insured
+    		on insured.customer_id = ccl.insurant_id
+    	left join cbs_contractlife_status status
+    		on status.status_code = ccl.status
+    	left join sys_insbranch insbranch
+    		on insbranch.insbranch_id = ccl.insbranch_id
+    	left join img_image img 
+    		on img.policy_id = 	ccl.policy_id
+	  where img.bus_type = 2
+			and ccl.branch_id in (select tda.data_auth_no
+                          			from t_data_auth tda
+                         			where tda.is_half_check is null
+                           			and tda.object_no = #emp_id#)
+		<isNotEmpty property="branch_id">
+			and branch.branch_allpath  like  '%$branch_id$%'
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			and ccl.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			and ccl.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			and ssa.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			and holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+			order by ccl.hold_date desc
+	</sql>
+	
+		<!-- 查询已有影像件保单信息列表 -->
+	<select id="queryContractImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		<include refid="query_head"/>
+		<include refid="query_all_contract"/>
+		<include refid="query_foot"/>
+	</select>
+	
+		<!-- 查询已有影像件保单总数 -->
+	<select id="queryContractImage_count" parameterClass="PolicyImageVoModel" resultClass="int">
+		select count(seq_id) from (
+		<include refid="query_all_contract" />
+		)
+	</select>
+	
+		<!-- 查询没有影像件保单信息列表 -->
+	<select id="queryAddContractImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		<include refid="query_head"/>
+		<include refid="query_add_contract"/>
+		<include refid="query_foot"/>
+	</select>
+	
+		<!-- 查询没有有影像件保单总数 -->
+	<select id="queryAddContractImage_count" parameterClass="PolicyImageVoModel" resultClass="int">
+		select count(seq_id) from (
+		<include refid="query_add_contract" />
+		)
+	</select>
+	
+		<!-- 影像件查看中的查看影像功能查询  添加的模糊查询条件是为了保单问题/回执件查看影像信息-->
+	<select id="viewPolicyImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageModel">
+		select 
+			seq_id,
+			file_id,
+			file_path
+		from img_image
+		where
+		 	policy_id=#policy_id#
+		<isNotEmpty property="bus_type">
+			and bus_type=#bus_type#
+		</isNotEmpty> 	
+	</select>
+	
+	<!-- 影像件查看中的查看投保单信息 影像类型1为投保单影像类型-->
+	<select id="queryPolicyForImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		select distinct
+			cpl.insbranch_id,
+			cpl.policy_code,
+			cpl.branch_id,
+			cpl.send_code,
+			cpl.policy_id,
+			branch.branch_name,
+			holder.app_name,
+			cpl.scan_time,
+			img.bus_type
+		from 
+			 cbs_policylife cpl
+		left join sys_branch branch
+      		 on branch.branch_id = cpl.branch_id
+      	left join cbs_policylife_holder holder
+    		 on holder.policy_id=cpl.policy_id
+    	left join img_image img 
+    		 on img.policy_id=cpl.policy_id 
+		where 
+		 	cpl.policy_id=#policy_id# 
+		and 	
+		 	img.bus_type=1 			
+		 	
+	</select>
+	
+	<!-- 影像件查看中的查看投保单信息 影像类型1为投保单影像类型-->
+	<select id="viewPolicyImageForAdd" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+		select distinct
+			cpl.insbranch_id,
+			cpl.policy_code,
+			cpl.branch_id,
+			cpl.send_code,
+			cpl.policy_id,
+			branch.branch_name,
+			holder.app_name,
+			cpl.scan_time,
+			(1) bus_type
+		from 
+			 cbs_policylife cpl
+		left join sys_branch branch
+      		 on branch.branch_id = cpl.branch_id
+      	left join cbs_policylife_holder holder
+    		 on holder.policy_id=cpl.policy_id
+		where 
+		 	cpl.policy_id=#policy_id# 
+		 	
+	</select>
+	
+	<!-- 影像件查看中的查看保单信息 影像类型2为保单影像类型-->
+	<select id="queryContractForImage" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+	   select distinct
+			ccl.insbranch_id,
+			ccl.policy_code,
+			ccl.branch_id,
+			ccl.send_code,
+			ccl.policy_id,
+			branch.branch_name,
+			holder.app_name,
+			ccl.scan_time, 
+			img.bus_type
+		from 
+			 cbs_contractlife ccl
+		left join sys_branch branch
+      		 on branch.branch_id = ccl.branch_id
+      	left join cbs_contractlife_holder holder
+    		 on holder.policy_id=ccl.policy_id
+    	left join img_image img 
+    		 on img.policy_id=ccl.policy_id
+		where 
+		 	ccl.policy_id=#policy_id# 
+		and 	
+		 	img.bus_type=2
+		
+		
+	</select>
+	
+	<!-- 影像件查看中的查看保单信息 为了保单添加-->
+	<select id="viewContractImageForAdd" parameterClass="PolicyImageVoModel" resultClass="PolicyImageVoModel">
+	   select distinct
+			ccl.insbranch_id,
+			ccl.policy_code,
+			ccl.branch_id,
+			ccl.send_code,
+			ccl.policy_id,
+			branch.branch_name,
+			holder.app_name,
+			ccl.scan_time, 
+			(2) bus_type
+		from 
+			 cbs_contractlife ccl
+		left join sys_branch branch
+      		 on branch.branch_id = ccl.branch_id
+      	left join cbs_contractlife_holder holder
+    		 on holder.policy_id=ccl.policy_id
+		where 
+		 	ccl.policy_id=#policy_id# 
+	</select>
+	
+		<!-- 影像件类型查询 -->
+	<select id="getTypes"  resultClass="ImageBusTypeModel">
+		select 
+			img_type_code,
+			img_type_name
+		from img_image_bustype
+	</select>
+	
+ </sqlMap>

@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="Customer">
+   <typeAlias alias="customerModel" type="com.ca.cacore.csm.model.bo.CustomerModel"/>
+   <typeAlias alias="customerContactModel" type="com.ca.cacore.csm.model.bo.CustomerContactModel"/>
+   <typeAlias alias="customerLogModel" type="com.ca.cacore.csm.model.bo.CustomerLogModel"/>
+   <typeAlias alias="customerContactVOModel" type="com.ca.cacore.csm.model.vo.CustomerVOModel"/>
+   <typeAlias alias="viewModel" type="com.ca.cacore.csm.model.vo.CustomerViewVOModel"/>
+   <typeAlias alias="CustomerJieChuModel" type="com.ca.cacore.csm.model.bo.CustomerJieChuModel"/>
+   <typeAlias alias="InfclaimsModel" type="com.ca.cacore.csm.model.bo.InfclaimsModel"/>
+   <typeAlias alias="LastpolicyModel" type="com.ca.cacore.csm.model.vo.LastpolicyModel"/>
+   <typeAlias alias="model" type="com.ca.cacore.csm.model.vo.CustomerVOModel"/>
+
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<sql id="query_all">
+		   select distinct 
+		   cr.customer_id,
+		   cr.org_id,
+		   sh.branch_name,
+		   cr.insured_name,
+		   cr.insured_papertype,
+		   decode(cr.insured_company_type,'1','单位','2','个人') insured_company_type,
+           cr.insured_tel,
+           cr.insured_mailbox,
+		   cr.insured_cid,
+		   cr.insured_phone,
+           sh.BRANCH_PARENTID,
+           cr.home_address,
+           sh.branch_id
+           from crm_customer cr
+           left join sys_branch sh on cr.org_id=sh.branch_id
+           where 1=1 and cr.org_id in $dept_list$
+		  	<isNotEmpty prepend="and" property="org_id">
+			<!-- cr.org_id = #org_id# -->
+			cr.org_id in (  select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#org_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="insured_name">
+			cr.insured_name like  '%$insured_name$%' 
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="insured_cid">
+			cr.insured_cid = #insured_cid#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="insured_phone">
+			cr.insured_phone = #insured_phone#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="customer_id">
+			cr.customer_id = #customer_id#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="branch_id">
+			<!-- sh.branch_id = #branch_id# -->
+			sh.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="insured_company_type">
+			cr.insured_company_type = #insured_company_type#
+			</isNotEmpty>
+			
+		  order by insured_name 
+	</sql>
+	
+	
+	<!-- <![CDATA[ 
+	  select distinct br.branch_id,
+                                br.branch_name,
+                                cc.customer_type,
+                                cct.type_name,
+                                cc.customer_id,
+                                cc.name,
+                                cc.member_id,
+                                cc.gender,
+                                sg.gender_name,
+                                cc.birthday,
+                                cc.certi_type,
+                                sc.certi_type_name,
+                                cc.certi_no,
+                                cc.education2,
+                                se.education_name,
+                                cc.marital_stat,
+                                sj.jobtype_name,
+                                cc.job_code,
+                                cc.income_type,
+                                cci.incomtype_name,
+                                cc.homeplace,
+                                lf.address,
+                                lf.mobile,
+                                lf.email,
+                                sl.marital_stat_name,
+                                cc.upload_time,
+                                cc.company_name,
+                                cc.company_address,
+                                cc.company_telphone,
+                                cc.company_fax,
+                                cc.company_mobile,
+                                cc.company_postcode,
+                                cc.corporation_represen,
+                                cc.company_url,
+                                cc.company_mail,
+                                cc.company_industry,
+                                cc.corporation_represen_qq,
+                                cc.corporation_represen_wechat,
+                                cc.company_remark
+                  from crm_customer cc
+                  left join (select *
+                              from (select t.*,
+                                           row_number() over(partition by t.customer_id order by t.createdate desc) rn
+                                      from crm_customer_contact t) tou
+                             where tou.rn <= 1) lf
+                    on cc.customer_id = lf.customer_id
+                  left join cd_agreement ca
+                  on ca.agreement_no = cc.agreement_no
+                  left join sys_branch br
+                    on ca.branch_id = br.branch_id      
+                  left join crm_customer_type cct
+                    on cc.customer_type = cct.type_code
+                  left join sys_library_gender sg
+                    on cc.gender = sg.gender_code
+                  left join sys_library_certi_type sc
+                    on cc.certi_type = sc.certi_type_code
+                  left join sys_library_education se
+                    on cc.Education2 = se.education_code
+                  left join sys_library_jobtype sj
+                    on cc.Job_Type = sj.jobtype_code
+                  left join crm_customer_incomtype cci
+                    on cc.income_type = cci.incomtype_code
+                  left join sys_library_marital sl
+                    on cc.marital_stat = sl.marital_stat_code
+                    left join CBS_SMC_CMAIN csc 
+				              on csc.policyno=cc.policyno
+				            left join CBS_SMC_PMAIN csp
+				              on csp.policyno=cc.policyno
+				            left join CBS_SMC_CLAIM_ALL isca
+				              on isca.policyno=cc.policyno
+				            left join (select distinct count(claimno) a,policyno  
+				                      from CBS_SMC_CLAIM_ALL group by policyno) b
+              on b.policyno=cc.policyno  	 
+                 where 1 = 1
+              and lf.branch_id in (select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no =#emp_id#)
+        
+	]]>	
+	 <isNotEmpty prepend="and" property="insurCount">
+	      b.a = #insurCount# 
+	    </isNotEmpty>
+	     <isNotEmpty prepend="and" property="policyno">
+           (csp.policyno = #policyno#  or  csp.endorseno = #policyno#)
+         </isNotEmpty>
+	    <isNotEmpty prepend="and" property="claimno">
+	      isca.claimno = #claimno#
+	    </isNotEmpty>
+	     <isNotEmpty prepend="and" property="car_no">
+	      csc.car_no = #car_no#
+	    </isNotEmpty>
+ 		<isNotEmpty prepend="and" property="branch_id">
+			br.branch_allpath like  '%$branch_id$%' 
+		</isNotEmpty>
+			<isNotEmpty prepend="and" property="branch_id">
+				br.branch_id =#branch_id# 
+			</isNotEmpty>
+		<isNotEmpty prepend="and" property="customer_type">
+			cc.customer_type = #customer_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="customer_id">
+			cc.customer_id like '%$customer_id$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="name">
+			(cc.name like '%$name$%' ) or (cc.corporation_represen like '%$name$%')
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="member_id">
+			cc.member_id = #member_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_type">
+			cc.certi_type = #certi_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_no">
+			cc.certi_no = #certi_no#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="birthday">
+			cc.birthday = #birthday#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="mobile">
+			lf.mobile = #mobile#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="gender">
+			cc.gender = #gender#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="education2">
+			cc.education2 = #education2#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="job_type">
+			cc.job_type = #job_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="income_type">
+			cc.income_type = #income_type#
+		</isNotEmpty>
+		union all
+		<![CDATA[ 
+		select distinct                 
+			lf.branch_id
+			,br.branch_name
+			,cc.customer_type
+			,cct.type_name 
+			,cc.customer_id
+			,cc.name
+			,cc.member_id
+			,cc.gender
+			,sg.gender_name
+			,cc.birthday
+			,cc.certi_type
+			,sc.certi_type_name
+			,cc.certi_no
+			,cc.education2
+			,se.education_name
+			,cc.marital_stat
+			,sj.jobtype_name
+			,cc.job_code
+			,cc.income_type
+			,cci.incomtype_name
+			,cc.homeplace
+			,lf.address
+			,lf.mobile
+			,lf.email
+			,sl.marital_stat_name
+			,cc.upload_time
+			,cc.company_name
+				,cc.company_address
+				,cc.company_telphone
+				,cc.company_fax
+				,cc.company_mobile
+				,cc.company_postcode
+				,cc.corporation_represen
+				,cc.company_url
+				,cc.company_mail
+				,cc.company_industry
+				,cc.corporation_represen_qq
+				,cc.corporation_represen_wechat
+				,cc.company_remark 
+		from crm_customer cc 
+		    left join 
+		    (select * from 
+		    (select t.*,row_number() over(partition by t.customer_id order by t.createdate desc ) rn from crm_customer_contact t ) tou 
+		    where tou.rn <=1) lf
+ 				on cc.customer_id = lf.customer_id 
+ 			left join sys_branch br 
+          		on lf.branch_id=br.branch_id
+          	left join crm_customer_type cct 
+          		on cc.customer_type=cct.type_code
+          	left join sys_library_gender sg
+          		on cc.gender = sg.gender_code 
+          	left join sys_library_certi_type sc
+          		on cc.certi_type = sc.certi_type_code 
+          	left join sys_library_education se
+          		on cc.Education2 = se.education_code 
+          	left join sys_library_jobtype sj 
+          		on cc.Job_Type = sj.jobtype_code 
+          	left join crm_customer_incomtype cci
+          		on cc.income_type = cci.incomtype_code
+          	left join sys_library_marital sl 
+          		on cc.marital_stat = sl.marital_stat_code
+          	left join CBS_SMC_CMAIN csc 
+              on csc.policyno=cc.policyno
+            left join CBS_SMC_PMAIN csp
+              on csp.policyno=cc.policyno
+            left join CBS_SMC_CLAIM_ALL isca
+              on isca.policyno=cc.policyno
+            left join (select distinct count(claimno) a,policyno  
+                      from CBS_SMC_CLAIM_ALL group by policyno) b
+              on b.policyno=cc.policyno  	 
+ 		where 1 = 1
+ 		and lf.branch_id in (select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no =#emp_id#)
+ 		 ]]>	
+	    <isNotEmpty prepend="and" property="insurCount">
+	      b.a = #insurCount# 
+	    </isNotEmpty>
+	     <isNotEmpty prepend="and" property="policyno">
+           (csp.policyno = #policyno#  or  csp.endorseno = #policyno#)
+         </isNotEmpty>
+	    <isNotEmpty prepend="and" property="claimno">
+	      isca.claimno = #claimno#
+	    </isNotEmpty>
+	     <isNotEmpty prepend="and" property="car_no">
+	      csc.car_no = #car_no#
+	    </isNotEmpty>
+ 		<isNotEmpty prepend="and" property="branch_id">
+			br.branch_allpath like  '%$branch_id$%' 
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			br.branch_id =#branch_id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="customer_type">
+			cc.customer_type = #customer_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="customer_id">
+			cc.customer_id like '%$customer_id$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="name">
+			(cc.name like '%$name$%' ) or (cc.corporation_represen like '%$name$%')
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="member_id">
+			cc.member_id = #member_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_type">
+			cc.certi_type = #certi_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_no">
+			cc.certi_no = #certi_no#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="birthday">
+			cc.birthday = #birthday#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="mobile">
+			lf.mobile = #mobile#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="gender">
+			cc.gender = #gender#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="education2">
+			cc.education2 = #education2#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="job_type">
+			cc.job_type = #job_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="income_type">
+			cc.income_type = #income_type#
+		</isNotEmpty>
+		 order by cc.modifydate desc
+        ,b.a 删除一个查询内容，去除重复		
+	</sql>
+	 -->
+	<!-- 查询页数 -->
+	<select id="queryCount" parameterClass="customerContactVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		)
+	</select>
+	
+	<!--查询所有信息   heier-->
+	<select id="queryAll" parameterClass="customerContactVOModel" resultClass="customerContactVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!--为导出用户信息查询所有信息-->
+	<select id="queryCustomerForExport" parameterClass="customerContactVOModel" resultClass="customerContactVOModel">		
+		<include refid="query_all"/>		
+	</select>
+	
+	<!-- 查询 -->
+	<select id="queryRigid" parameterClass="customerModel" resultClass="customerModel">
+		select * from CRM_Customer t where 1=1 
+		<isNotEmpty prepend="and" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+	</select>
+	
+	
+	<!-- 查询详细信息 -->
+	<select id="queryView" parameterClass="customerModel" resultClass="viewModel">
+	   select distinct cc.customer_id
+	        ,cc.name
+	        ,cc.member_id
+	        ,cc.title
+	        ,cc.gender
+	        ,cc.birthday
+	        ,cc.customer_type
+	        ,cc.certi_type
+	        ,cc.certi_no
+	        ,cc.certi_validdate
+	        ,cc.education
+	        ,cc.nationality
+	        ,cc.nation
+	        ,cc.homeplace
+	        ,cc.seat_address
+	        ,cc.height
+	        ,cc.weight
+	        ,cc.political
+	        ,cc.education2
+	        ,cc.marital_stat
+	        ,cc.health
+	        ,cc.job_type
+	        ,cc.job_code
+	        ,cc.income_type
+	        ,cc.bank_code
+	        ,cc.bank_account_no
+	        ,cc.bank_account_name
+	        ,cc.is_telmsgservice
+	        ,cc.remark
+	        ,br.branch_name
+	        ,lf.seq_id as customercontact_seq_id
+	        ,lf.branch_id
+	        ,lf.address
+	        ,lf.zip
+	        ,lf.mobile
+	        ,lf.fax
+	        ,lf.telphone
+	        ,lf.job_tel
+		    ,lf.email
+		    ,lf.job_com
+		    ,lf.modifydate
+		     ,att.file_id<!-- 附件id -->
+	         ,att.file_name <!-- 附件名称 -->
+	         ,att.bus_id
+	         ,cc.upload_time
+		    from crm_customer cc 
+		    left join sys_attachment att on att.bus_id = cc.customer_id and att.attachment_type = #attachment_type#
+		    left join 
+		    	(select * from 
+		    	(select t.*,row_number() over(partition by t.customer_id order by t.createdate desc ) rn from crm_customer_contact t ) tou 
+		    	where   <![CDATA[ tou.rn <=1]]>) lf
+ 				on cc.customer_id = lf.customer_id
+ 			left join sys_branch br 
+          		on lf.branch_id=br.branch_id
+ 			where 1 = 1 
+ 			and cc.customer_id = #customer_id#
+		
+		
+	</select>
+	<!--根据客户ID查询客户接触信息  -->
+	<select id="queryForJieChu" parameterClass="customerModel" resultClass="viewModel">
+	 <![CDATA[	select distinct t.name,
+         t.customer_id, 
+         lf.branch_id,
+         t.corporation_represen
+    from crm_customer t 
+      left join 
+		    	(select * from 
+		    	(select t.*,row_number() over(partition by t.customer_id order by t.createdate desc ) rn from crm_customer_contact t ) tou 
+		    	where tou.rn <=1) lf
+ 				on t.customer_id = lf.customer_id
+ 			left join sys_branch br 
+          		on lf.branch_id=br.branch_id
+      
+    where  t.customer_id = #customer_id# ]]>
+		
+	</select>
+	<!--查询理赔信息  -->
+	<select  id="queryInfclaims" parameterClass="customerModel" resultClass="InfclaimsModel">
+	     select cc.customer_id,isca.policyno, isca.damagedate event_date, isca.claimno claims_no,
+               nvl(isoa.os_loss,0.00)  undetermined_money,nvl(issa.settled_loss,0.00) determined_money,
+                decode(isca.casetypecode,'1','结案','未结案')  claims_status_name
+         from CBS_SMC_CLAIM_ALL isca 
+         left join CBS_SMC_OSLOSS_ALL isoa on isoa.claimno=isca.claimno
+         left join CBS_SMC_SETTLE_ALL issa on issa.claimno=isoa.claimno
+         left join CRM_CUSTOMER cc on isca.policyno=cc.policyno
+         where 1=1
+		and cc.customer_id = #customer_id#
+	</select>
+	 <!--查询客户接触信息  -->
+	 <select id="queryJiechu" parameterClass="customerModel" resultClass="CustomerJieChuModel">
+				select cca.customer_id, cca.action_time, cca.action_notes, nvl(cc.name,cc.corporation_represen) name
+		  from crm_customer_action cca
+		  left join crm_customer cc
+		    on cca.customer_id = cc.customer_id
+		 where 1 = 1
+		<isNotEmpty prepend="and" property="customer_id">
+			cc.customer_id = #customer_id#
+		</isNotEmpty>
+	</select> 
+	<!--承保信息  -->
+	<select id="queryLast" parameterClass="customerModel" resultClass="LastpolicyModel">
+						 <![CDATA[	select inf.riskname,
+					       inf.startdate,
+					       inf.enddate,
+					       (case
+					         when enddate > sysdate then
+					          '在保'
+					         else
+					          '未保'
+					       end) as status,
+					       inf.policyno,
+					       inf.netpremium
+					  from CBS_SMC_CMAIN inf left join crm_customer cc
+                      on cc.policyno = inf.policyno where 1=1]]>
+       <isNotEmpty prepend="and" property="customer_id">
+			cc.customer_id = #customer_id#
+	   </isNotEmpty>
+	</select>
+	
+	<!-- 录入客户接触信息 -->
+	 <insert id="addCustomerJieChu" parameterClass="CustomerJieChuModel">
+		insert into CRM_Customer_Action t(
+		       	t.seq_id
+				,t.branch_id
+				,t.customer_id
+				,t.action_time
+				,t.action_notes
+				,t.remark
+				,t.createuser
+				,t.createdate
+				,t.modifyuser
+				,t.modifydate
+	            ) 
+	            values 
+	            (
+	           	seq_id.nextval
+				,#branch_id#
+				,#customer_id#
+				,#action_time#
+				,#action_notes#
+				,#remark#
+				,#createuser#
+				,#createdate#
+				,#modifyuser#
+				,#modifydate#
+	       )
+	</insert>
+	<!-- 查看CutomerModel信息 -->
+	<select id="queryCustomerModel" parameterClass="customerModel" resultClass="viewModel">
+		select 
+			 t.seq_id
+			,t.branch_id
+			,sb.branch_name
+		    ,t.customer_id
+		    ,t.name
+		    ,t.member_id
+		    ,t.title
+		    ,t.gender
+		    ,t.birthday
+		    ,t.customer_type
+		    ,t.certi_type
+		    ,t.certi_no
+		    ,t.certi_validdate
+		    ,t.education
+		    ,t.nationality
+		    ,t.nation
+		    ,t.homeplace
+		    ,t.seat_address
+		    ,t.height
+		    ,t.weight
+		    ,t.political
+		    ,t.education2
+		    ,t.marital_stat
+		    ,t.health
+		    ,t.job_type
+		    ,t.job_code
+		    ,t.income_type
+		    ,t.bank_code
+		    ,t.bank_account_no
+		    ,t.bank_account_name
+		    ,t.is_telmsgservice
+		    ,t.remark 
+		    ,t.createuser
+		    ,t.createdate
+		    ,t.modifyuser
+		    ,t.modifydate
+		     ,att.file_id<!-- 附件id -->
+	         ,att.file_name <!-- 附件名称 -->
+	         ,att.bus_id
+	         ,t.upload_time
+	            ,t.company_name
+				,t.company_address
+				,t.company_telphone
+				,t.company_fax
+				,t.company_mobile
+				,t.company_postcode
+				,t.corporation_represen
+				,t.company_url
+				,t.company_mail
+				,t.company_industry
+				,t.corporation_represen_qq
+				,t.corporation_represen_wechat
+				,t.company_remark 
+		    from CRM_Customer t  
+		    left join sys_branch sb
+		    on sb.branch_id=t.branch_id 
+		    left join sys_attachment att 
+		    on att.bus_id = t.customer_id and att.attachment_type = #attachment_type#
+		    where 1 = 1  
+		<isNotEmpty prepend="and" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_type">
+			t.certi_type = #certi_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="certi_no">
+			t.certi_no = #certi_no#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="name">
+			t.name = #name#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="birthday">
+			t.birthday = #birthday#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="gender">
+			t.gender = #gender#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+	</select>
+	
+	
+	<!-- 查看CutomerContactModel信息 -->
+	<select id="queryCustomerContactModel" parameterClass="customerModel" resultClass="customerContactModel">
+		select distinct
+		t.customer_id
+		    ,t.branch_id
+		    ,br.branch_name
+		    ,t.address
+		    ,t.zip
+		    ,t.mobile
+		    ,t.fax
+		    ,t.telphone
+		    ,t.job_tel
+		    ,t.email
+		    ,t.job_com
+		    ,t.modifydate 
+		    ,t.corporation_contact_person
+            ,t.corporation_contact_mobile
+            ,t.corporation_contact_qq    
+            ,t.corporation_contact_wechat  
+		    from  
+		    CRM_Customer_Contact t 
+			left join sys_branch br 
+	          		on t.branch_id=br.branch_id 
+		    where 1 = 1 
+		<isNotEmpty prepend="and" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 查看CutomerContactModel信息 -->
+	<select id="queryNewestCustomerContact" parameterClass="customerModel" resultClass="customerContactModel">
+		select 
+		    t.branch_id
+		    ,t.address
+		    ,t.zip
+		    ,t.mobile
+		    ,t.fax
+		    ,t.telphone
+		    ,t.job_tel
+		    ,t.email
+		    ,t.job_com
+		    ,t.modifydate
+		    from  
+		    CRM_Customer_Contact t 
+		    where 1 = 2  
+		<isNotEmpty prepend="or" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+	</select>
+	
+	<!--查询客户主键用于录入到客户日志信息表中-->
+	<select id="querySeqId" parameterClass="customerModel" resultClass="Integer">
+		select 
+			seq_id 
+		from 
+			crm_customer t 
+			where 1 = 1 
+		<isNotEmpty prepend="and" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+	</select>
+	
+ 	<!--新增客户联系信息-->
+	<insert id="insertCustomerContact" parameterClass="customerContactModel" >
+	  insert into crm_customer_contact t(
+		       	t.seq_id
+				,t.branch_id
+				,t.customer_id
+				,t.address
+				,t.zip
+				,t.mobile
+				,t.fax
+				,t.telphone
+				,t.email
+				,t.job_com
+				,t.job_tel
+				,t.status
+				,t.remark
+				,t.log_seq_id
+				,t.log_bustype
+				,t.log_busdate
+				,t.log_date
+				,t.log_remark
+				,t.createuser
+				,t.createdate
+				,t.modifyuser
+				,t.modifydate
+				,corporation_contact_person
+                ,corporation_contact_mobile
+                ,corporation_contact_qq    
+                ,corporation_contact_wechat
+	            ) 
+	            values 
+	            (
+	           	seq_id.nextval
+				,#branch_id#
+				,#customer_id#
+				,#address#
+				,#zip#
+				,#mobile#
+				,#fax#
+				,#telphone#
+				,#email#
+				,#job_com#
+				,#job_tel#
+				,#status#
+				,#remark#
+				,#log_seq_id#
+				,#log_bustype#
+				,sysdate
+				,sysdate
+				,#log_remark#
+				,#createuser#
+				,sysdate
+				,#modifyuser#
+				,sysdate
+				,#corporation_contact_person#
+                ,#corporation_contact_mobile#
+                ,#corporation_contact_qq#    
+                ,#corporation_contact_wechat#
+	       )
+	</insert>
+     
+     <!--新增客户信息-->
+	<insert id="insertCustomer" parameterClass="customerModel" >
+ 		insert into crm_customer t(
+		       seq_id
+		       ,branch_id
+		   	   ,customer_id
+			   ,name
+			   ,member_id
+			   ,title
+			   ,gender
+			   ,birthday
+			   ,customer_type
+			   ,certi_type
+			   ,certi_no
+			   ,certi_validdate
+			   ,education
+			   ,nationality
+			   ,nation
+			   ,homeplace
+			   ,seat_address
+			   ,height
+			   ,weight
+			   ,political
+			   ,education2
+			   ,marital_stat
+			   ,health
+			   ,job_type
+			   ,job_code
+			   ,income_type
+			   ,bank_code
+			   ,bank_account_no
+			   ,bank_account_name
+			   ,status
+			   ,remark
+			   ,is_telmsgservice
+			   ,createuser
+			   ,createdate
+			   ,modifyuser
+			   ,modifydate
+			   ,upload_time
+			    ,company_name
+				,company_address
+				,company_telphone
+				,company_fax
+				,company_mobile
+				,company_postcode
+				,corporation_represen
+				,company_url
+				,company_mail
+				,company_industry
+				,corporation_represen_qq
+				,corporation_represen_wechat
+				,company_remark
+	            ) 
+	            values 
+	            (
+	           seq_id.nextval
+	           ,#branch_id#
+	           ,#customer_id#
+			   ,#name#
+			   ,#member_id#
+			   ,#title#
+			   ,#gender#
+			   ,#birthday#
+			   ,#customer_type#
+			   ,#certi_type#
+			   ,#certi_no#
+			   ,#certi_validdate#
+			   ,#education#
+			   ,#nationality#
+			   ,#nation#
+			   ,#homeplace#
+			   ,#seat_address#
+			   ,#height#
+			   ,#weight#
+			   ,#political#
+			   ,#education2#
+			   ,#marital_stat#
+			   ,#health#
+			   ,#job_type#
+			   ,#job_code#
+			   ,#income_type#
+			   ,#bank_code#
+			   ,#bank_account_no#
+			   ,#bank_account_name#
+			   ,#status#
+			   ,#remark#
+			   ,#is_telmsgservice#
+			   ,#createuser#
+			   ,sysdate
+			   ,#modifyuser#
+			   ,sysdate
+			   ,#upload_time#
+			    ,#company_name#
+				,#company_address#
+				,#company_telphone#
+				,#company_fax#
+				,#company_mobile#
+				,#company_postcode#
+				,#corporation_represen#
+				,#company_url#
+				,#company_mail#
+				,#company_industry#
+				,#corporation_represen_qq#
+				,#corporation_represen_wechat#
+				,#company_remark#
+	       )
+	</insert>
+	
+	<!--插入到客户信息日志表中 -->
+	<insert id="insertCustomerLog" parameterClass="customerLogModel">
+				insert into crm_customer_log t
+			  (seq_id,
+			   customer_id,
+			   name,
+			   member_id,
+			   title,
+			   gender,
+			   birthday,
+			   customer_type,
+			   certi_type,
+			   certi_no,
+			   certi_validdate,
+			   education,
+			   nationality,
+			   nation,
+			   homeplace,
+			   seat_address,
+			   height,
+			   weight,
+			   political,
+			   education2,
+			   marital_stat,
+			   health,
+			   job_type,
+			   job_code,
+			   income_type,
+			   bank_code,
+			   bank_account_no,
+			   bank_account_name,
+			   is_telmsgservice,
+			   status,
+			   remark,
+			   log_seq_id,
+			   log_bustype,
+			   log_busdate,
+			   log_date,
+			   log_remark,
+			   createuser,
+			   createdate,
+			   modifyuser,
+			   modifydate
+		        ,company_name
+				,company_address
+				,company_telphone
+				,company_fax
+				,company_mobile
+				,company_postcode
+				,corporation_represen
+				,company_url
+				,company_mail
+				,company_industry
+				,corporation_represen_qq
+				,corporation_represen_wechat
+				,company_remark
+		   )
+		values
+			  (seq_id.nextval,
+			   #customer_id#,
+			   #name#,
+			   #member_id#,
+			   #title#,
+			   #gender#,
+			   #birthday#,
+			   #customer_type#,
+			   #certi_type#,
+			   #certi_no#,
+			   #certi_validdate#,
+			   #education#,
+			   #nationality#,
+			   #nation#,
+			   #homeplace#,
+			   #seat_address#,
+			   #height#,
+			   #weight#,
+			   #political#,
+			   #education2#,
+			   #marital_stat#,
+			   #health#,
+			   #job_type#,
+			   #job_code#,
+			   #income_type#,
+			   #bank_code#,
+			   #bank_account_no#,
+			   #bank_account_name#,
+			   #is_telmsgservice#,
+			   #status#,
+			   #remark#,
+			   #log_seq_id#,
+			   #log_bustype#,
+			   sysdate,
+			   sysdate,
+			   #log_remark#,
+			   #createuser#,
+			   sysdate,
+			   #modifyuser#,
+			   sysdate
+		        ,#company_name#
+				,#company_address#
+				,#company_telphone#
+				,#company_fax#
+				,#company_mobile#
+				,#company_postcode#
+				,#corporation_represen#
+				,#company_url#
+				,#company_mail#
+				,#company_industry#
+				,#corporation_represen_qq#
+				,#corporation_represen_wechat#
+				,#company_remark#
+		   )
+
+	</insert>
+	   
+    <!--更新客户信息-->
+    
+    <update id="updateCustomer" parameterClass="customerModel" >
+		update CRM_Customer set customer_id=#customer_id#
+		                     ,name=#name#
+		                     ,member_id=#member_id#
+		                     ,title=#title#
+		                     ,gender=#gender#
+		                     ,birthday=#birthday#
+		                     ,customer_type=#customer_type#
+		                     ,certi_type=#certi_type#
+		                     ,certi_no=#certi_no#
+		                     ,certi_validdate=#certi_validdate#
+		                     ,education=#education#
+		                     ,nationality=#nationality#
+		                     ,nation=#nation#
+		                     ,homeplace=#homeplace#
+		                     ,seat_address=#seat_address#
+		                     ,height=#height#
+		                     ,weight=#weight#
+		                     ,political=#political#
+		                     ,education2=#education2#
+		                     ,marital_stat=#marital_stat#
+		                     ,health=#health#
+		                     ,job_type=#job_type#
+		                     ,job_code=#job_code#
+		                     ,income_type=#income_type#
+		                     ,bank_code=#bank_code#
+		                     ,bank_account_no=#bank_account_no#
+		                     ,bank_account_name=#bank_account_name#
+		                     ,status=#status#
+		                     ,remark=#remark#
+		                     ,is_telmsgservice=#is_telmsgservice#
+		                     ,createuser=#createuser#
+		                     ,createdate=#createdate#
+		                     ,modifyuser=#modifyuser#
+		                     ,modifydate=sysdate
+		                     ,company_name=#company_name#
+							,company_address=#company_address#
+							,company_telphone=#company_telphone#
+							,company_fax=#company_fax#
+							,company_mobile=#company_mobile#
+							,company_postcode=#company_postcode#
+							,corporation_represen=#corporation_represen#
+							,company_url=#company_url#
+							,company_mail=#company_mail#
+							,company_industry=#company_industry#
+							,corporation_represen_qq=#corporation_represen_qq#
+							,corporation_represen_wechat=#corporation_represen_wechat#
+							,company_remark=#company_remark#
+		                      where seq_id=#seq_id#
+	</update>
+	
+	
+	
+	<!--更新联系人信息-->
+    <update id="updateCustomerContact" parameterClass="customerContactModel" >
+		update CRM_Customer_Contact set 
+		                     branch_id=#branch_id#
+		                     ,address=#address#
+		                     ,zip=#zip#
+		                     ,mobile=#mobile#
+		                     ,telphone=#telphone#
+		                     ,email=#email#
+		                     ,job_com=#job_com#
+		                     ,job_tel=#job_tel#
+		                     ,status=#status#
+		                     ,remark=#remark#
+		                     ,log_seq_id=#log_seq_id#
+		                     ,log_bustype=#log_bustype#
+		                     ,log_busdate=sysdate
+		                     ,log_date=sysdate
+		                     ,log_remark=#log_remark#
+		                     ,createuser=#createuser#
+		                     ,createdate=sysdate
+		                     ,modifyuser=#modifyuser#
+		                     ,modifydate=sysdate
+		                     ,corporation_contact_person=#corporation_contact_person#
+							,corporation_contact_mobile=#corporation_contact_mobile#
+							,corporation_contact_qq=#corporation_contact_qq#
+							,corporation_contact_wechat=#corporation_contact_wechat#
+		                      where customer_id=#customer_id#
+	</update>
+
+	<!-- 查看CutomerContactModel信息 -->
+	<select id="getCustomerNewInfo" parameterClass="customerContactVOModel"
+		resultClass="customerContactVOModel">
+		select ccc.*, g.gender_name, ct.certi_type_name, rownum
+		from (select cus.gender,
+		cus.certi_type,
+		cus.certi_no,
+		cus.customer_id,
+		cus.customer_type,
+		cus.name,
+		cus.birthday,
+		cus.certi_validdate,
+		cus.education,
+		cus.nationality,
+		cus.nation,
+		cus.homeplace,
+		cus.seat_address,
+		cus.height,
+		cus.weight,
+		cus.political,
+		cus.marital_stat,
+		cus.health,
+		cus.education2,
+		cus.job_type,
+		cus.job_code,
+		cus.income_type,
+		cus.bank_code,
+		cus.bank_account_no,
+		cus.bank_account_name,
+		cus.is_telmsgservice,
+		cus.status,
+		con.branch_id,
+		con.log_bustype,
+		con.log_remark,
+		con.address,
+		con.zip,
+		con.mobile,
+		con.fax,
+		con.telphone,
+		con.email,
+		con.job_com,
+		con.job_tel,
+		con.log_seq_id,
+		cus.upload_time
+		from CRM_Customer cus
+		left join CRM_Customer_Contact con
+		on cus.customer_id = con.customer_id
+		where con.branch_id = #branch_id#
+		and con.customer_id = #customer_id#
+		order by con.modifydate desc) ccc
+		inner join sys_library_gender g
+		on g.gender_code = ccc.gender
+		inner join sys_library_certi_type ct
+		on ct.certi_type_code = ccc.certi_type
+		where rownum = 1
+	</select>
+	
+	<!-- 校验会员编号是否存在用于客户添加及修改 -->
+	<select id="checkMemberId" parameterClass="customerModel" resultClass="int">
+		select count(seq_id) from crm_customer where member_id = #member_id#
+	</select>
+	
+	<!-- 查询客户最新的一条联系信息 -->
+	<select id="getNewestCustomerContact" parameterClass="customerContactModel" resultClass="customerContactModel">
+		select 
+		    t.branch_id
+		    ,t.address
+		    ,t.zip
+		    ,t.mobile
+		    ,t.fax
+		    ,t.telphone
+		    ,t.job_tel
+		    ,t.email
+		    ,t.job_com
+		    ,t.modifydate
+		    from  
+		    crm_customer_contact t 
+		    ,(select max(modifydate) modifydate  from crm_customer_contact where customer_id =#customer_id# ) time
+		    where t.modifydate= time.modifydate
+	</select>
+	
+	<!-- 更新附件上传时间 -->
+	<update id="updateCustomterTime" parameterClass="customerModel">
+	 update crm_customer
+	      set
+	          upload_time = sysdate ,                        
+	          modifyDate = sysdate
+        where certi_no = #certi_no#
+	</update>
+
+	<select id="getClasscode" parameterClass="customerModel" resultClass="customerModel">
+		   select  cc.name,
+			       cc.certi_no,
+			       cc.policyno,
+			       (case
+			         when csr.businesstype = '财产险' then
+			          4
+			         when csr.businesstype = '车险' then
+			          1
+			         when csr.businesstype = '意外险' then
+			          2  
+			         when csr.businesstype = '货运险' then
+			          3
+			       end) businesstype 
+  			from CRM_CUSTOMER cc
+  			left join CBS_SMC_CMAIN csc
+    			on csc.policyno = cc.policyno
+  			left join CBS_SMC_RISKCODE csr
+    			on csr.riskcode = csc.riskcode
+		   where cc.policyno=#policyno#
+	</select>
+	
+	<!-- 添加-->	
+    <insert id="queryCustomer1" parameterClass="model" >
+	      insert into crm_customer (seq_id,org_id,insured_cid,insured_name,insured_company_type,<!--insured_papertype,-->	home_address,insured_mailbox,insured_phone,insured_tel,customer_id) 
+          values (seq_id.nextval,#branch_id#,#insured_cid#,#insured_name#,#insured_company_type#,<!--#insured_papertype#,-->#home_address#,#insured_mailbox#,#insured_phone#,#insured_tel#,#customer_id#)
+    </insert>
+        
+    
+     <!-- 修改 -->
+	<update id="modifySave" parameterClass="model">
+		update crm_customer
+		set    insured_name=#insured_name#,
+			   insured_cid=#insured_cid#,
+			   insured_company_type=#insured_company_type#,
+		       home_address=#home_address#,
+			   insured_mailbox=#insured_mailbox#,
+			   insured_phone=#insured_phone#,
+			   insured_tel=#insured_tel#,
+			   org_id=#branch_id#
+		where  customer_id =#customer_id# 
+	</update>
+	<!--  查询单个   -->
+	<select id="goModify" parameterClass ="java.lang.String" resultClass="model">
+	   select distinct 
+       cr.customer_id,
+       cr.org_id,
+       branch_name,
+       cr.insured_name,
+       cr.insured_cid,
+       cr.insured_phone,
+       cr.insured_company_type,
+       cr.insured_mailbox,
+       cr.insured_tel,
+       sh.BRANCH_PARENTID,
+       cr.home_address,
+       sh.branch_id
+       FROM crm_customer cr
+       left join sys_branch sh on cr.org_id=sh.branch_id
+       where customer_id =#customer_id#
+	
+	</select>
+	<!-- 查询客户总数 -->
+	<select id="customerCount" parameterClass ="model" resultClass="int">
+	    select count(seq_id)+1 from crm_customer
+	     where insured_papertype=#insured_papertype# 
+	</select>
+	
+	<delete id="deleteCustomerContanct" parameterClass="customerModel" >
+	  delete from crm_customer_contact where customer_id=#customer_id#
+	</delete>
+</sqlMap>

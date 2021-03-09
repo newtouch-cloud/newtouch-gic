@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="policypersonmanager">
+<typeAlias alias="PolicyManagerPerson" type="com.newtouch.customerManager.model.IPolicyManagerPersonModel"/>
+	<sql id="query_head">
+		select * from (select row_.*, rownum rownum_ from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	<sql id ="queryAll" >
+		select ipm.id,
+				ipm.province_orgname                ,
+				ipm.province_orgid                ,
+			ipm.city_orgname                    ,
+			ipm.city_orgid                      ,
+			ipm.area_orgid                      ,
+			ipm.area_orgname                    ,
+			sys.branch_name sale_org_name       ,
+			sys.branch_id sale_org_id           ,
+			ipm.settled_date                    ,
+			ipm.policy_no                       ,
+			ipm.insure_no                       ,
+			ipm.center_risk_flag                ,
+			ipm.center_risk_name                ,
+			ipm.center_risk_id                  ,
+			ipm.applicant_name                  ,
+			ipm.insured_name                    ,
+			ipm.insure_date                     ,
+			ipm.paper_date                      ,
+			ipm.cancel_date                     ,
+			ipm.cancel_reason                   ,
+			ipm.pay_fee_type                    ,
+			ipm.pay_date                        ,
+			ipm.insured_during                  ,
+			ipm.pay_type                        ,
+			ipm.premium                         ,
+			ipm.amount                          ,
+			ipm.fee_ratio                       ,
+			ipm.new_paper_fee                   ,
+			ipm.renew_paper_fee                 ,
+			ipm.total_fee                       ,
+			ipm.owner_name                      ,
+			ipm.owner_no                        ,
+			ipm.agent_fee_rate                  ,
+			ipm.agent_fee                       ,
+			ipm.business_flag                   ,
+			ipm.inter_flag                      ,
+			ipm.endor_no                        ,
+			ipm.endor_date                      ,
+			ipm.change_nu						,
+			ipm.data_type						,
+			ipm.center_risk_type       ,
+			ipm.long_risk_flag         ,
+			ipm.renew_flag             ,
+			ipm.applicant_id           ,
+			ipm.insured_id             ,
+			ipm.insured_during_flag    ,
+			ipm.pay_fee_year           ,
+			ipm.risk_year              ,
+			ipm.endor_valid     	   ,
+			ipm.settled_time<!-- 结算时间 -->       
+			<!-- sa.settle_time settled_time,
+			sa.settle_date settle_date -->
+			<!-- case when sa.settle_time is null then sa.settle_date
+			else to_char(sa.settle_time,'yyyy/mm/dd') end settle_date -->       
+	from ins_cmain_person  ipm
+	left join sys_branch sys
+	on ipm.channel_no = sys.channelcode and sys.status = '1'
+	<!-- left join sys_policy_accounts sa
+    on sa.policy_no=ipm.policy_no and ( (sa.endor_no is null and ipm.endor_no  is null ) or (sa.endor_no = ipm.endor_no)) -->
+	where 1 = 1
+	  
+     <isNotEmpty property= "policy_no">
+    	and  ipm.policy_no = #policy_no#
+    </isNotEmpty >
+    
+    <isNotEmpty  property="check_date_L" >
+        	and ipm.paper_date = #check_date_L#
+    </isNotEmpty>
+     <!-- <isNotEmpty  property="check_date_G" >
+         	and #check_date_G# >=ipm.paper_date 
+    </isNotEmpty> -->
+    
+    <isNotEmpty  property="createDateL" >
+        	and ipm.insure_date  >= #createDateL#
+    </isNotEmpty>
+    <isNotEmpty  property="createDateG" >
+         	and #createDateG# >=ipm.insure_date 
+    </isNotEmpty>
+    
+     <isNotEmpty property= "center_risk_id">
+    	and  ipm.center_risk_id = #center_risk_id#
+    </isNotEmpty >
+    <isNotEmpty property= "settled_date">
+    	and ipm.settled_date = #settled_date#
+    	<!-- and sa.settle_date = #settled_date# -->
+    	<!-- and (case when sa.settle_time is null then sa.settle_date
+		else to_char(sa.settle_time,'yyyy-mm') end) = #settled_date# -->
+    </isNotEmpty >
+    	 <isNotEmpty  property="branch_id_Branch" >
+         <!-- and ipm.sale_org_id = #branch_id_Branch# -->
+         and sys.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id_Branch#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+    </isNotEmpty>
+    <isNotEmpty  property="branch_id" >
+         <!-- and ipm.org_id = #branch_id# -->
+         and ipm.org_id in (select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#branch_id# 
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+    </isNotEmpty> 
+    <isNotEmpty property= "user_jurisdiction">
+    and sys.branch_id in (SELECT ID
+          FROM (SELECT DISTINCT BRANCH_ID       ID,
+                                BRANCH_NAME     NAME,
+                                BRANCH_PARENTID PID
+                  FROM SYS_BRANCH T
+                 WHERE T.STATUS = '1'
+                 START WITH T.BRANCH_ID IN
+                            (SELECT TDA.DATA_AUTH_NO
+                               FROM T_DATA_AUTH TDA
+                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                AND TDA.OBJECT_NO = #user_jurisdiction#
+                                AND OBJECT_TYPE = 'USER')
+                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID))
+    </isNotEmpty >
+    order by ipm.policy_no, ipm.endor_no
+    </sql>
+	<select id = "inPolicyQuery_count" parameterClass="PolicyManagerPerson" resultClass="int">
+		select count(*) from (
+		<include refid="queryAll"/>
+		)
+	</select>
+	<select id = "InPolicyQuery" parameterClass="PolicyManagerPerson" resultClass="PolicyManagerPerson">
+		<include refid="query_head"/>
+		<include refid="queryAll"/>
+		<include refid="query_foot"/>
+	</select>
+	<select id = "InPolicyMsg" parameterClass="PolicyManagerPerson" resultClass="PolicyManagerPerson">
+		select 
+			ipm.id
+			ipm.province_orgname                ,
+			ipm.province_orgid                  ,
+			ipm.city_orgname                    ,
+			ipm.city_orgid                      ,
+			ipm.area_orgid                      ,
+			ipm.area_orgname                    ,
+			ipm.sale_org_name                   ,
+			ipm.sale_org_id                     ,
+			ipm.settled_date                    ,
+			ipm.policy_no                       ,
+			ipm.insure_no                       ,
+			ipm.center_risk_flag                ,
+			ipm.center_risk_name                ,
+			ipm.center_risk_id                  ,
+			ipm.applicant_name                  ,
+			ipm.insured_name                    ,
+			ipm.insure_date                     ,
+			ipm.paper_date                      ,
+			ipm.cancel_date                     ,
+			ipm.cancel_reason                   ,
+			ipm.pay_fee_type                    ,
+			ipm.pay_date                        ,
+			ipm.insured_during                  ,
+			ipm.pay_type                        ,
+			ipm.premium                         ,
+			ipm.amount                          ,
+			ipm.fee_ratio                       ,
+			ipm.new_paper_fee                   ,
+			ipm.renew_paper_fee                 ,
+			ipm.total_fee                       ,
+			ipm.owner_name                      ,
+			ipm.owner_no                        ,
+			ipm.agent_fee_rate                  ,
+			ipm.agent_fee                       ,
+			ipm.business_flag                   ,
+			ipm.inter_flag                      ,
+			ipm.endor_no                        ,
+			ipm.endor_date                      ,
+			ipm.change_nu						,
+			ipm.data_type						,
+			ipm.center_risk_type       ,
+			ipm.long_risk_flag         ,
+			ipm.renew_flag             ,
+			ipm.applicant_id           ,
+			ipm.insured_id             ,
+			ipm.insured_during_flag    ,
+			ipm.pay_fee_year           ,
+			ipm.risk_year              ,
+			ipm.endor_valid             
+	from ins_cmain_person ipm 
+		        where  ipm.policy_no =#policy_no#
+	</select>
+</sqlMap>

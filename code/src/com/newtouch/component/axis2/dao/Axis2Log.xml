@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="axis2Log">
+   <typeAlias alias="axis2Log"  type="com.newtouch.component.axis2.model.Axis2Log"/>
+	
+	<!-- 记录webservice访问日志信息  -->
+	<insert id="insertAxis2Log" parameterClass="axis2Log" >
+	    insert into axis2_log(
+			seq_id,
+			checkflag,
+			resultcode,
+			resultmsg,
+			transtype,
+			agentcode,
+			agentlicno,
+			agentgroup,
+			transdate,
+			transtime,
+			dealdate,
+			dealtime,
+			service,
+			receiveXml,
+			returnXml
+					) values(
+			seq_id.nextval,
+			#checkFlag#,
+			#resultCode#,
+			#resultMsg#,
+			#transType#,
+			#agentCode#,
+			#agentLicNo#,
+			#agentGroup#,
+			#transDate#,
+			#transTime#,
+			#dealDate#,
+			#dealTime#,
+			#service#,
+			#receiveXml#,
+			#returnXml#
+		) 
+	</insert>
+	
+</sqlMap>

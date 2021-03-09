@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="user"> 
+   <typeAlias alias="userModel" type="com.ca.cacore.manage.model.bo.UserModel"/>
+   <typeAlias alias="branchTree" type="com.ca.cacore.manage.model.vo.BranchTree"/>
+   <typeAlias alias="userAuthsVO" type="com.ca.cacore.manage.model.vo.UserAuthsVO"/>
+   <typeAlias alias="userAuthsModel" type="com.ca.cacore.manage.model.bo.UserAuthsModel"/>
+   <typeAlias alias="userPortraitModel" type="com.ca.cacore.manage.model.bo.UserPortraitModel"/>
+   <sql id="queryUser_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="queryUser_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+      
+	<sql id="queryUser_all">
+		SELECT seq_id,
+		       branch_id,
+		       user_type,
+		        case user_type when '1' then '管理员权限'
+		          when '2' then '普通用户权限'
+		          when '3' then '来宾' end as user_typeName,
+		       userName,
+		       password,
+		       name,
+		       case when sex_code='0' then '未知的性别'
+				  when sex_code='1' then '男性'
+				when sex_code='2' then '女性'
+				else '未说明的性别' end as sex_code,
+		       mobile,
+		       fixed_line,
+		       email,
+		       emp_id,
+		       job_tel,
+		       job_address,
+		       (case when t.status = '1' then
+                         '有效'
+                  else
+                         '无效'
+                    end) as status,
+		        remark,
+		        createUser,
+		        createDate,
+		        modifyUser,
+		        modifyDate 
+		  FROM SYS_USER t 
+		 where 1=1 
+	    <isNotEmpty property="seq_id">
+			AND t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty property="branch_id">
+			AND t.branch_id like '%$branch_id$%'
+		</isNotEmpty> 
+		<isNotEmpty property="user_type">
+			AND t.user_type like '%$user_type$%'
+		</isNotEmpty>
+		<isNotEmpty property="userName">
+			AND t.userName like '%$userName$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND t.status like '%$status$%'
+		</isNotEmpty>
+		<isNotEmpty property="name">
+			AND t.name like '%$name$%'
+		</isNotEmpty>
+		ORDER BY seq_id DESC
+    </sql>    
+	
+	<!-- 查询CRUD信息 -->
+	<select id="queryUser" parameterClass="userModel" resultClass="userModel">
+		<include refid="queryUser_head"/>
+		<include refid="queryUser_all"/>
+		<include refid="queryUser_foot"/>
+	</select>
+	
+	<select id="queryUser_count" parameterClass="userModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryUser_all"/>
+		) WHERE 1=1
+	</select>
+	
+	<!-- 新增CRUD信息 -->
+	<insert id="insertUser" parameterClass="userModel" >
+		 insert into SYS_USER (seq_id,
+		                       branch_id,
+		                       user_type,
+		                       userName,
+		                       password,
+		                       name,
+		                       sex_code,
+		                       mobile,
+		                       fixed_line,
+		                       email,
+		                       emp_id,
+		                       job_tel,
+		                       job_address,
+		                       status,
+		                       remark,
+		                       createUser,
+		                       createDate,
+		                       modifyUser,
+		                       modifyDate)
+		               values (seq_id.nextval,
+		                       #branch_id#,
+		                       #user_type#,
+		                       #userName#,
+		                       #password#,
+		                       #name#,
+		                       #sex_code#,
+		                       #mobile#,
+		                       #fixed_line#,
+		                       #email#,
+		                       #emp_id#,
+		                       #job_tel#,
+		                       #job_address#,
+		                       #status#,
+		                       #remark#,
+		                       #createUser#,
+		                       sysdate,
+		                       #modifyUser#,
+		                       sysdate) 
+	</insert>
+	
+	<!-- 修改CRUD信息 -->
+	<update id="updateUser" parameterClass="userModel" >
+		update SYS_USER set 
+		                   branch_id=#branch_id#,
+		                   user_type=#user_type#,
+		                   userName=#userName#,
+		                   password=#password#,
+		                   name=#name#,
+		                   sex_code=#sex_code#,
+		                   mobile=#mobile#,
+		                   fixed_line=#fixed_line#,
+		                   email=#email#,
+		                   emp_id=#emp_id#,
+		                   job_tel=#job_tel#,
+		                   job_address=#job_address#,
+		                   remark=#remark#,
+		                   modifyUser=#modifyUser#,
+		                   modifyDate=sysdate 
+		             where seq_id=#seq_id#
+	</update>
+	
+	<!-- 查询CRUD信息 -->
+	<select id="queryUserBySeqId" parameterClass="userModel" resultClass="userModel">
+           SELECT * FROM SYS_USER t where 1=1                     
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="userName">
+			t.userName = #userName#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="name">
+			t.name = #name#
+		</isNotEmpty>
+	</select>
+	
+	<!--以用户名查询所有的角色以及此用户名选中的角色 -->
+	<select id="queryRoleSelected" parameterClass="userModel" resultClass="userAuthsVO">
+		select role_name,role_id,
+		( case 
+  		when sr.role_id in (select role_id from sys_user_auths t
+  		where 1=2
+  		<isNotEmpty prepend="or" property="userName">
+			t.userName = #userName#
+		</isNotEmpty>
+  		) then 'checked'
+  		 else ''
+   		end ) as roleSelected
+		from sys_role sr
+	</select>
+	
+	<!-- 得到所有的机构以及选中的机构 -->
+	<select id="queryAllBranch" parameterClass="userAuthsModel" resultClass="branchTree">
+		select rtrim(t.branch_id) branch_id,rtrim(t.branch_parentid) branch_parentid,t.branch_name branch_name, 
+		(case
+ 		 when rtrim(t.branch_id) in ( select distinct(rtrim(branch_id)) from sys_user_auths where
+ 		 1=1 
+ 		 <isNotEmpty prepend="and" property="userName">
+			userName = #userName#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_id">
+			role_id = #role_id#
+		</isNotEmpty>
+ 		  ) then 'true'
+    	else 'false'
+    	end
+		) as selected 
+		from sys_branch t 
+	</select>
+	
+	<!-- 对机构权限表进行操作 -->
+<!-- 	<delete id= "deleteUserAuths" parameterClass="userAuthsModel"> -->
+<!-- 		delete from sys_user_auths where 1 = 1 -->
+<!-- 		<isNotEmpty prepend="and" property="userName"> -->
+<!-- 			userName = #userName# -->
+<!-- 		</isNotEmpty> -->
+<!-- 		<isNotEmpty prepend="and" property="userName"> -->
+<!-- 			userName = #userName# -->
+<!-- 		</isNotEmpty> -->
+<!-- 		<isNotEmpty prepend="and" property="userName"> -->
+<!-- 			userName = #userName# -->
+<!-- 		</isNotEmpty> -->
+<!-- 	</delete> -->
+	<select id="queryUserAuths" parameterClass="userModel" resultClass="userAuthsVO">
+		select r.role_id,r.role_name,case when ua.username is null then 'false' else 'true' end as roleSelected,r.remark
+		  from SYS_Role r left join SYS_User_Auths ua
+		    on r.role_id = ua.role_id and ua.username =#userName#
+		where r.status='1' and r.role_type=#user_type#
+	</select>
+
+	<delete id="deleteUserAuths" parameterClass="userModel">
+		delete from SYS_User_Auths t where t.username=#userName#
+	</delete>
+	<insert id="addUserAuths" parameterClass="userAuthsModel" >
+		insert into SYS_User_Auths (seq_id,username,branch_id,role_id,status,remark,createuser,createdate,modifyuser,modifydate)
+			values(seq_id.nextval,#userName#,#branch_id#,#role_id#,'1',#remark#,#createUser#,sysdate,#modifyUser#,sysdate)
+	</insert>
+	
+	<!-- 添加用户头像 -->
+	<insert id="addUserPortrait" parameterClass="userPortraitModel" >
+		insert into SYS_USER_PORTRAIT  (seq_id,file_id, emp_id,scan_time,file_path,file_name,remark,createuser,createdate,modifyuser,modifydate)
+					     values(seq_id.nextval,#file_id#,#emp_id#,sysdate,#file_path#,#file_name#,#remark#,#emp_id#,sysdate,#emp_id#,sysdate)
+	</insert>
+	
+	<!-- 查询用户是否已经上传头像 -->
+	<select id="checkUserPortrait" parameterClass="userPortraitModel" resultClass="int">
+		select count(seq_id) from SYS_USER_PORTRAIT where emp_id=#emp_id#
+	</select>
+	
+	<!-- 修改用户头像 -->
+	<update id="updateUserPortrait" parameterClass="userPortraitModel" >
+		update  SYS_USER_PORTRAIT set file_id=#file_id#, 
+									  emp_id=#emp_id#,
+									  scan_time=sysdate,
+									  file_path=#file_path#,
+									  file_name=#file_name#,
+									  remark=#remark#,
+									  modifyuser=#emp_id#,
+									  modifydate=sysdate
+								where emp_id=#emp_id# 	  
+	</update>
+	
+	<!-- 通过emp_id获取用户头像保存地址 -->
+	<select id="getPortraitPath" parameterClass="userModel" resultClass="String">
+		select file_path from SYS_USER_PORTRAIT where emp_id=#emp_id#
+	</select>
+	
+	<!-- 通过emp_id获取绑定的核心用户和密码-->
+	<select id="getCoreUser" parameterClass="userModel" resultClass="userModel">
+		select inf.usercode core_usercode,
+			   inf.password core_password 
+	    from INS_CA_USER_BINDING ins 
+	    left join cbs_smc_user inf on inf.usercode = ins.usercode 
+	    where ins.ca_code = #emp_id#
+	    and   ins.status = '1'
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="InsRncDfn">
+   <typeAlias alias="InsRncDfn" type="com.ca.cacore.msss.model.bo.InsRncDfnModel"/>
+   <typeAlias alias="InsRncDfnVO" type="com.ca.cacore.msss.model.vo.InsRncDfnVOModel"/>
+   <typeAlias alias="CompanyMo" type="com.ca.cacore.mass.model.bo.CompanyBranchModel"/>
+   <typeAlias alias="branchTreeModel" type="com.ca.cacore.manage.model.bo.BranchTreeModel"/>
+   
+   <sql id="query_head">
+	SELECT *
+	  	  FROM (SELECT row_.*, rownum rownum_ 
+	  	          FROM (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		WHERE rownum < #limit#)
+		WHERE rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  
+	<sql id="query_all">
+    	select  iid.seq_id,
+          iid.company_id branch_id,
+          cb.branch_name,
+          iid.classCode,
+          iid.className,
+          iid.product_code,
+          iid.product_name,
+          iid.status,
+          iid.riskName,
+          iid.riskCode,
+          cb.branch_id parcode,
+          cb.branch_name parname,
+          iid.bjtype,
+          se.enum_name bjtypename
+      from  CBS_SMC_RISKCODE  iid
+      left join cpy_branch cb 
+      on   cb.branch_id = iid.COMPANY_ID
+      left join Sys_Enum se
+      on iid.bjtype=se.enum_code and se.up_enum='classcode'   <!-- zddxiu -->
+      where  1 = 1 <!-- and  iid.status=1  --><!-- by zdd02 20190616 -->
+		<isNotEmpty  property="branch_id">
+			AND iid.company_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			AND iid.className like '%$product_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="product_code">
+			AND iid.product_code = #product_code#
+		</isNotEmpty>
+		<!-- by zdd02 20190617 -->
+		<isNotEmpty  property="riskName">
+			AND iid.riskName like '%$riskName$%'
+		</isNotEmpty>
+		<isNotEmpty  property="riskCode">
+			AND iid.riskCode like '%$riskCode$%'
+		</isNotEmpty>
+		and cb.bleng_branchid IN  (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+         ORDER BY IID.Modifydate DESC, iid.create_time DESC
+         <!-- by zdd02 20190617 -->
+    </sql>
+	
+	<select id="queryInsRncDfn" parameterClass="InsRncDfn" resultClass="InsRncDfn">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="queryInsRncDfn_count" parameterClass="InsRncDfn" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		) WHERE 1=1
+	</select>
+	
+	<!-- 新增其他保险公司产品 -->
+	<insert id="insRncDfnAdd" parameterClass="InsRncDfn">
+	 <!--  insert into CBS_SMC_RISKCODE
+	     (seq_id,company_id,       
+	      classCode,  className,        product_code, 
+	      product_name, modifydate,status)
+	  values( seq_id.nextval, #branch_id#,       
+	  	  #classCode#,    #className#,    #product_code#,    
+	         #product_name#,sysdate,'1'
+	         ) -->
+	          INSERT INTO CBS_SMC_RISKCODE
+      (<!-- seq_id, -->COMPANY_ID,
+       CLASSCODE,
+       CLASSNAME,
+       RISKNAME,
+       RISKCODE,
+       MODIFYDATE,
+       Create_Time,
+       STATUS,
+       bjtype)
+    VALUES
+      (<!-- (select max(seq_id)+1 from CBS_SMC_RISKCODE), -->
+      #branch_id#,
+       #classCode#,
+       #className#,
+       #riskName#,
+       #riskCode#,
+       sysdate,
+       sysdate,
+       '1',
+       #bjtype#)
+	</insert>
+	
+	<!-- 修改其他保险公司产品 -->
+	<update id="insRncDfnUpdate" parameterClass="InsRncDfn">
+		update CBS_SMC_RISKCODE
+		set company_id=#branch_id#
+			,classCode=#classCode#
+			,className=#className#
+			,product_code=#product_code#
+			,product_name=#product_name#
+			,riskName=#riskName#
+			,riskCode=#riskCode#
+			,Modifydate=sysdate
+			,bjtype=#bjtype#
+		where seq_id=#seq_id#
+	</update>
+	<!-- 查询其他保险公司产品 -->
+	<select id="getInsRncDfn" parameterClass="InsRncDfn" resultClass="InsRncDfn">
+		select  iid.seq_id,
+          iid.company_id branch_id,
+          cb.branch_name,
+          iid.classCode,
+          iid.className,
+          iid.product_code,
+          iid.product_name,
+          iid.riskName,
+          iid.riskCode,
+          iid.bjtype,
+          se.enum_name bjtypename
+      from  CBS_SMC_RISKCODE  iid
+      left join cpy_branch cb 
+      on   cb.branch_id = iid.COMPANY_ID
+      left join Sys_Enum se
+      on iid.bjtype=se.enum_code and se.up_enum='classcode'   <!-- zddxiu -->
+    	where  iid.seq_id = #seq_id#
+	</select>
+	<!-- 校验险种代码是否存在 -->
+	<select id="checkRiskCode" parameterClass="InsRncDfn" resultClass="InsRncDfnVO">
+		select * from CBS_SMC_RISKCODE 
+		where riskCode=#riskCode# and product_source=#product_source#
+	</select>
+	
+	<!-- 查询所有险类 -->
+	<select id="queryClassCode" parameterClass="InsRncDfn" resultClass="InsRncDfn">
+		select PRODUCT_ID classCode,PRODUCT_NAME className from sys_ins_risk 
+		where CATEGORY='1' 
+		<isNotEmpty  property="branch_id">
+			and companyid=#branch_id#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 查询所有险种 -->
+	<select id="queryRiskCode" resultClass="InsRncDfn">
+		select PRODUCT_ID riskCode,PRODUCT_NAME riskName from sys_ins_risk 
+		where CATEGORY='2' and parent_id = #classCode#
+	</select>
+	
+	<!-- 查询所有险别 -->
+	<select id="queryTypeCode" resultClass="InsRncDfn">
+		select PRODUCT_ID type_code,PRODUCT_NAME type_name from sys_ins_risk 
+		where CATEGORY='3' and parent_id = #riskCode#
+	</select>
+	
+	<!-- 查询所有总公司 -->
+	<select id="queryCompany" resultClass="CompanyMo">
+		select branch_id,branch_name from cpy_branch 
+		where branch_level = '1'
+	</select>
+	<!-- 修改状态-->
+	<update id="updateStatus" parameterClass="InsRncDfn">
+		update CBS_SMC_RISKCODE
+		set status = #status#,Modifydate=sysdate
+		where seq_id=#seq_id#
+	</update>
+	
+	<!-- 查询机构树 -->
+	<select id="queryCompanyTree" resultClass="branchTreeModel">
+		select id,name,pid from (
+		select distinct branch_id id, branch_name name, branch_parentid pid 
+			from cpy_branch t where t.status ='1' <!-- and t.branch_level = '1' -->	
+		) 
+		order by id
+		
+		
+	</select>
+	
+	<!-- 查询机构树 -->
+	<select id="queryPoundage" parameterClass="InsRncDfn" resultClass="string">
+		select sir.poundage from SYS_INS_RISK sir where sir.product_id = #classCode#
+	</select>
+	<!-- 导出 by zdd02 20190617 -->
+	<select id="exportInfo" parameterClass="InsRncDfn" resultClass="InsRncDfn">
+	 <!-- select  iid.seq_id,
+          iid.company_id branch_id,
+          cb.branch_name,
+          iid.classCode,
+          iid.className,
+          iid.product_code,
+          iid.product_name,
+          iid.status,
+          iid.riskName,
+          cb.branch_id parcode,
+          cb.branch_name parname
+          iid.bjtype,
+          se.enum_name bjtypename
+      from  CBS_SMC_RISKCODE  iid
+      left join cpy_branch cb 
+      on   cb.branch_id = iid.COMPANY_ID
+       left join Sys_Enum se
+      on iid.bjtype=se.enum_code and se.up_enum='classcode'   zddxiu
+      where  1 = 1 and  iid.status=1  
+      <isNotEmpty  property="branch_id">
+			AND iid.company_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			AND iid.className like '%$product_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="product_code">
+			AND iid.product_code = #product_code#
+		</isNotEmpty>
+		by zdd02 20190617
+		<isNotEmpty  property="riskName">
+			AND iid.riskName like '%$riskName$%'
+		</isNotEmpty>
+		<isNotEmpty  property="riskCode">
+			AND iid.riskCode like %#riskCode#
+		</isNotEmpty>
+      and cb.bleng_branchid IN  (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+      ORDER BY IID.Modifydate DESC,iid.create_time DESC -->
+      select  iid.seq_id,
+          iid.company_id branch_id,
+          cb.branch_name,
+          iid.classCode,
+          iid.className,
+          iid.product_code,
+          iid.product_name,
+          iid.status,
+          iid.riskName,
+          iid.riskCode,
+          cb.branch_id parcode,
+          cb.branch_name parname,
+          iid.bjtype,
+          se.enum_name bjtypename
+      from  CBS_SMC_RISKCODE  iid
+      left join cpy_branch cb 
+      on   cb.branch_id = iid.COMPANY_ID
+      left join Sys_Enum se
+      on iid.bjtype=se.enum_code and se.up_enum='classcode'   <!-- zddxiu -->
+      where  1 = 1 <!-- and  iid.status=1  --><!-- by zdd02 20190616 -->
+		<isNotEmpty  property="branch_id">
+			AND iid.company_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			AND iid.className like '%$product_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="product_code">
+			AND iid.product_code = #product_code#
+		</isNotEmpty>
+		<!-- by zdd02 20190617 -->
+		<isNotEmpty  property="riskName">
+			AND iid.riskName like '%$riskName$%'
+		</isNotEmpty>
+		<isNotEmpty  property="riskCode">
+			AND iid.riskCode like '%$riskCode$%'
+		</isNotEmpty>
+		and cb.bleng_branchid IN  (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+         ORDER BY IID.Modifydate DESC, iid.create_time DESC
+	</select>
+	<!-- by zdd02 20190617 -->
+	<select id="selectIsOrNobranchname" parameterClass="String" resultClass="String">
+	 SELECT cb.branch_name
+        FROM CPY_BRANCH CB
+        WHERE CB.BRANCH_LEVEL = '1'
+        AND CB.BRANCH_ID = #branch_id#
+	</select>
+	<!-- by zdd02 20190617 -->
+	<insert id="insRncDfnAddzdd" parameterClass="InsRncDfn">
+	      INSERT INTO CBS_SMC_RISKCODE
+      (<!-- seq_id, -->COMPANY_ID,
+       CLASSCODE,
+       CLASSNAME,
+       RISKNAME,
+       RISKCODE,
+       MODIFYDATE,
+       Create_Time,
+       STATUS,
+       bjtype)
+    VALUES
+      (<!-- (select max(seq_id)+1 from CBS_SMC_RISKCODE), -->
+      #branch_id#,
+       #classCode#,
+       #className#,
+       #riskName#,
+       #riskCode#,
+       sysdate,
+       sysdate,
+       '1',
+       (SELECT se.enum_code 
+FROM Sys_Enum se 
+WHERE se.up_enum='classcode' 
+AND se.enum_name=#bjtypename#))
+	</insert>
+	<select id="selectCheckInsRncDfnModel"  parameterClass="InsRncDfn" resultClass="InsRncDfn">
+	   SELECT distinct COMPANY_ID branch_id,<!-- CLASSCODE  classCode, CLASSNAME className,-->RISKCODE riskCode,RISKNAME riskName
+		  FROM CBS_SMC_RISKCODE CB,Sys_Enum t
+     WHERE t.up_enum='classcode'
+         AND cb.bjtype=t.enum_code
+		and CB.COMPANY_ID=#branch_id#
+		<!-- <isNotEmpty  property="classCode">
+        and  CB.CLASSCODE =#classCode#
+        </isNotEmpty> -->  
+        and   CB.RISKCODE=#riskCode# 
+        <isNotEmpty  property="seq_id">
+        and cb.seq_id<![CDATA[!=]]>#seq_id#
+        </isNotEmpty>
+        
+        <!-- and  STATUS=1 --> <!-- zdd0724 -->
+	</select>
+	
+	<select id="validateRtype"  parameterClass="InsRncDfn" resultClass="String">
+	SELECT COUNT(1) FROM t_Enum t
+       WHERE t.enum_parentid='classcode'
+       AND to_char(t.enum_desc)=#classCode#
+       AND to_char(t.enum_code)=#rtype#
+	</select>
+	<select id="checkLimitsBranchid"  parameterClass="InsRncDfn" resultClass="InsRncDfn">
+	         <!--  SELECT cb.seq_id,cb.branch_parentid,cb.branch_id,cb.branch_name,cb.branch_level,cb.status
+	           FROM cpy_branch cb
+          WHERE status=1 and cb.branch_id=#branch_id#
+          START WITH cb.BRANCH_ID IN(
+           SELECT tda.auth_cpy_no
+           FROM T_DATA_AUTH TDA 
+           WHERE TDA.IS_HALF_CHECK IS NULL
+           AND TDA.OBJECT_NO = #modifyUser#
+           AND OBJECT_TYPE = 'USER' )
+           CONNECT BY PRIOR cb.BRANCH_ID = cb.BRANCH_PARENTID   -->
+           SELECT cb.seq_id,cb.branch_parentid,cb.branch_id,cb.branch_name,cb.branch_level,cb.status 
+            FROM cpy_branch cb WHERE cb.bleng_branchid IN  (SELECT tt.branch_id 
+                       FROM SYS_BRANCH tt
+                                 WHERE tt.STATUS = '1'
+                                 START WITH tt.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR tt.BRANCH_ID = tt.BRANCH_PARENTID)
+                       and cb.status=1
+                       AND cb.branch_level='1'
+                       AND cb.branch_id=#branch_id#
+	</select>
+	<select id="getsysemlist" resultClass="InsRncDfn"  parameterClass="String">
+	SELECT se.enum_code bjtype,se.enum_name bjtypename FROM Sys_Enum se WHERE se.up_enum='classcode'
+     AND se.enum_code LIKE  <!-- (SELECT CASE WHEN ins_type='L' THEN '1%' ELSE '0%'  END n  FROM cpy_branch b WHERE b.branch_id=#branch_id#) -->
+	(select case when dept_type = '02' THEN '1%' when dept_type = '01' then '0%' else '%%' END from  Sys_Enum where up_enum = 'headoffice' and enum_code = #branch_id#)
+	</select>
+	<select id="isPORL" parameterClass="InsRncDfn" resultClass="String">
+	SELECT cp.ins_type FROM cpy_branch cp WHERE cp.branch_id=#branch_id#
+	</select>
+	<update id="insRncDfnUpdate1" parameterClass="InsRncDfn">
+		update CBS_SMC_RISKCODE set className = #className#, classCode = #classCode# where COMPANY_ID = trim(#branch_id#) 
+		and riskCode = trim(#riskCode#) and riskName = trim(#riskName#)
+	</update>
+</sqlMap>

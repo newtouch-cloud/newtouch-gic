@@ -1,0 +1,255 @@
+html,body{
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	background: #DFE8F6;
+	overflow: hidden;
+}
+select{
+	width:160px;
+	height:22px;
+	border:#999 1px solid;
+	float: left;
+}
+input[type="checkbox"]{
+	width:20px;
+	height:20px;
+	border: 0;
+	clear: both;
+	margin: 0;
+}				
+input{
+	width: expression((this.type=="checkbox" || this.type=="radio") ?"20px":"style"); 
+	width:160px;
+	height: expression((this.type=="checkbox" || this.type=="radio") ?"20px":"style"); 
+	height:22px;
+	border: expression((this.type=="checkbox" || this.type=="radio") ?"0":"style"); 
+	border:#b5b8c8 1px solid;
+	float: left;
+}
+.select{
+	border:#b5b8c8 1px solid;
+	float: left;
+}
+.select select{
+	width:158px;
+	height:20px;
+	border: 0px;
+}
+.h60{height:60px;}
+/* Ò³ÃæÑùÊ½ */
+.warp{
+	height: 100%;
+	*width: 100%;
+	overflow: hidden;
+	border: 1px solid #99bbe8;
+}
+.warp_body{
+	height: 100%;
+	*width: 100%;
+	overflow: auto;
+	border: 1px solid #ffffff;
+}
+.innerblock{
+	*width:100%;
+	overflow: hidden;
+	margin: 4px 4px 0 4px;
+	border: 1px solid #cccccc;
+}
+table.table{
+	table-layout:fixed;
+	width: 100%;
+	border: 0px;
+	padding: 0px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+table.table tr{
+	height: 30px;
+}
+table.table td{
+	width:20%;
+	text-align:left;
+	font:normal normal 12px tahoma, arial, verdana, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	padding: 0px;
+}
+table.table td.odd{
+	width:13%;
+	text-align: right;
+}
+table.table td.center{
+	text-align: center;
+}
+table.table td.right{
+	text-align: right;
+}
+#chaxun,.chaxun{
+	margin-right: 10px;
+	padding: 0px;
+	cursor: pointer;
+}
+#chaxun span,.chaxun span{
+	display:block;
+	margin-left:4px!important; margin-left:0px;
+	margin-right:4px !important; margin-right:0px;
+	height:16px;
+	background: url(../images/icons/ico_search.png) 0 0 no-repeat;
+	padding: 0 0 0 16px;
+	font:normal normal 12px/16px tahoma, arial, verdana, sans-serif;
+	text-align: left;
+}
+#save,.save{
+	margin-right: 10px;
+	padding: 0px;
+	cursor: pointer;
+}
+#save span,.save span{
+	display:block;
+	margin-left:4px!important; margin-left:0px;
+	margin-right:4px !important; margin-right:0px;
+	height:16px;
+	background: url(../images/icons/ico_save.png) 0 0 no-repeat;
+	padding: 0 0 0 16px;
+	font:normal normal 12px/16px tahoma, arial, verdana, sans-serif;
+	text-align: left;
+}
+
+#chongzhi,.chongzhi{
+	margin-right: 10px;
+	padding: 0px;
+	cursor: pointer;
+}
+#chongzhi span,.chongzhi span{
+	display:block;
+	margin-left:4px!important; margin-left:0px;
+	margin-right:4px !important; margin-right:0px;
+	height:16px;
+	background: url(../images/icons/arrow_undo.png) 0 0 no-repeat;
+	padding: 0 0 0 16px;
+	font:normal normal 12px/16px tahoma, arial, verdana, sans-serif;
+	text-align: left;
+}
+
+.innerblock_1{
+	*width: 100%;
+	overflow: hidden;
+	margin:4px 4px 0 4px;
+	border: 1px solid #99bbe8;
+}
+.innerblock_warp{
+	*width: 100%;
+	overflow: auto;
+	border: 1px solid #ffffff;
+}
+.table_tool{
+	border-color: #a9bfd3;
+	border-style: solid;
+	border-width:0 0 1px 0;
+	margin:0;
+	padding: 0;
+	background: #d9e4ef url(../images/tab/toolbg.gif) repeat-x top left;
+	height: 24px;
+	width: 100%;
+	zoom:1;
+}
+.table_tool table{
+	height: 20px;
+}
+.table_tool table button{
+	height:20px;
+/* 	width:74px; */
+	padding: 0 0 0 0;
+	margin:0 1px 0 1px;
+	*margin:0 2px 0 2px;
+	text-align:center;
+	background: transparent;
+	border:none;
+	font:normal normal 12px tahoma, arial, verdana, sans-serif;
+	color: #15428b;
+	white-space:nowrap;
+	cursor: pointer;
+}
+.table_tool table button.buttonOver{
+	border: #a9bfd3 1px solid;
+	margin:0;
+	padding:0;
+/* 	FILTER:ALPHA(opacity=100,finishopacity=10,style=0,startx=0,finishx=20); */
+	FILTER: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='#ffffff', EndColorStr='#D7E7FA',GradientType=0 );
+	background:#ebf3fd;
+}
+.table_tool table button span{
+	display:block;
+	margin-left:2px!important; margin-left:0px;
+	margin-right:2px !important; margin-right:0px;
+	height:18px;
+	line-height:18px;
+	text-align: left;
+}
+.table_tool table button span.add{
+	background:url(../images/icons/add.png) 0 0 no-repeat;
+	padding: 0 0 0 18px;
+}
+.table_tool table button span.delete{
+	background:url(../images/icons/ico_no.png) 0 0 no-repeat;
+	padding: 0 0 0 18px;
+}
+.table_tool table button span.serch{
+	background:url(../images/icons/ico_search.png) 0 0 no-repeat;
+	padding: 0 0 0 18px;
+}
+.table_tool table button span.xiugai{
+	background:url(../images/icons/paintbrush.png) 0 0 no-repeat;
+	padding: 0 0 0 18px;
+}
+.table_tool table button span.save{
+	background:url(../images/icons/table_save.png) 0 0 no-repeat;
+	padding: 0 0 0 18px;
+}
+.tablestyle{
+	table-layout: fixed;
+	width:100%;
+	font:normal normal 12px tahoma, arial, verdana, sans-serif;
+	color: #000000;
+	border-width: 1px;
+	border-collapse:collapse;
+	border-style: solid;
+	border-color: #d0d0d0;
+}
+.tablestyle thead tr{
+	background: url("../images/tab/grid3-hrow.gif") repeat-x;
+	font-weight: normal;
+}
+.tablestyle thead th{
+	font-weight: normal;
+	height:22px;
+	line-height:22px;
+	text-align:center;
+	padding:0;
+	font-weight: normal;
+	border-width: 0 1px 1px 0;
+	border-style: solid;
+	border-color: #d0d0d0;
+	vertical-align: middle;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.tablestyle tbody td{
+	height: 22px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-width: 0 0 1px 0;
+	border-style: solid;
+	border-color: #d0d0d0;
+}
+.tablestyle tbody tr{
+	background:#ffffff;
+}
+.tablestyle tbody tr.even{
+	background:#ecf6fc;
+}
+.tablestyle tbody tr.over{background:#efefef;}

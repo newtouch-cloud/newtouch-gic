@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:ehcache="http://www.springmodules.org/schema/ehcache"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans-2.5.xsd 
+						http://www.springframework.org/schema/context 
+						http://www.springframework.org/schema/context/spring-context-2.5.xsd 
+						http://www.springframework.org/schema/aop 
+						http://www.springframework.org/schema/aop/spring-aop-2.5.xsd 
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	<!-- 注释解析处理器  lib\common-annotations.jar-->
+	<context:annotation-config />
+	
+	<aop:aspectj-autoproxy />
+	<!-- 自动扫描工程下所有 注释了@Controller,@Service,@component @Repository的类
+		 其中 @Controller用于标注控制层组件
+		   @Service用于注释业务层组件
+		   @component泛指组件
+		   @Repository用于数据访问组件即DAO组件
+	-->
+	<context:component-scan base-package="com">
+		<context:include-filter type="annotation" expression="org.aspectj.lang.annotation.Aspect"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+	<!-- JDBC连接控制 -->
+	<bean id="defaultJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate" abstract="false" lazy-init="false" autowire="default" dependency-check="default">
+		<property name="dataSource"><ref bean="dataSource" /></property>
+	</bean>
+	
+	<!-- 整体事物控制 -->
+	<bean id="defaultTxManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<tx:advice id="defaultTxAdvice" transaction-manager="defaultTxManager"><!-- <tx:annotation-driven transaction-manager="defaultTxManager" /> -->
+		<tx:attributes>
+			<tx:method name="query*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="chaXun*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="defaultPointCut" expression="execution(* com..*Controller.*(..)) || execution(* com..*ServiceImp.*(..)) || execution(* com..*Service.*(..))" />
+		<aop:advisor pointcut-ref="defaultPointCut" advice-ref="defaultTxAdvice" />
+	</aop:config>
+	
+	<!-- 配置文件导入 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:/app_config/ca/cacore/defalutDataSource.ini</value>
+				<value>classpath:/app_config/ca/cacore/redis.ini</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 导入项目配置文件 -->
+	<import resource="classpath:/app_config/ca/cacore/appContext-DataSource.xml" />
+	<import resource="classpath:/app_config/ca/cacore/appContext-Redis.xml" />
+	
+ 	<!-- ibatis的配置-->
+    <bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:/app_config/ca/cacore/sql-map-config.xml"/>
+    </bean>
+
+    <!-- 文件上传 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"></property>
+        <property name="maxUploadSize" value="52428800"></property>
+    </bean>
+</beans>

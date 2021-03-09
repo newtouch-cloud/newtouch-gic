@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="YYPersonReport">
+		<typeAlias alias="YYPersonReportVOModel" type="com.ca.cacore.rsss.model.vo.YYPersonReportVOModel"/>
+	
+	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	<!-- 受理保单清单报表-->
+	<sql id="query_all" >
+			 select sale.branch_id,
+		       org.branch_name,
+		       count(poli.policyno) newPolicyNum,
+		       count(cla.policyno) XZLPJNum 
+		  from cbs_smc_cmain     poli,
+		       smis_sales        sale,
+		       sys_branch        org,
+		       cbs_smc_claim_all cla
+		 where poli.handlercode = sale.sales_id
+		   and org.branch_id = sale.branch_id
+		   and poli.policyno = cla.policyno(+)
+		   and trunc(poli.operatedate, 'mm') = to_date(#statistic_month#, 'yyyy-mm-dd')
+		 group by sale.branch_id, org.branch_name 
+	</sql>
+	<!--查询受理保单清单报表-->
+	<select id="queryYYPersonReport" parameterClass="YYPersonReportVOModel" resultClass="YYPersonReportVOModel">
+		<include refid="query_head" />
+		<include refid="query_all" />
+		<include refid="query_foot" />
+	</select>
+	<!-- 查询数据总条数  -->
+	<select id="YYPersonReport_Count" parameterClass="YYPersonReportVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all" />
+		)
+	</select>
+	
+		<!-- 导出数据-->
+	<select id="exportYYPersonReport" parameterClass="YYPersonReportVOModel" resultClass="YYPersonReportVOModel">
+	 select sale.branch_id,
+		       org.branch_name,
+		       count(poli.policyno) newPolicyNum,
+		       count(cla.policyno) XZLPJNum
+		  from cbs_smc_cmain     poli,
+		       smis_sales        sale,
+		       sys_branch        org,
+		       cbs_smc_claim_all cla
+		 where poli.handlercode = sale.sales_id
+		   and org.branch_id = sale.branch_id
+		   and poli.policyno = cla.policyno(+)
+		   and trunc(poli.operatedate, 'mm') = to_date(#statistic_month#, 'yyyy-mm-dd')
+		 group by sale.branch_id, org.branch_name
+	</select>
+</sqlMap>

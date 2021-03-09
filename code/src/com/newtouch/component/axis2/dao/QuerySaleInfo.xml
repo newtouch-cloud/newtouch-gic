@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="querySaleInfo">
+   <typeAlias alias="protocolQueryVoModel"  type="com.newtouch.component.axis2.model.ProtocolQueryVoModel"/>
+	
+	<!-- 查询对应中介人员是否存在 并查找中介人所在机构是否有对应协议号-->
+	<select id="querySalesInfo" parameterClass="protocolQueryVoModel" resultClass="protocolQueryVoModel">
+	    select s.sales_id , 
+	    	   s.sales_name , 
+	    	   s.branch_id ,
+	    	   branch.branch_allpath,
+	    	   (case when s.branch_id in (select cd.branch_id from cd_agreement cd where cd.agreement_no=#agreement_no# and cd.status = '1')
+	    	   then '1'
+	    	   else '0'
+	    	   end 
+	    	   ) agreement_flag
+	    from smis_sales s 
+	    left join sys_branch branch on branch.branch_id = s.branch_id
+	    where sales_id = #sales_id#
+	</select>
+	
+	<!-- 查询协议号是否存在  并且是有效的 status = '1'-->
+	<select id="checkAgreemengtInfo" parameterClass="protocolQueryVoModel" resultClass="protocolQueryVoModel">
+	    select cd.agreement_no,
+	    	   cd.branch_id,
+	    	   branch.branch_allpath
+	    from cd_agreement cd
+	    left join sys_branch branch on branch.branch_id = cd.branch_id
+	    where 
+	    	cd.agreement_no = #agreement_no#
+	   	and cd.status = '1'
+	</select>
+	
+</sqlMap>

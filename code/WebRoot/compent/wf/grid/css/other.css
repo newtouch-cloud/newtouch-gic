@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+
+.not-null {
+	color: #f00;
+	font: bold;
+	font-size: large;
+	text-align: center;
+	vertical-align: middle;
+}

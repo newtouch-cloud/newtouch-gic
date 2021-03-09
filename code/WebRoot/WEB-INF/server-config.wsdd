@@ -1,0 +1,23 @@
+<deployment xmlns="http://xml.apache.org/axis/wsdd/"
+	xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+	<handler name="URLMapper" type="java:org.apache.axis.handlers.http.URLMapper" />
+	<service name="WsMainServer" provider="java:RPC">
+		<parameter name="className"
+			value="com.newtouch.component.s6webservice.server.WsMainServer" />
+		<parameter name="allowedMethods" value="*" />
+		<parameter name="scope" value="request" />
+		<beanMapping qname="ns1:WsContext"
+			xmlns:ns1="com.newtouch.component.s6webservice.pojo"
+			languageSpecificType="java:com.newtouch.component.s6webservice.pojo.WsContext" />
+		<typeMapping qname="ns1:WsContext"
+			xmlns:ns1="com.newtouch.component.s6webservice.pojo"
+			languageSpecificType="java:com.newtouch.component.s6webservice.pojo.WsContext"
+			deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+			serializer="org.apache.axis.encoding.ser.BeanSerializerFactory" />
+	</service>
+	<transport name="http">
+		<requestFlow>
+			<handler type="URLMapper" />
+		</requestFlow>
+	</transport>
+</deployment>

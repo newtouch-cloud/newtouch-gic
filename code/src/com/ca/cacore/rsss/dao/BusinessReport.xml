@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="BusinessReport">
+		<typeAlias alias="BusinessReportModel" type="com.ca.cacore.rsss.model.vo.BusinessReportModel"/>
+	<!--查询保险代理机构业务汇总表-->
+	<select id="queryBusinessReport" parameterClass="BusinessReportModel" resultClass="BusinessReportModel">
+	<![CDATA[	select count(org.dept_id) branch_name, 
+             nvl(sum(sale.countsale),0) person_num,
+             nvl(sum(sale.countsale) - sum(sale_af.countsale),0) person_com,
+             count(prenum1.policyno) period_num, 
+             count(prenum2.policyno) total_num, 
+             nvl(sum(prefee1.netpremium),0) period_prem,
+             nvl(sum(prefee2.netpremium),0) total_prem,
+             nvl(sum(prefee1.fnum),0) period_fee,
+             nvl(sum(prefee2.fnum),0) total_fee  
+        from ca_d_org_temp org
+        left join (select team_id, count(sales_id) countsale
+                     from (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') =
+                                  to_date(#statistic_month#, 'yyyy-mm-dd'))
+                    group by team_id) sale
+          on sale.team_id = org.dept_id
+        left join (select team_id, count(sales_id) countsale
+                     from (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') =
+                                  add_months(to_date(#statistic_month#, 'yyyy-mm-dd'),
+                                             -1))
+                    group by team_id) sale_af
+          on sale_af.team_id = org.dept_id
+    
+        left join (select sale.team_id, cms.policyno
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <=
+                                  to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') =
+                          to_date(#statistic_month#, 'yyyy-mm-dd')) prenum1
+          on prenum1.team_id = org.dept_id
+     
+        left join (select sale.team_id, cms.policyno
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <=
+                                  to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') <=
+                          to_date(#statistic_month#, 'yyyy-mm-dd')) prenum2
+          on prenum2.team_id = org.dept_id
+     
+        left join (select sale.team_id, cms.policyno,cms.netpremium,cms.fnum
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') = to_date(#statistic_month#, 'yyyy-mm-dd')) prefee1
+          on prefee1.team_id = org.dept_id
+      
+        left join (select sale.team_id, cms.policyno,cms.netpremium,cms.fnum
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) prefee2
+          on prefee2.team_id = org.dept_id
+       where (org.branch_id like '$branch_id$%' or org.company_id like '$branch_id$%' or
+             org.headquarters_id like '$branch_id$%') 		 ]]>
+	</select>
+	<!-- 导出保险代理机构业务汇总表-->
+	<select id="exportBusinessReport" parameterClass="BusinessReportModel" resultClass="BusinessReportModel">
+	<![CDATA[	select count(org.dept_id) branch_name, 
+             nvl(sum(sale.countsale),0) person_num,
+             nvl(sum(sale.countsale) - sum(sale_af.countsale),0) person_com,
+             count(prenum1.policyno) period_num, 
+             count(prenum2.policyno) total_num, 
+             nvl(sum(prefee1.netpremium),0) period_prem,
+             nvl(sum(prefee2.netpremium),0) total_prem,
+             nvl(sum(prefee1.fnum),0) period_fee,
+             nvl(sum(prefee2.fnum),0) total_fee  
+        from ca_d_org_temp org
+        left join (select team_id, count(sales_id) countsale
+                     from (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') =
+                                  to_date(#statistic_month#, 'yyyy-mm-dd'))
+                    group by team_id) sale
+          on sale.team_id = org.dept_id
+        left join (select team_id, count(sales_id) countsale
+                     from (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') =
+                                  add_months(to_date(#statistic_month#, 'yyyy-mm-dd'),
+                                             -1))
+                    group by team_id) sale_af
+          on sale_af.team_id = org.dept_id
+    
+        left join (select sale.team_id, cms.policyno
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <=
+                                  to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') =
+                          to_date(#statistic_month#, 'yyyy-mm-dd')) prenum1
+          on prenum1.team_id = org.dept_id
+     
+        left join (select sale.team_id, cms.policyno
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <=
+                                  to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') <=
+                          to_date(#statistic_month#, 'yyyy-mm-dd')) prenum2
+          on prenum2.team_id = org.dept_id
+     
+        left join (select sale.team_id, cms.policyno,cms.netpremium,cms.fnum
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') = to_date(#statistic_month#, 'yyyy-mm-dd')) prefee1
+          on prefee1.team_id = org.dept_id
+      
+        left join (select sale.team_id, cms.policyno,cms.netpremium,cms.fnum
+                     from cbs_smc_cmain cms,
+                          (select lo.*
+                             from smis_sales_log lo,
+                                  (select t.sales_id, max(t.log_seq_id) log_seq_id
+                                     from smis_sales_log t
+                                    group by t.sales_id) llo
+                            where lo.sales_id = llo.sales_id
+                              and lo.log_seq_id = llo.log_seq_id
+                              and trunc(lo.probation_date, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) sale
+                    where cms.handlercode = sale.sales_id
+                      and trunc(cms.operatedate, 'mm') <= to_date(#statistic_month#, 'yyyy-mm-dd')) prefee2
+          on prefee2.team_id = org.dept_id
+       where (org.branch_id like '$branch_id$%' or org.company_id like '$branch_id$%' or
+             org.headquarters_id like '$branch_id$%') 		 ]]>
+	</select>
+</sqlMap>

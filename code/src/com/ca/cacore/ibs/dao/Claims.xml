@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- wang_ds -->                 
+<sqlMap namespace="claims">
+   <typeAlias alias="claimsVOModel" type="com.ca.cacore.ibs.model.vo.ClaimsVOModel"/>
+   <typeAlias alias="claimsModel" type="com.ca.cacore.ibs.model.bo.ClaimsModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+   	<sql id="query_all">
+		 SELECT 
+		     cl.seq_id,
+	        cl.policy_id,
+	        cl.branch_id,
+	        cl.insBranch_id,
+	        cl.policy_code,
+	        cl.holder_id,
+	        cl.insurant_id,
+	        cl.event_id,
+	        ins2.insurant_name event_name,
+	        cl.event_date,
+	        cl.event_process,
+	        cl.claims_status,
+		    branch.branch_name,
+		    insb.insBranch_name, 
+	      	cls.claimsstatus_name claims_status_name,
+	      	holder.app_name holder_name,
+	      	ins.insurant_name
+	  
+	    FROM CBS_Claims cl
+      		left join CBS_ContractLife_Insured ins on ins.customer_id = cl.insurant_id and ins.policy_id = cl.policy_id 
+	    	left join CBS_ContractLife_Insured ins2 on ins2.policy_id = cl.policy_id and  cl.event_id = ins2.customer_id 
+	    	left join sys_branch branch on cl.branch_id=branch.branch_id
+	    	left join sys_insbranch insb on cl.insBranch_id=insb.insBranch_id
+      		left join CBS_Claims_Status cls on cls.ClaimsStatus_Code = cl.claims_status
+      		left join CBS_ContractLife_Holder holder on cl.policy_id=holder.policy_id and holder.customer_id=cl.holder_id 
+	    
+		WHERE 1=1
+		<isNotEmpty property="insBranch_id">
+			AND cl.insBranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			AND cl.policy_code=#policy_code#
+		</isNotEmpty>
+		ORDER BY seq_id  DESC
+  	</sql>
+    <!-- 查询所有理赔信息 -->
+	<select id="queryClaims" parameterClass="claimsVOModel" resultClass="claimsVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	 <!-- 查询所有理赔信息总数 -->
+	<select id="queryClaims_count" parameterClass="claimsVOModel" resultClass="int">
+		SELECT COUNT(*) FROM (
+		<include refid="query_all"/>
+		) WHERE 1=1
+	</select>
+  	
+	
+	<select id="getPoliInfo" parameterClass="claimsModel" resultClass="claimsVOModel">
+		SELECT distinct
+			    cpl.insBranch_id,
+			    cpl.policy_code,
+			    branch.branch_id,
+			    branch.branch_name,
+			    cpl.policy_id,
+			    cpl.holder_id,
+			    cpl.insurant_id,
+			    holder.app_name holder_name,
+			    ins.insurant_name,
+			    validate_date
+			    
+			    FROM CBS_ContractLife cpl
+			    left join sys_branch branch on cpl.branch_id=branch.branch_id
+			    left join CBS_ContractLife_Holder holder on cpl.policy_id=holder.policy_id and holder.customer_id=cpl.holder_id 
+			    left join CBS_ContractLife_Insured ins on ins.customer_id = cpl.insurant_id and ins.policy_id = cpl.policy_id
+	    WHERE  1=1 AND cpl.status ='1' AND
+	    cpl.insBranch_id=#insBranch_id# AND cpl.policy_code=#policy_code#
+	</select>
+	<!-- 理赔信息录入 -->
+	<insert id="addClaims" parameterClass="claimsModel">
+		 insert into CBS_Claims
+		   (seq_id,
+		    policy_id,
+		    branch_id,
+		    insBranch_id,
+		    policy_code,
+		    holder_id,
+		    insurant_id,
+		    event_id,
+		    event_date,
+		    event_process,
+		    claims_status,
+		    remark,
+		    createUser,
+		    createDate,
+		    modifyUser,
+		    modifyDate)
+		 values
+		   (seq_id.nextval,
+		    #policy_id#,
+		    #branch_id#,
+		    #insBranch_id#,
+		    #policy_code#,
+		    #holder_id#,
+		    #insurant_id#,
+		    #event_id#,
+		    #event_date#,
+		    #event_process#,
+		    #claims_status#,
+		    #remark#,
+		    #createUser#,
+		    sysdate,
+		    #modifyUser#,
+		    sysdate)
+	</insert>
+	<select id="getClaimsInfo" parameterClass="claimsModel" resultClass="claimsVOModel">
+		 SELECT 
+		     cl.seq_id,
+	        cl.policy_id,
+	        cl.branch_id,
+	        cl.insBranch_id,
+	        cl.policy_code,
+	        cl.holder_id,
+	        cl.insurant_id,
+	        cl.event_id,
+	        ins2.insurant_name event_name,
+	        cl.event_date,
+	        cl.event_process,
+	        cl.claims_status,
+		    branch.branch_name,
+		    insb.insBranch_name, 
+	      	cls.claimsstatus_name claims_status_name,
+	      	holder.app_name holder_name,
+	      	ins.insurant_name
+	  
+	    FROM CBS_Claims cl
+      		left join CBS_ContractLife_Insured ins on ins.customer_id = cl.insurant_id and ins.policy_id = cl.policy_id 
+	    	left join CBS_ContractLife_Insured ins2 on ins2.policy_id = cl.policy_id and  cl.event_id = ins2.customer_id 
+	    	left join sys_branch branch on cl.branch_id=branch.branch_id
+	    	left join sys_insbranch insb on cl.insBranch_id=insb.insBranch_id
+      		left join CBS_Claims_Status cls on cls.ClaimsStatus_Code = cl.claims_status
+      		left join CBS_ContractLife_Holder holder on cl.policy_id=holder.policy_id and holder.customer_id=cl.holder_id 
+	    
+		WHERE 1=1 and cl.seq_id = #seq_id# 
+	</select>
+	
+	<select id="getEventInfo" parameterClass="Long" resultClass="claimsVOModel">
+		SELECT 
+		    ins.customer_id event_id,
+		    ins.insurant_name event_name
+		    FROM CBS_ContractLife_Insured ins 
+    	WHERE 1= 1 AND ins.policy_id= #policy_id#
+	</select>
+	
+	<!-- 修改理赔信息 -->
+	<update id="updateClaims" parameterClass="claimsModel" >
+		UPDATE CBS_Claims 
+	    SET    event_id = #event_id#,
+		       event_date = #event_date#,
+		       event_process = #event_process#,
+		       claims_status = #claims_status#,
+		       modifyUser = #modifyUser#,
+		       modifyDate = sysdate
+	 	WHERE seq_id = #seq_id#
+	</update>
+</sqlMap>
+

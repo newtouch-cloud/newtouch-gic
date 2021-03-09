@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="city">
+	<typeAlias alias="cityModel"	type="com.ca.cacore.mass.model.bo.CityModel" />
+	<select id="queryCity" resultClass="cityModel">
+		select * from  sys_library_city
+	</select>
+</sqlMap>

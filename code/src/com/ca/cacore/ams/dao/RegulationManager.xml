@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="regulationManager">
+    <!-- 注入实体类preserveRegVOModel -->
+	<typeAlias alias="preserveRegVOModel" type="com.ca.cacore.ams.model.vo.PreserveRegVOModel" />
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	
+	<!-- 查询规章制度 -->
+	<sql id="queryAllRegulation">
+       select 
+			rr.seq_id,
+			rr.regulation_id,
+			rr.regulation_name,
+			rr.regulation_description,
+			rr.makers,
+			rr.make_time,
+			rr.upload_time,
+			rr.remark,
+			rr.createuser,
+			rr.createdate,
+			rr.modifyuser,
+			rr.modifydate,
+			rr.regulation_status_code,
+			rrs.regulation_status_name
+		    from rms_regulation rr
+		    left join rms_regulation_status rrs
+		    on rr.regulation_status_code=rrs.regulation_status_code
+		    where 1=1
+		<isNotEmpty prepend="and" property="regulation_id">
+			rr.regulation_id=#regulation_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="regulation_name">
+			rr.regulation_name like '%$regulation_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="makers">
+			rr.makers like '%$makers$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="firstDate">
+			<![CDATA[
+				rr.make_time >= #firstDate#
+			]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="secondDate">
+			<![CDATA[
+				rr.make_time <= #secondDate#
+			]]>
+		</isNotEmpty>
+		order by rr.make_time desc
+	</sql>
+	
+	<!-- 分页查询规章制度信息(查询出所有的记录) -->
+	<select id="getAllRegulation" parameterClass="preserveRegVOModel" resultClass="preserveRegVOModel">
+		<include refid="query_head" />
+		<include refid="queryAllRegulation" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询规章制度 -->
+	<sql id="queryStatusAll">
+       select 
+			rr.seq_id,
+			rr.regulation_id,
+			rr.regulation_name,
+			rr.regulation_description,
+			rr.makers,
+			rr.make_time,
+			rr.upload_time,
+			rr.remark,
+			rr.createuser,
+			rr.createdate,
+			rr.modifyuser,
+			rr.modifydate,
+			rr.regulation_status_code,
+			rrs.regulation_status_name
+		    from rms_regulation rr
+		    left join rms_regulation_status rrs
+		    on rr.regulation_status_code=rrs.regulation_status_code
+		    where  rr.regulation_status_code=#regulation_status_code# and 1=1
+		<isNotEmpty prepend="and" property="regulation_id">
+			rr.regulation_id=#regulation_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="regulation_name">
+			rr.regulation_name like '%$regulation_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="makers">
+			rr.makers like '%$makers$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="firstDate">
+			<![CDATA[
+				rr.make_time >= #firstDate#
+			]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="secondDate">
+			<![CDATA[
+				rr.make_time <= #secondDate#
+			]]>
+		</isNotEmpty>
+		order by rr.make_time desc
+	</sql>
+	<!-- 查询规章制度信息(查询出待发布的记录) -->
+	<select id="getStatusAll" parameterClass="preserveRegVOModel" resultClass="preserveRegVOModel">
+		<include refid="query_head" />
+		<include refid="queryStatusAll" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询所有的记录条数 -->
+	<select id="getAllRegulation_count" parameterClass="preserveRegVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryAllRegulation" />
+		) where 1=1
+	</select>
+	
+	<!-- 查询规章制度（待发布） -->
+	<sql id="queryStatus">
+       select 
+			rr.seq_id,
+			rr.regulation_id,
+			rr.regulation_name,
+			rr.regulation_description,
+			rr.makers,
+			rr.make_time,
+			rr.upload_time,
+			rr.remark,
+			rr.createuser,
+			rr.createdate,
+			rr.modifyuser,
+			rr.modifydate,
+			rr.regulation_status_code,
+			rrs.regulation_status_name
+		    from rms_regulation rr
+		    left join rms_regulation_status rrs
+		    on rr.regulation_status_code=rrs.regulation_status_code
+		    where  rr.regulation_status_code='0' and 1=1
+		<isNotEmpty prepend="and" property="regulation_id">
+			rr.regulation_id=#regulation_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="regulation_name">
+			rr.regulation_name like '%$regulation_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="makers">
+			rr.makers like '%$makers$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="firstDate">
+			<![CDATA[
+				rr.make_time >= #firstDate#
+			]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="secondDate">
+			<![CDATA[
+				rr.make_time <= #secondDate#
+			]]>
+		</isNotEmpty>
+		order by rr.make_time desc
+	</sql>
+	
+	
+	<!-- 查询所有的记录条数 -->
+	<select id="getStatus_count" parameterClass="preserveRegVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryStatus" />
+		) where 1=1
+	</select>
+	
+	<!-- 添加规章制度信息 -->
+	<insert id="addRegulationManager" parameterClass="preserveRegVOModel">
+	    insert into rms_regulation
+		   (seq_id,                          regulation_id,            regulation_name,                regulation_status_code,
+		   regulation_description,         makers,                make_time,                                         upload_time, 
+		                              remark,   createuser,               createdate,                                            modifyuser,
+		                        modifydate
+            )
+		values
+			(seq_id.nextval,        #regulation_id#,          #regulation_name#,           #regulation_status_code#, 
+			#regulation_description#,      #makers#,       #make_time#,                                      #upload_time#,
+			                     #remark#,  #createuser#,             sysdate,                                                #modifyuser#,       
+			                     sysdate
+             )
+	</insert>
+	
+	<!-- 查询某条规章记录数据 -->
+	<select id="getRegulation" parameterClass="preserveRegVOModel" resultClass="preserveRegVOModel">
+     select distinct rr.*,
+	             att.file_id,
+			     att.file_name
+	  from rms_regulation rr
+	  left join sys_attachment att on att.bus_id = rr.regulation_id and att.attachment_type = '17'
+	   where rr.regulation_id = #regulation_id#
+	</select>
+	<!-- 修改规章制度信息 -->
+	<update id="modifyRegulation" parameterClass="preserveRegVOModel">
+	       	    update rms_regulation
+	            set 
+	            regulation_id=#regulation_id#,
+			    regulation_name=#regulation_name#,  regulation_description = #regulation_description#, 
+			    regulation_status_code='0',                                                                        makers = #makers#,            
+			    make_time = #make_time#, createuser=#createuser#,
+			    createdate=sysdate,           modifyuser=#modifyuser#,    modifydate = sysdate
+	            where regulation_id = #regulation_id#
+	</update>
+    <!-- 更新规章制度的状态(即待发布更新到已发布状态) -->
+    <update id="updateRegulationStatus" parameterClass="preserveRegVOModel">
+       update rms_regulation rr
+         set  rr.regulation_status_code='1'
+       where rr.seq_id=#seq_id#
+    </update>
+    
+    <!-- 更新规章制度附件上传时间 -->
+	<update id="updateRegulationTime" parameterClass="preserveRegVOModel">
+	  update rms_regulation
+	      set
+	          upload_time = sysdate,
+              modifyDate = sysdate
+       where regulation_id = #regulation_id#
+	</update>
+	
+    <!-- 校验规章编号是否存在(用于添加) -->
+	<select id="checkRegulationId" parameterClass="preserveRegVOModel" resultClass="int">
+		select count(*) from rms_regulation where regulation_id = #regulation_id#
+	</select>
+	
+	
+</sqlMap>

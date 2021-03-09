@@ -1,0 +1,143 @@
+/* CSS Document */
+.alert-body{
+color:#000;	
+margin-top:3px;
+margin-bottom:0px;
+
+}
+.alert-normal {
+  background-color: #ffffff;
+  border-color: #cccccc;
+  color: #000000;
+}
+.alert .heading4{
+color:#2fa4e7;
+font-family:"宋体";
+font-size: 10.5pt;
+font-weight: bold;
+}
+
+.splitor{
+	background-color:#cccccc;
+	margin:0px;
+	padding:0px;
+}
+.line1{
+line-height:30px;
+float:left;	
+}
+
+.inline{
+display:inline;	
+}
+.input-text-line{
+color:#000;	
+text-align:center;
+height:30px;
+line-height:30px;	
+float:left;
+}
+.input-row-height{
+	height:30px;
+	line-height:30px;
+}
+.product-list{
+float:left;	
+}
+.product-list li{
+	
+	list-style:none;
+	width:400px;
+	clear:both;
+}
+.product-list label{
+line-height:30px;
+height:30px;
+}
+.product-list input{
+height:25px;	
+line-height:25px;
+}
+#frm-cust label{
+width:140px;	
+}
+.table-caption{
+text-align:left;	
+}
+table .controls{
+height:30px;
+line-height:30px;	
+}
+
+
+.special-policy td{
+height:60px;
+line-height:60px;	
+}
+
+.no-wrap{
+white-space:nowrap;	
+}
+.mycontrols{
+height:25px;	
+display:inline-block;
+margin:0px;
+padding:0px;
+float:left;	
+
+}
+.my-control-group{
+float:left;
+margin:2px;
+padding:0px;
+display:inline-block;
+}
+.mycontrollabel{
+  float: left;
+  width: 80px;
+  padding-top: 3px;
+  text-align: right;
+  display:inline-block;
+}
+.span12-1{
+width:99%;	
+}
+.span12-2{
+width:1240px;	
+}
+.span6-1{
+width:602px;	
+}
+.span3-5{
+width:320px;	
+}
+.span3-1{
+width:250px;	
+}
+
+.span3-2{
+width:280px;	
+}
+.myheight{
+height:40px;line-height:40px;	
+}
+
+
+
+.form-horizontal .mycontrolgroup {
+  margin-bottom: 3px;
+  *zoom: 1;
+}
+.form-horizontal .mycontrolgroup:before,
+.form-horizontal .mycontrolgroup:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.form-horizontal .mycontrolgroup:after {
+  clear: both;
+}
+
+
+
+

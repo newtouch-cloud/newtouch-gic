@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="productFeeRate">
+	<typeAlias alias="ProductFeeRateVOModel" type="com.ca.cacore.msss.model.vo.ProductFeeRateVOModel"/>
+	<typeAlias alias="ProductFeeRateBOModel" type="com.ca.cacore.msss.model.bo.ProductFeeRateModel"/>
+	
+    <sql id="queryProFeeRate_head">
+	SELECT *
+	  	  FROM (SELECT row_.*, rownum rownum_ 
+	  	          FROM (
+	</sql>
+	
+	<sql id="queryProFeeRate_foot">
+    	<![CDATA[
+				) row_ 
+		WHERE rownum < #limit#)
+		WHERE rownum_ >= #start#
+		]]>	
+	</sql>
+   
+    <sql id="queryProFeeRate_all">
+		select pfr.seq_id,pfr.insBranch_id,b.insBranch_name,pfr.product_id,p.product_name,
+			pfr.coverage_period,plc.coverage_period_name,pfr.coverage_year,pfr.sell_way,sw.sell_way_name,
+			pfr.charge_type,ct.charge_type_name,pfr.charge_year,pfr.policy_year,pfr.policy_period,
+			pfr.fee_rate,pfr.start_date,pfr.end_date,pfr.status,pfr.remark,
+			pfr.createuser,pfr.createdate,pfr.modifyuser,pfr.modifydate
+        from pdt_product_fee_rate pfr
+        	left join sys_insbranch b 
+          		on pfr.insBranch_id = b.insbranch_id
+          	left join pdt_product_llife p
+          		on pfr.product_id = p.product_id and pfr.insbranch_id = p.insbranch_id
+          	left join cbs_sell_way sw
+          		on pfr.sell_way = sw.sell_way_code
+          	left join pdt_lib_chargetype ct
+          		on pfr.charge_type = ct.charge_type_code
+          	left join pdt_lib_coverageperiod plc
+          		on pfr.coverage_period = plc.coverage_period_code
+		where 1= 1 
+		<isNotEmpty  property="insBranch_id">
+			and pfr.insBranch_id = #insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_id">
+			and pfr.product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			and p.product_name = #product_name#
+		</isNotEmpty>
+		<isNotEmpty  property="charge_type">
+			and pfr.charge_type = #charge_type#
+		</isNotEmpty>
+	</sql>
+	
+	<!-- 查询所有ProductFeeRate信息 -->
+	<select id="queryProFeeRate" parameterClass="ProductFeeRateVOModel" resultClass="ProductFeeRateVOModel">
+		<include refid="queryProFeeRate_head"/>  
+		<include refid="queryProFeeRate_all"/>
+		<include refid="queryProFeeRate_foot"/>
+	</select>
+
+	<select id="queryProFeeRate_count" parameterClass="ProductFeeRateVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryProFeeRate_all"/>
+		) where 1=1
+	</select>
+	
+	<!-- 查询明细 -->
+	<!-- 根据seq_id获取产品手续费率明细信息-->
+	<select id="queryProFeeRateView" parameterClass="ProductFeeRateVOModel" resultClass="ProductFeeRateVOModel">
+		select pfr.seq_id,pfr.insBranch_id,b.insBranch_name,pfr.product_id,p.product_name,
+			pfr.coverage_period,plc.coverage_period_name,pfr.coverage_year,pfr.sell_way,sw.sell_way_name,
+			pfr.charge_type,ct.charge_type_name,pfr.charge_year,pfr.policy_year,pfr.policy_period,
+			pfr.fee_rate,pfr.start_date,pfr.end_date,pfr.status,pfr.remark,
+			pfr.createuser,pfr.createdate,pfr.modifyuser,pfr.modifydate
+        from pdt_product_fee_rate pfr
+        	left join sys_insbranch b 
+          		on pfr.insBranch_id = b.insbranch_id
+          	left join pdt_product_llife p
+          		on pfr.product_id = p.product_id and pfr.insbranch_id = p.insbranch_id
+          	left join cbs_sell_way sw
+          		on pfr.sell_way = sw.sell_way_code
+          	left join pdt_lib_chargetype ct
+          		on pfr.charge_type = ct.charge_type_code
+          	left join pdt_lib_coverageperiod plc
+          		on pfr.coverage_period = plc.coverage_period_code
+		where pfr.seq_id = #seq_id#
+	</select>
+	
+	<!-- 根据产品手续费率纬度（缴费年限，保单年度）获取产品手续费率信息-->
+	<select id="getProFeeRateBO" parameterClass="ProductFeeRateBOModel" resultClass="ProductFeeRateBOModel">
+         select *
+           from pdt_product_fee_rate
+		 where 1=1   
+		<isNotEmpty  property="insBranch_id">
+			and insBranch_id = #insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_id">
+			and product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="policy_year">
+			and policy_year = #policy_year#
+		</isNotEmpty>
+		<isNotEmpty  property="charge_year">
+			and charge_year = #charge_year#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 修改选中的产品手续费率信息-->
+	<update id="modifyProFeeRate" parameterClass="ProductFeeRateVOModel">
+		update pdt_product_fee_rate
+			set 
+			 coverage_period=#coverage_period#,
+			 coverage_year=#coverage_year#,
+			 charge_type=#charge_type#,
+			 charge_year=#charge_year#,
+			 policy_year=#policy_year#,
+			 policy_period=#policy_period#,
+			 fee_rate=#fee_rate#,
+			 start_date=#start_date#,
+			 end_date=#end_date#,
+			 modifyUser=#modifyUser#,
+			 modifyDate=sysdate
+		where seq_id=#seq_id#
+	</update>
+	
+	<!-- 新增产品手续费率信息-->
+	<insert id="insertProFeeRate" parameterClass="ProductFeeRateVOModel">
+		insert into pdt_product_fee_rate
+		(seq_id,insBranch_id,product_id,coverage_period,coverage_year
+		,sell_way,charge_type,charge_year,policy_year,policy_period
+		,fee_rate,start_date,end_date,status,remark
+		,createuser,createdate,modifyuser,modifydate)
+		values
+		(seq_id.nextval,#insBranch_id#,#product_id#,#coverage_period#,#coverage_year#
+		,'32',#charge_type#,#charge_year#,#policy_year#,#policy_period#
+		,#fee_rate#,#start_date#,#end_date#,'1',#remark#
+		,#createUser#,sysdate,#modifyUser#,sysdate)
+	</insert>
+</sqlMap>

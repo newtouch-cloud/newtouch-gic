@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="branch">
+   <typeAlias alias="branchModel" type="com.ca.cacore.manage.model.bo.BranchModel"/>
+   <typeAlias alias="branchTreeModel" type="com.ca.cacore.manage.model.bo.BranchTreeModel"/>
+   <typeAlias alias="branchVoModel" type="com.ca.cacore.manage.model.vo.BranchVOModel"/>
+   <typeAlias alias="branchStatusHisModel" type="com.ca.cacore.manage.model.bo.BranchStatusHisModel"/>
+   <typeAlias alias="branchStatusHisVoModel" type="com.ca.cacore.manage.model.vo.BranchStatusHisVOModel"/>
+   <typeAlias alias="customerContactVOModel" type="com.ca.cacore.csm.model.vo.CustomerVOModel"/>
+   
+    <typeAlias alias="businessLicenseHisModel" type="com.ca.cacore.manage.model.vo.BusinessLicenseHisModel"/>
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+   
+	<sql id="query_all">
+	
+		SELECT t.seq_id,
+               t.branch_parentid     as parent_branch_id,
+               t.branch_id,
+               t.branch_name,
+               t.branch_abbr,
+               t.branch_level,
+               t.branch_allpath,
+               t.delegate,
+               t.address,
+               t.telephone,
+               t.fax,
+               t.email,
+              (SELECT replace(wm_concat(sb.branch_name),',','--') hj FROM sys_branch sb  where sb.branch_id!='0001'  START WITH  sb.BRANCH_ID IN(t.branch_id)
+  CONNECT BY PRIOR BRANCH_PARENTID =sb.BRANCH_ID ) sbname,
+               t.found_date,
+               t.recall_date,
+               t.status,
+               <!-- '有效' status_name, -->
+               CASE WHEN t.status='0' THEN '删除' ELSE
+                         CASE WHEN t.status='1' THEN '启用' ELSE
+                           '禁止' END END status_name,
+               t.remark,
+               t.cost_center,
+               t.settle_center,
+               t.createUser,
+               t.createDate,
+               t.modifyUser,
+               t.permitarea,
+               t.permitcode,
+               t.modifyDate,
+              <!--  t.province_code,
+               t.city_code,
+               t.area_code, -->
+               t.province,
+               t.city,
+               t.area,
+               t.channelcode,
+               t1.branch_name        as parent_branch_name,
+               sbl.branch_level_name as branch_level_name,
+               <!-- 添加统一社会信用代码   by zdd 20190610 start-->
+		      t.UnifiedSocialCreditNO,
+		      t.busLicenseFoundDate as buslicensefounddate,
+		      t.exitTime as exittime,
+		      t.licensepath,
+		      t.deatailedaddress
+	          <!-- 添加统一社会信用代码   by zdd 20190610 end-->
+          from 
+          <isEmpty property="branch_id">
+	          sys_branch t
+	          left join sys_branch t1
+	            on t.branch_parentid =t1.branch_id
+	          left join SYS_BRANCH_LEVEL sbl
+	            on sbl.branch_level_code = t.branch_level
+          </isEmpty>
+          <isNotEmpty property="branch_id">
+				(  select sh.branch_id from  sys_branch sh where  1=1  <!-- and sh.status = '1' -->
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )sb
+	          left join sys_branch t
+	            on sb.branch_id =t.branch_id
+	          left join sys_branch t1
+	            on t.branch_parentid =t1.branch_id
+	          left join SYS_BRANCH_LEVEL sbl
+	            on sbl.branch_level_code = t.branch_level
+		  </isNotEmpty>
+		  where 1=1 <!-- and t.branch_id in $branch_list$ -->
+		  and t.branch_id in (SELECT ID
+                          FROM (SELECT DISTINCT BRANCH_ID       ID,
+                                                BRANCH_NAME     NAME,
+                                                BRANCH_PARENTID PID
+                                  FROM SYS_BRANCH T
+                                 START WITH T.BRANCH_ID IN
+                                            (SELECT TDA.DATA_AUTH_NO
+                                               FROM T_DATA_AUTH TDA
+                                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                                AND TDA.OBJECT_NO = #modifyUser#
+                                                AND OBJECT_TYPE = 'USER')
+                                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID))
+		 <!-- <isNotEmpty prepend="and" property="found_date"> -->
+			<!-- t.found_date >= #found_date# -->
+		<isNotEmpty prepend="and" property="buslicensefounddate"> <!-- by zdd 20190613 --> <!-- zdd20190722 -->
+			to_date(to_char(t.busLicenseFoundDate,'yyyy-mm-dd'),'yyyy-mm-dd')>=#buslicensefounddate# 
+		</isNotEmpty>
+        <isNotEmpty prepend="and" property="recall_date">
+			<!-- #recall_date# >= t.found_date -->
+			#recall_date#>=to_date(to_char(t.busLicenseFoundDate,'yyyy-mm-dd'),'yyyy-mm-dd')
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_name">
+			 t.branch_name like '%$branch_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_abbr">
+			 t.branch_id like '%$branch_abbr$%'
+		</isNotEmpty>
+		<!-- 添加对机构层次的判断 by zdd 20190606 start -->
+		<isNotEmpty prepend="and" property="branch_level_name">
+		     sbl.branch_level_name=#branch_level_name#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="status">
+		     t.status=#status#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="permitarea">
+		  t.permitarea like '%$permitarea$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="beglongarea">
+		  t.beglongarea like '%$beglongarea$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="licensepath">
+			<isEqual property="licensepath" compareValue="1">
+				t.licensepath is not null and t.branch_level in ('1','3','4')
+			</isEqual>
+			<isEqual property="licensepath" compareValue="0">
+				t.licensepath is null and t.branch_level in ('1','3','4')
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="channelcode">
+		  	t.channelcode = #channelcode#
+		</isNotEmpty>
+		<!-- 添加对机构层次的判断 by zdd 20190606 end -->
+		order by t.modifyDate desc,t.createDate desc
+    </sql>
+    
+	
+	<!--查询所有信息-->
+	<select id="queryBranch" parameterClass="branchModel" resultClass="branchVoModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!-- 更具id获取model *-->
+	<select id="getModelBySeqid" parameterClass="branchModel" resultClass="branchModel">
+		select * from SYS_Branch t where  1 = 2 
+		<isNotEmpty prepend="or" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 查询页数 -->
+	<select id="queryBranch_count" parameterClass="branchModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		)
+	</select>
+	
+ 	<!--新增机构信息-->
+	<insert id="insertBranch" parameterClass="branchModel" >
+	  insert into SYS_Branch t(
+          <!-- seq_id, -->
+          branch_parentid
+          ,branch_id
+          ,branch_name
+          ,branch_abbr
+          ,branch_level
+          ,branch_allpath
+          ,delegate
+          ,address
+          ,zip
+          ,telephone
+          ,fax
+          ,email
+          ,found_date
+          ,status
+          ,remark
+          <!-- ,cost_center
+          ,settle_center -->
+          ,createUser
+          ,createDate
+          ,modifyUser
+          ,modifyDate
+          <!-- ,province_code
+          ,city_code
+          ,area_code -->
+          ,province_code
+          ,city_code
+          ,area_code
+          ,permitcode
+          ,permitarea
+          ,channelcode
+          ,unifiedsocialcreditno
+          ,busLicenseFoundDate,
+          deatailedaddress 
+          ) 
+    values(
+    	 <!--  (select max(seq_id)+1 from SYS_Branch)
+          , -->#branch_parentid#
+          ,#branch_id#
+          ,#branch_name#
+          ,#branch_abbr#
+          ,#branch_level#
+          ,#branch_allpath#
+          ,#delegate#
+          ,#address#
+          ,#zip#
+          ,#telephone#
+          ,#fax#
+          ,#email#
+          ,#found_date#
+          ,#status#
+          ,#remark#
+          <!-- ,#cost_center#
+          ,#settle_center# -->
+          ,#createUser#
+          ,sysdate
+          ,#modifyUser#
+          ,sysdate
+          ,#province_code#
+          ,#city_code#
+          ,#area_code#
+          ,#permitcode#
+          ,#permitarea#
+          ,#channelcode#
+          ,#unifiedSocialCreditNO#
+          ,#buslicensefounddate#
+          ,#deatailedaddress#
+         )
+	</insert>
+	
+	
+	 <!--批量新增机构信息-->
+	<!-- <insert id="insertbranchList" parameterClass="lists" >
+		<selectKey resultClass="long" keyProperty="id" type="pre">
+	      select seqid.nextval as id from dual
+	    </selectKey>
+	  insert into SYS_Branch t(
+          seq_id
+          ,branch_parentid
+          ,branch_id
+          ,branch_name
+          ,branch_abbr
+          ,branch_level
+          ,branch_allpath
+          ,delegate
+          ,address
+          ,zip
+          ,telephone
+          ,fax
+          ,email
+          ,found_date
+          ,status
+          ,remark
+          ,cost_center
+          ,settle_center
+          ,createUser
+          ,createDate
+          ,modifyUser
+          ,modifyDate
+          ,province_code
+          ,city_code
+          ,area_code
+          ,province_code
+          ,city_code
+          ,area_code
+          ,permitcode
+          ,permitarea
+          ,channelcode
+          ,unifiedsocialcreditno
+          ,busLicenseFoundDate 
+          ) 
+    values
+    <foreach collection="lists"  item="it" separator="," >
+		    <selectKey resultClass="long" keyProperty="id" type="pre">
+			      select seqid.nextval as id from dual
+			    </selectKey>
+      (
+    	   #id:INTEGER#,
+          ,#it.branch_parentid:VARCHAR#
+          ,#it.branch_id:VARCHAR#
+          ,#it.branch_name:VARCHAR#
+          ,#it.branch_abbr:VARCHAR#
+          ,#it.branch_level:VARCHAR#
+          ,#it.branch_allpath:VARCHAR#
+          ,#it.delegate:VARCHAR#
+          ,#it.address:VARCHAR#
+          ,#it.zip:VARCHAR#
+          ,#it.telephone:VARCHAR#
+          ,#it.fax:VARCHAR#
+          ,#it.email:VARCHAR#
+          ,#it.found_date#
+          ,#it.status:VARCHAR#
+          ,#it.remark:VARCHAR#
+          ,#it.createUser:VARCHAR#
+          ,#it.createDate:Date#
+          ,#it.modifyUser:VARCHAR#
+          ,#it.modifyDate:Date#
+          ,#it.province_code:INTEGER#
+          ,#it.city_code:INTEGER#
+          ,#it.area_code:INTEGER#
+          ,#it.permitcode:VARCHA#
+          ,#it.permitarea:VARCHA#
+          ,#it.channelcode:VARCHA#
+          ,#it.unifiedSocialCreditNO:VARCHA#
+          ,#it.buslicensefounddate:DATE#
+         )
+         </foreach>
+	</insert> -->
+
+    <!--更新机构信息-->
+    <update id="updateBranch" parameterClass="branchModel" >
+		update SYS_Branch set branch_id=#branch_id#
+		                     ,branch_name=#branch_name#
+		                     ,branch_abbr=#branch_abbr#
+		                     ,branch_level=#branch_level#
+		                     ,branch_allpath=#branch_allpath#
+		                     ,status=#status#
+		                     ,delegate=#delegate#
+		                    ,address=#address# 
+		                     ,zip=#zip#
+		                     ,found_date=#found_date#
+		                     ,telephone=#telephone#
+		                     ,fax=#fax#
+		                     ,email=#email#
+		                     ,recall_date=#recall_date#
+		                     ,remark=#remark#
+		                     <!-- ,cost_center=#cost_center#
+		                     ,settle_center=#settle_center# -->
+		                     ,modifyUser=#modifyUser#
+		                     ,modifyDate=sysdate
+		                    <!--  ,province_code=#province_code#
+		                     ,city_code=#city_code#
+		                     ,area_code=#area_code# -->
+		                     ,province=#province#
+		                     ,city=#city#
+		                     ,area=#area#
+		                     ,permitcode=#permitcode#
+		                     ,permitarea=#permitarea#
+		                     ,channelcode=#channelcode#
+		                     ,exittime=#exittime#
+		                     ,deatailedaddress=#deatailedaddress#
+		                     ,buslicensefounddate=#buslicensefounddate#
+		                     ,unifiedSocialCreditNO=#unifiedSocialCreditNO#
+		                      where seq_id=#seq_id#
+		                      
+	</update>
+	<!--修改NC中间表的信息  -->
+	<update id="updateNcDept" parameterClass="branchModel">
+	  update  ITF_NC_DEPT  SET
+           COMPANY=#cost_center#
+          ,CDEPT_NAME=#branch_name#
+          ,CDEPT_PARENTID=#branch_parentid#
+          WHERE CDEPT_ID=#branch_id#
+
+	</update>
+     
+	<!--查询机构明细信息,获取上级信息-->
+	<select id="queryVOBySeqId" parameterClass="branchModel" resultClass="branchVoModel">
+       SELECT distinct t.seq_id
+	       ,trim(t.branch_parentid) as parent_branch_id
+	       ,t.branch_id
+	       ,t.branch_name
+	       ,t.branch_abbr
+	       ,t.branch_level
+	       ,t.branch_allpath
+	       ,t.delegate
+	       ,t.address
+	       ,t.zip
+	       ,t.telephone
+	       ,t.fax
+	       ,t.email
+	       ,t.found_date
+	       ,t.recall_date
+	       ,t.status
+	       ,t.remark
+	       ,t.cost_center
+	       ,t.settle_center
+	      ,t.createUser
+	      ,t.createDate
+	      ,t.permitcode
+	      ,t.permitarea
+	      ,t.modifyUser
+	      ,t.modifyDate
+	      ,t.channelcode
+	      <!-- 添加查询省市县 -->
+		  <!-- ,t.province_code,t.city_code,t.area_code -->
+		   ,t.province,t.city,t.area  <!-- zddxiu -->
+	      ,sb.branch_name as parent_branch_name
+	      ,sbl.branch_level_name as branch_level_name 
+	      <!-- 添加统一社会信用代码   by zdd 20190610 start-->
+	      ,t.UnifiedSocialCreditNO
+	      ,t.busLicenseFoundDate as buslicensefounddate
+		  ,t.exitTime as exittime
+		  ,t.licensepath licensepath
+		  ,t.deatailedaddress
+	      <!-- 添加统一社会信用代码  by zdd 20190610 end-->
+		FROM SYS_Branch t 
+		left join SYS_Branch sb on trim(t.branch_parentid) = trim(sb.branch_id) 
+		left join SYS_BRANCH_LEVEL sbl
+			on sbl.branch_level_code=t.branch_level
+		where 1=1                      
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			t.branch_id = #branch_id#
+		</isNotEmpty>
+	</select>	
+	
+	<!-- 全部信息验证(插入) -->
+	<select id="queryByVerifyAll" parameterClass="branchModel" resultClass="branchModel">
+        select  * from sys_branch t where 1 = 2   
+		<isNotEmpty prepend="or" property="branch_id">
+			t.branch_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="or" property="branch_name">
+			t.branch_name = #branch_name#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_abbr">
+			t.branch_abbr = #branch_abbr#
+		</isNotEmpty>	
+	</select>	
+	
+	<!--非本条记录验证(更新) -->
+	<select id="queryByVerifyOtherData" parameterClass="branchModel" resultClass="branchModel">	
+		   select * from (select * from sys_branch where 1=1 
+		<isNotEmpty prepend="and" property="seq_id">
+			<![CDATA[ seq_id <> #seq_id# ]]>	
+		</isNotEmpty>
+    		) t where 1=2 
+    	<isNotEmpty prepend="or" property="branch_name">
+			t.branch_name = #branch_name#
+		</isNotEmpty> 
+		<isNotEmpty prepend="or" property="branch_abbr">
+			t.branch_abbr = #branch_abbr#
+		</isNotEmpty>
+   		<isNotEmpty prepend="or" property="branch_id">
+			t.branch_id = #branch_id#
+		</isNotEmpty>
+	</select>	
+	
+	<!--前台ajax校验检查是否存在项by张晨 -->
+	<select id="queryForVerifyData" parameterClass="branchModel" resultClass="int">	
+		   select count(*) from sys_branch b 
+    		where 1=2 
+    	<isNotEmpty prepend="or" property="branch_name">
+			b.branch_name = #branch_name#
+		</isNotEmpty> 
+		<isNotEmpty prepend="or" property="branch_abbr">
+			b.branch_abbr = #branch_abbr#
+		</isNotEmpty>
+   		<isNotEmpty prepend="or" property="branch_id">
+			b.branch_id = #branch_id#
+		</isNotEmpty>
+	</select>	
+	
+	<sql id="queryBranchStatusHisSql">
+		   select 
+		     t.seq_id
+		     ,t.channel_id
+		     ,t.branch_id
+		     ,slc1.status_name bef_stat_code
+		     ,slc2.status_name aft_stat_code
+		     ,t.effect_date
+		     ,t.approval_id
+		     ,(case
+		           when t.process_completed = 'Y'
+		            then '已处理'
+		           else '未处理'
+		            end) as process_completed
+		     ,t.remark
+		     ,t.createUser
+		     ,t.createDate
+		     ,t.modifyUser
+		     ,t.modifyDate 
+		     ,sb.branch_name
+		     from SYS_Branch_StatusHis t 
+		     left join SYS_Branch sb on trim(t.branch_id) = trim(sb.branch_id)  
+		     left join SYS_Library_CommonStatus slc1 on  t.bef_stat_code=slc1.status_code
+		     left join SYS_Library_CommonStatus slc2 on  t.aft_stat_code=slc2.status_code
+		     where 1=1
+		 <isNotEmpty prepend="and" property="emp_id">
+			sb.branch_id in (select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			sb.branch_allpath like '%$branch_id$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="aft_stat_code">
+			t.aft_stat_code=#aft_stat_code#
+		</isNotEmpty>
+		 order by t.modifyDate desc 
+	</sql>
+	
+	<!--查询所有信息-->
+	<select id="queryBranchStatusHisAll" parameterClass="branchStatusHisVoModel" resultClass="branchStatusHisVoModel">
+		<include refid="query_head"/>
+		<include refid="queryBranchStatusHisSql"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!-- 查询页数 -->
+	<select id="queryBranchStatusHis_count" parameterClass="branchStatusHisVoModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryBranchStatusHisSql"/>
+		)
+	</select>
+	
+		<insert id="insertBranchStatusHis" parameterClass="branchStatusHisModel" >
+		 insert into SYS_Branch_StatusHis t(
+	              seq_id
+				  ,channel_id
+				  ,branch_id
+				  ,bef_stat_code
+				  ,aft_stat_code
+				  ,effect_date
+				  ,approval_id
+				  ,process_completed
+				  ,remark
+				  ,createUser
+				  ,createDate
+				  ,modifyUser
+				  ,modifyDate)  
+	             values(
+	             seq_id.nextval
+	             ,#channel_id#
+				 ,#branch_id#
+				 ,#bef_stat_code#
+				 ,#aft_stat_code#
+				 ,sysdate
+				 ,#approval_id#
+				 ,#process_completed#
+				 ,#remark#
+				 ,#createUser#
+				 ,sysdate
+				 ,#modifyUser#
+				 ,sysdate)
+	</insert>
+	
+	<select id="queryBranchTree" parameterClass="branchModel" resultClass="branchTreeModel">
+	select id,name,pid,branch_level blevel from (
+		<!-- select distinct branch_id id, branch_name name, branch_parentid pid
+			from sys_branch t where
+			t.branch_id	in (
+			select tda.data_auth_no	from t_data_auth tda where tda.is_half_check ='false' and tda.object_no =  #emp_id# and object_type='USER'  )
+			and status = '1'
+		union  -->
+		select distinct branch_id id, branch_name name, branch_parentid pid ,branch_level
+			from sys_branch t   where 
+		 	t.status = '1'  start with
+			t.branch_id	in ( 
+			select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no =  #emp_id# and object_type='USER'  )
+		connect by prior t.branch_id=branch_parentid )
+	order by name
+	</select>
+	<select id="queryBranchTreeParent" parameterClass="branchModel" resultClass="branchTreeModel">
+		select id,name,pid,branch_level blevel,isParent  from (
+		select distinct branch_id id, branch_name name, branch_parentid pid ,branch_level,
+		(case (select count(*) from sys_branch where branch_parentid=t.branch_id  )  when 0 then 'false' else 'true' end ) isParent
+		from sys_branch t   where
+		t.status = '1' and
+		t.branch_id	in (
+		select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no =  #emp_id# and object_type='USER' ))
+		order by id
+	</select>
+	<select id="queryBranchTreeChild" parameterClass="branchModel" resultClass="branchTreeModel">
+		SELECT DISTINCT
+		branch_id id,
+		branch_name name,
+		branch_parentid pid,
+		branch_level,
+		(case (select count(*) from sys_branch where branch_parentid=t.branch_id  )  when 0 then 'false' else 'true' end ) isParent
+		FROM
+		sys_branch t
+		where
+		t.status = '1' and branch_parentid=#branch_id# and t.branch_id in $branch_list$
+		order by name
+	</select>
+
+	<select id="queryBranchTreeExceptCentral" parameterClass="branchModel" resultClass="branchTreeModel">
+		select branch_id id, branch_name name, branch_parentid pid 
+		from sys_branch t where 
+		t.branch_id	in (select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		and status = '1' and t.branch_level !='5'  and t.branch_level !='1'
+		order by t.branch_level
+	</select>
+	
+	<select id="queryBranchTree4WF" parameterClass="branchModel" resultClass="branchTreeModel">
+		select branch_id id, branch_name name, branch_parentid pid 
+		from sys_branch t where 
+		t.branch_id	in (select tda.data_auth_no	from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		and status = '1' and t.branch_level != '5'
+	</select>
+	
+	<select id="getSubBranchInfo" parameterClass="String" resultClass="branchVoModel">
+		select * from sys_branch sb where sb.branch_parentid=#branch_parentid#
+	</select>
+	
+     <select  id="isHasPerson" parameterClass="customerContactVOModel" resultClass="customerContactVOModel">
+        <!--   select
+				      sb.branch_id,
+				      sb.branch_name,
+				      sb.branch_level,
+				      ss.team_id,
+				      ss.sales_id  customer_id,
+				      ss.sales_name customer_name
+			   from sys_branch sb
+			   left join smis_sales ss on ss.branch_id=sb.branch_id
+			   where sb.branch_id=#branch_id# and sb.branch_level in ('4','5') -->
+			   
+			   select 
+				    b2.branch_id   team_no_1,   
+				    b2.branch_name team_name_1,
+				    b1.branch_id   team_no_2,  
+				    b1.branch_name team_name_2,
+				    sb.branch_id   team_no_3,
+				    sb.branch_name team_name_3,
+				    st.team_id,
+				    st.team_name,
+				    ss.sales_id customer_id,
+				    ss.sales_name customer_name
+			from smis_sales  ss 
+			left join smis_team st on st.team_id=ss.team_id
+			left join sys_branch sb on sb.branch_id=ss.branch_id
+			left join sys_branch b1 on b1.branch_id = sb.branch_parentid 
+			left join sys_branch b2 on b2.branch_id = b1.branch_parentid 
+		    where st.team_id=#branch_id#
+     </select>
+     <!--新增机构时，需要将机构的信息同步给财务系统，通过接口表的方式实现-->
+	<!-- <insert id="insertITF_GL_DEPT" parameterClass="branchModel" >
+	  insert into ITF_GL_DEPT t(
+           COMPANY
+          ,CDEPT_ID
+          ,CDEPT_NAME
+          ,CDEPT_FLAG
+          ) 
+    values(
+    	   SUBSTR(#branch_id#,3,2)
+          ,#branch_id#
+          ,#branch_name#
+          ,'0'
+         )
+	</insert> -->
+	<insert id="insertITF_NC_DEPT" parameterClass="branchModel" >
+	  insert into ITF_NC_DEPT t(
+           COMPANY
+          ,CDEPT_ID
+          ,CDEPT_NAME
+          ,CDEPT_PARENTID
+          ,CDEPT_FLAG
+          ) 
+    values(
+           #cost_center#
+          ,#branch_id#
+          ,#branch_name#
+          ,#branch_parentid#
+          ,'0'
+         )
+	</insert>
+
+	<select id="exportBranchInfo" parameterClass="branchModel" resultClass="branchVoModel">
+		<!-- SELECT 
+			t.seq_id
+			,t.branch_parentid as parent_branch_id
+			,t.branch_id
+			,t.branch_name
+			,t.branch_abbr
+			,t.branch_level
+			,t.branch_allpath
+			,t.delegate
+			,t.address
+			,t.zip
+			,t.telephone
+			,t.fax
+			,t.email
+			,t.found_date
+			,t.recall_date
+			,t.status
+			,slc.status_name
+			,t.remark
+			,t.cost_center
+			,t.settle_center
+			,t.createUser
+			,t.createDate
+			,t.modifyUser
+			,t.modifyDate
+			,sb.branch_name as parent_branch_name
+			,sbl.branch_level_name as branch_level_name
+			添加统一社会信用代码、银保监机构编码、许可经营区域   by zdd 20190610 start
+	      ,t.UnifiedSocialCreditNO
+	      ,t.permitarea
+	      ,t.permitcode
+	      ,t.busLicenseFoundDate as buslicensefounddate
+		  ,t.exitTime as exittime
+		  ,t.province_code
+          ,t.city_code
+          ,t.area_code
+	      添加统一社会信用代码、银保监机构编码、许可经营区域   by zdd 20190610 end
+		from sys_branch t 
+		left join sys_branch sb 
+			on trim(t.branch_parentid) = trim(sb.branch_id)
+		left join SYS_Library_CommonStatus slc
+			on slc.status_code=t.status
+		left join SYS_BRANCH_LEVEL sbl
+			on sbl.branch_level_code=t.branch_level
+		where 1=1  
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="emp_id">
+			( t.branch_id in (	select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and   tda.object_no = #emp_id# )
+			or t.branch_parentid in (	select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and  tda.object_no = #emp_id# ) )
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="status">
+			t.status = #status#
+		</isNotEmpty>
+		<isNotEmpty  property="branch_id">
+			and t.branch_id like '$branch_id$%'
+		</isNotEmpty>
+        <isNotEmpty prepend="and" property="branch_level">
+			t.branch_level = #branch_level#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="buslicensefounddate"> by zdd 20190613
+			t.busLicenseFoundDate>=#buslicensefounddate#
+		</isNotEmpty>
+        <isNotEmpty prepend="and" property="recall_date">by zdd 20190613
+			#recall_date#>=t.busLicenseFoundDate
+		</isNotEmpty>
+		添加branch_level_name by zdd 20190606 start
+		<isNotEmpty prepend="and" property="branch_level_name">
+			sbl.branch_level_name = #branch_level_name#
+		</isNotEmpty>
+
+		添加branch_level_name by zdd 20190606 end
+		order by t.branch_id asc -->
+		<!-- SELECT t.seq_id,
+               t.branch_parentid     as parent_branch_id,
+               t.branch_id,
+               t.branch_name,
+               t.branch_abbr,
+               t.branch_level,
+               t.branch_allpath,
+               t.delegate,
+               t.address,
+               t.telephone,
+               t.fax,
+               t.email,
+               t.found_date,
+               t.recall_date,
+               t.status,
+               '有效' status_name,
+               CASE WHEN t.status='0' THEN '删除' ELSE
+                         CASE WHEN t.status='1' THEN '启用' ELSE
+                           '禁止' END END status_name,
+               t.remark,
+               t.cost_center,
+               t.settle_center,
+               t.createUser,
+               t.createDate,
+               t.modifyUser,
+               t.permitarea,
+               t.permitcode,
+               t.modifyDate,
+               t.province_code,
+               t.city_code,
+               t.area_code,
+               t.province,
+               t.city,
+               t.area, 
+               t.channelcode,
+               t1.branch_name        as parent_branch_name,
+               sbl.branch_level_name as branch_level_name,
+               添加统一社会信用代码   by zdd 20190610 start
+		      t.UnifiedSocialCreditNO,
+		      t.busLicenseFoundDate as buslicensefounddate,
+		      t.exitTime as exittime
+	          添加统一社会信用代码   by zdd 20190610 end
+          from 
+          <isEmpty property="branch_id">
+	          sys_branch t
+	          left join sys_branch t1
+	            on t.branch_parentid =t1.branch_id
+	          left join SYS_BRANCH_LEVEL sbl
+	            on sbl.branch_level_code = t.branch_level
+          </isEmpty>
+          <isNotEmpty property="branch_id">
+				(  select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )sb
+	          left join sys_branch t
+	            on sb.branch_id =t.branch_id
+	          left join sys_branch t1
+	            on t.branch_parentid =t1.branch_id
+	          left join SYS_BRANCH_LEVEL sbl
+	            on sbl.branch_level_code = t.branch_level
+		  </isNotEmpty>
+		  where 1=1 and t.branch_id in $branch_list$
+		<isNotEmpty prepend="and" property="buslicensefounddate"> by zdd 20190613
+			to_date(to_char(t.busLicenseFoundDate,'yyyy-mm-dd'),'yyyy-mm-dd')>=#buslicensefounddate#
+		</isNotEmpty>
+		
+        <isNotEmpty prepend="and" property="recall_date">
+			#recall_date#>=to_date(to_char(t.busLicenseFoundDate,'yyyy-mm-dd'),'yyyy-mm-dd')
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="status">
+			t.status = #status#
+		</isNotEmpty>
+		 <isNotEmpty prepend="and" property="branch_level">
+			t.branch_level = #branch_level#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_name">
+			 t.branch_name like '%$branch_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_abbr">
+			 t.branch_id like '%$branch_abbr$%'
+		</isNotEmpty>
+		添加对机构层次的判断 by zdd 20190606 start
+		<isNotEmpty prepend="and" property="branch_level_name">
+		     sbl.branch_level_name=#branch_level_name#
+		</isNotEmpty>
+		添加对机构层次的判断 by zdd 20190606 end
+		order by t.modifyDate desc,t.createDate desc -->
+		<include refid="query_all"/>
+    </select>
+    <select id="queryNcBranch" parameterClass="branchModel" resultClass="branchModel">
+    select ind.company,
+       ind.cdept_name,
+       ind.cdept_id,
+       ind.cdept_parentid
+    from itf_nc_dept ind
+    where ind.cdept_id=#branch_id#
+    </select>
+    
+    <!--查询省市县-->
+    <select id="queryProvince" resultClass="branchModel">
+		select t.area_code province_code,t.area_name province from  t_area_info t where t.parent_area_code='000000'
+	</select>
+	<select id="queryCity" parameterClass="String" resultClass="branchModel">
+		select t.area_code city_code,t.area_name city from  t_area_info t where t.parent_area_code=#parent_code#
+	</select>
+	<select id="queryArea" parameterClass="String" resultClass="branchModel">
+		select t.area_code area_code,t.area_name area from  t_area_info t where t.parent_area_code=#parent_code#
+	</select>
+	<!-- 根据省市县code查询name -->
+    <select id="getCityByCode" parameterClass="String" resultClass="branchVoModel">
+		select t.area_name area from  t_area_info t where t.area_code=#area_code#
+	</select>
+	<select id ="queryBranchTreeTeam" parameterClass="branchModel" resultClass="branchTreeModel">
+		
+    select distinct sb.branch_id id, sb.branch_name name, sb.branch_parentid pid 
+			from sys_branch sb where sb.status ='1'and sb.branch_id in $branch_list$
+	order by name
+	</select>
+	
+	<!-- 根据机构等级查询机构name -->
+    <select id="queryBranchLevelName" parameterClass="String" resultClass="String">
+		select sbl.branch_level_name from  sys_branch_level sbl where sbl.branch_level_code=#branch_level#
+	</select>
+	
+	<!-- 查询机构代码是否存在 by zdd 20190612 -->
+	 <select id="isornoBranchId" parameterClass="String" resultClass="Integer">
+		SELECT COUNT(1) FROM sys_branch b WHERE b.branch_id=#branch_id#
+	</select>
+	
+	<!-- 插入营业执照 by zdd 20190612 -->
+	
+	<update id="insertBusinessLicense" parameterClass="branchModel" >
+	  
+	  UPDATE Sys_Branch b SET b.licensepath=#licensepath# WHERE b.seq_id=#seq_id#
+	</update>
+	<!-- 插入营业执照历史记录 -->
+	<insert id="insertBusinessLicenseHis"  parameterClass="businessLicenseHisModel" >
+	 insert into BUSINESSLICENSEHIS(id,seq_id,licensepath,c_crt_tm,c_up_tm,c_crt_user,c_up_user,status,branch_name,c_last_mark)
+	 values((select nvl(max(id),0)+1 from BUSINESSLICENSEHIS),#seq_id#,#licensepath#,sysdate,sysdate,#c_crt_user#,#c_crt_user#,'1',(select branch_name from sys_branch where seq_id=#seq_id#),1)
+	</insert>
+	 <!--  查询机构层级  by zdd 20190613 -->
+	 <select id="getBranchLeavel" resultClass="String">
+	 SELECT B.BRANCH_LEVEL_NAME FROM SYS_BRANCH_LEVEL B order by BRANCH_LEVEL_NAME asc
+	 </select>
+	 <!-- 根据省市县name查询code  by zdd 20190613-->
+    <select id="getCityByNamez" parameterClass="String" resultClass="String">
+		select t.area_code  from  t_area_info t where t.area_name=#area#
+	</select>
+	<select id="getzzstuts"  resultClass="String" parameterClass="String">
+	 SELECT s.enum_code||','||s.enum_name FROM Sys_Enum s WHERE s.up_enum=#str#
+	</select>
+	<select id="querHeightYON" parameterClass="branchModel" resultClass="Integer"><!--   zdd0722 -->
+	SELECT COUNT(1) FROM Sys_Branch sb WHERE sb.branch_id=#branch_id# and sb.branch_name=#branch_name#
+	</select>
+	<!-- zdd05 -->
+	<update id="updatebeanchyezhizhao" parameterClass="branchModel">
+	    update SYS_Branch  set modifyDate=sysdate,unifiedsocialcreditno=#unifiedSocialCreditNO#,
+		 buslicensefounddate=#buslicensefounddate#,province_code=#province_code#,
+		 city_code=#city_code#,area_code=#area_code#,permitarea=#permitarea#,<!-- address=#address#, -->
+		 permitcode=#permitcode#,city=#city#,province=#province#,area=#area#,deatailedaddress=#deatailedaddress#
+		 where branch_id=#branch_id#
+	</update>
+	
+	<select id="isORNoPower" parameterClass="branchModel" resultClass="Integer">
+	SELECT count(1) FROM sys_branch sb WHERE sb.branch_id IN(SELECT ID
+          FROM (SELECT DISTINCT BRANCH_ID       ID,
+                                BRANCH_NAME     NAME,
+                                BRANCH_PARENTID PID
+                  FROM SYS_BRANCH T
+                <!-- WHERE T.STATUS = '1' -->
+                 
+                 START WITH T.BRANCH_ID IN
+                            (SELECT TDA.DATA_AUTH_NO
+                               FROM T_DATA_AUTH TDA
+                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                AND TDA.OBJECT_NO = #modifyUser#   
+                                AND OBJECT_TYPE = 'USER')
+                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID))
+          AND sb.branch_id=#branch_id# and sb.branch_level in ('1','3','4')
+	</select>
+	<select id="businessLicenseHis" parameterClass="Integer" resultClass="businessLicenseHisModel">
+	  SELECT bf.seq_id,bf.licensepath,bf.c_crt_tm,bf.c_up_tm,bf.branch_name,bf.status,bf.id,bf.c_last_mark FROM BUSINESSLICENSEHIS bf WHERE bf.seq_id=#seq_id#  and status='1'
+	     ORDER BY bf.c_up_tm DESC
+	</select>
+	<update id="upbusinessLicenseHisc_last_mark" parameterClass="Integer">
+	    update BUSINESSLICENSEHIS set c_last_mark=0 where seq_id=#seq_id# and c_last_mark=1
+	</update>
+	<update id="upbusinessLicenseHis" parameterClass="businessLicenseHisModel">
+	  update BUSINESSLICENSEHIS set status='0' where id=#id#
+	</update>
+	<select id="branchIdSelect" parameterClass="String" resultClass="String">
+		select max(branch_id)+1 from sys_branch where branch_id like '$branch_id$__'
+	</select>
+	<!-- 查询机构信息 -->
+ 	<select id="BranchBySeqId" parameterClass="branchModel" resultClass="branchVoModel">
+		 SELECT distinct t.seq_id
+	       ,trim(t.branch_parentid) as parent_branch_id
+	       ,t.branch_id
+	       ,t.branch_name
+	       ,t.branch_abbr
+	       ,t.branch_level
+	       ,t.branch_allpath
+	       ,t.delegate
+	       ,t.address
+	       ,t.zip
+	       ,t.telephone
+	       ,t.fax
+	       ,t.email
+	       ,t.found_date
+	       ,t.recall_date
+	       ,t.status
+	       ,t.remark
+	       ,t.cost_center
+	       ,t.settle_center
+	      ,t.createUser
+	      ,t.createDate
+	      ,t.permitcode
+	      ,t.permitarea
+	      ,t.modifyUser
+	      ,t.modifyDate
+	      ,t.channelcode
+	      <!-- 添加查询省市县 -->
+		  <!-- ,t.province_code,t.city_code,t.area_code -->
+		   ,t.province,t.city,t.area  <!-- zddxiu -->
+	      ,sb.branch_name as parent_branch_name
+	      ,sbl.branch_level_name as branch_level_name 
+	      <!-- 添加统一社会信用代码   by zdd 20190610 start-->
+	      ,t.UnifiedSocialCreditNO
+	      ,t.busLicenseFoundDate as buslicensefounddate
+		  ,t.exitTime as exittime
+		  ,t.licensepath licensepath
+		  ,t.deatailedaddress
+	      <!-- 添加统一社会信用代码  by zdd 20190610 end-->
+		FROM SYS_Branch t 
+		left join SYS_Branch sb on trim(t.branch_parentid) = trim(sb.branch_id) 
+		left join SYS_BRANCH_LEVEL sbl
+			on sbl.branch_level_code-1=t.branch_level
+		where 1=1                      
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			t.branch_id = #branch_id#
+		</isNotEmpty>
+	</select> 
+	<insert id="insertBranchJunior" parameterClass="branchModel">
+		insert into SYS_Branch t(
+           branch_parentid
+          ,branch_id
+          ,branch_name
+          ,branch_abbr
+          ,branch_level
+          ,delegate
+          ,address
+          ,zip
+          ,telephone
+          ,fax
+          ,email
+          ,found_date
+          ,status
+          ,remark
+          ,createUser
+          ,createDate
+          ,modifyUser
+          ,modifyDate
+          ,province
+          ,city
+          ,area
+          ,permitcode
+          ,permitarea
+          ,channelcode
+          ,deatailedaddress 
+          ) 
+    values(
+    	   #branch_parentid#
+          ,#branch_id#
+          ,#branch_name#
+          ,#branch_abbr#
+          ,#branch_level#
+          ,#delegate#
+          ,#address#
+          ,#zip#
+          ,#telephone#
+          ,#fax#
+          ,#email#
+          ,#found_date#
+          ,#status#
+          ,#remark#
+          ,#createUser#
+          ,sysdate
+          ,#modifyUser#
+          ,sysdate
+          ,#province#
+          ,#city#
+          ,#area#
+          ,#permitcode#
+          ,#permitarea#
+          ,#channelcode#
+          ,#deatailedaddress#
+         )
+	
+	</insert>
+	
+</sqlMap>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="policyLifeInsured">
+	<typeAlias alias="policyLifeInsuredModel"	type="com.ca.cacore.ibs.model.bo.PolicyLifeInsuredModel" />
+	<select id="queryPolicyLifeInsured" resultClass="policyLifeInsuredModel">
+		select * from CBS_POLICYLIFE_INSURED
+	</select>
+</sqlMap>

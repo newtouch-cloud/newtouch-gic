@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="funcPanel"> 
+	<typeAlias alias="funcPanelModel" type="com.ca.cacore.manage.model.bo.FuncPanelModel"/>
+	<typeAlias alias="menuModel" type="com.ca.cacore.manage.model.bo.MenuModel"/>
+	<typeAlias alias="searchParams" type="com.ca.cacore.manage.model.vo.SearchParamsModel"/>
+	
+	<!-- 查找功能界面常用功能的配置信息 -->
+	<select id="getFuncPanelConfInfo"  resultClass="funcPanelModel" parameterClass="String">
+		select * from sys_funcpanel_conf where emp_id=#emp_id# order by belong_zone,belong_row,belong_column
+	</select>
+	
+	<!-- 弹出式查找 -->
+	<select id="getMenuInfo"  resultClass="menuModel" parameterClass="searchParams">
+		select * from(
+			select rownum r,menu.* from t_menu menu
+				where menu.menu_no in(
+					select tda.data_auth_no from t_data_auth tda where tda.object_type = 'ROLE' and tda.data_auth_type = 'MENU' and tda.object_no in(
+						select tr.role_no from t_roles tr where tr.role_no in (
+							select tor.role_no from t_operator_roles tor where tor.opt_no = #emp_id#))) 
+				and menu.menu_name like '%$keyWord$%' and menu.menu_url is not null)t 
+		where <![CDATA[ t.r<11 ]]>
+	</select>
+	<select id="getSechInfo"  resultClass="searchParams" parameterClass="searchParams"> <!-- '%$keyWord$%' -->
+		select $t_name$ keyword from $table_name$ where $t_name$ like  '$reg$' and   <![CDATA[ rownum<=8 ]]> order by seq_id
+	</select>
+	
+	<select id="getManagerId"  resultClass="searchParams" parameterClass="searchParams"> <!-- '%$keyWord$%' -->
+				 select ss.$t_name$ keyword
+				    from smis_sales ss
+				    left join smis_rank sr
+				      on ss.rank_id = sr.rank_id
+				   where sr.rankseries_code = 'manager'
+				   and ss.$t_name$ like '$reg$' 
+				   and <![CDATA[ rownum<=8 ]]> order by ss.seq_id
+	</select>
+</sqlMap>

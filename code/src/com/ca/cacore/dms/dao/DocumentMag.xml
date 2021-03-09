@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+ <sqlMap namespace="DocumentMag">
+  <typeAlias alias="DocumentMag" type="com.ca.cacore.dms.model.bo.DocumentMagModel"/>
+<!--  zdd03 -->
+		 <sql id="query_head">
+				select *
+			  	  from (select row_.*, rownum rownum_ 
+			  	          from (
+		</sql>
+		
+		
+		<sql id="query_foot">
+		    	<![CDATA[
+						) row_ 
+				where rownum < #limit#)
+				where rownum_ >= #start#
+				]]>	
+		</sql>
+		
+
+		 <sql id="query_all">
+			SELECT DISTINCT to_char(dms.receiptdate,'yyyy-mm-dd') receiptdate,
+                dms.applyuserid applyuser_id,
+                 ae.person_name applyuser_name,
+                 dms.applyuser_signname,
+                 dms.apply_sysbranchid,
+                 dms.apply_sysbranchname,
+                 dms.applay_cpybranchid,
+                 dms.applay_cpybranchname,
+                 dms.document_idcard,
+                 dms.document_name,
+                 dms.document_serial_beg,
+                 dms.document_serial_end,
+                 dms.applay_num,
+                 to_char(dms.return_time,'yyyy-mm-dd') return_time,
+                 dms.returnuser_code,
+                 re.person_name returnuser_name,
+                 dms.return_sysbranchid,
+                 dms.return_sysbranchname,
+                 dms.return_cpybranchid,
+                 dms.return_cpybranchname,
+                 dms.redocument_idcard,
+                 dms.redocument_name,
+                 dms.redocument_serial_beg,
+                 dms.redocument_serial_end,
+                 dms.user_number,
+                 dms.obsolete_number,
+                 dms.not_used_number,
+                 dms.return_num,
+                dms.remarks,
+                 dms.modify_date,
+                dms.create_date
+           FROM dms_document dms
+          LEFT JOIN Sys_Employee ae
+          ON dms.applyuserid=ae.person_no
+          LEFT JOIN Sys_Employee re
+          ON dms.returnuser_code=re.person_no
+          left join Sys_Enum se
+          on se.enum_code=ccode and se.up_enum='danzheng'
+          WHERE 1=1
+             <isNotEmpty prepend="and" property="apply_sysbranchname">
+              (dms.RETURN_SYSBRANCHname=#apply_sysbranchname#  or dms.RETURN_SYSBRANCHname in 
+              (select branch_name from sys_branch  sys where sys.status = '1' start with sys.branch_id in (select branch_id from sys_branch where branch_name = #apply_sysbranchname# and branch_id in $dept_list$)connect by prior sys.branch_id=sys.branch_parentid))
+              or (dms.APPLY_SYSBRANCHNAME=#apply_sysbranchname# or dms.APPLY_SYSBRANCHNAME in 
+              (select branch_name from sys_branch  sys where sys.status = '1' start with sys.branch_id in (select branch_id from sys_branch where branch_name = #apply_sysbranchname# and branch_id in $dept_list$)connect by prior sys.branch_id=sys.branch_parentid))
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="ccodename">
+               (dms.applay_cpybranchname like '%$ccodename$%' or dms.return_cpybranchname like '%$ccodename$%')
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="document_idcard">
+               ( dms.document_idcard like '%$document_idcard$%' or   dms.redocument_idcard like '%$document_idcard$%')
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="receiptdate">
+                 dms.receiptdate>=to_date(#receiptdate#,'yyyy-mm-dd')
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="receiptdate1">
+                  to_date(#receiptdate1#,'yyyy-mm-dd')>=dms.receiptdate
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="return_time">
+                 dms.return_time>=to_date(#return_time#,'yyyy-mm-dd')
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="return_time1">
+                 to_date(#return_time1#,'yyyy-mm-dd')>=dms.return_time
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="applyuser_name">
+                ae.person_name like '%$applyuser_name$%'
+             </isNotEmpty>
+			<isNotEmpty prepend="and" property="returnuser_name">
+			    re.person_name like '%$returnuser_name$%'
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="applyuser_id">
+			    dms.APPLYUSERID like '%$applyuser_id$%'
+             </isNotEmpty>
+             <isNotEmpty prepend="and" property="returnuser_code">
+			    dms.Returnuser_Code like '%$returnuser_code$%'
+             </isNotEmpty>
+               order BY modify_date DESC,create_date DESC
+                          
+		 </sql>
+		 		 <!-- 查询页数 -->
+			<select id="querydocmanagent_count" parameterClass="DocumentMag" resultClass="int">
+				select count(*) from (
+				<include refid="query_all"/>
+				)
+			</select>
+			
+			<!--查询所有信息-->
+			<select id="querydocmanagent" parameterClass="DocumentMag" resultClass="DocumentMag">
+				<include refid="query_head"/>
+				<include refid="query_all"/>
+				<include refid="query_foot"/>
+			</select>
+			
+			<select id="exportdocmanagent" parameterClass="DocumentMag" resultClass="DocumentMag">
+			   <include refid="query_all"/>
+			</select>
+		<select id="checkpermissionYON" parameterClass="DocumentMag" resultClass="Integer">
+		      SELECT COUNT(1)
+                  FROM SYS_BRANCH T
+                 WHERE T.STATUS = '1' AND (branch_name=#apply_sysbranchname# OR branch_name=#return_sysbranchname#)
+                 START WITH T.BRANCH_ID IN
+                            (SELECT TDA.DATA_AUTH_NO
+                               FROM T_DATA_AUTH TDA
+                              WHERE TDA.IS_HALF_CHECK IS NULL
+                                AND TDA.OBJECT_NO =#modify_user# 
+                                AND OBJECT_TYPE = 'USER')
+                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID
+		</select>
+		
+		<select id="checkapjbYON" parameterClass="DocumentMag" resultClass="DocumentMag">
+				<!-- SELECT  DISTINCT e.person_no applyuser_id,
+				       e.person_name applyuser_name,
+				       sb.branch_id apply_sysbranchid,
+				       sb.branch_name apply_sysbranchname,
+				       cb.branch_id applay_cpybranchid,
+				       cb.branch_name applay_cpybranchname
+				 FROM Sys_Employee e
+				LEFT JOIN Sys_Branch sb
+				ON e.branch_id=sb.branch_id
+				LEFT JOIN cpy_branch cb
+				ON sb.branch_id=cb.bleng_branchid
+				WHERE e.person_no=#applyuser_id#
+				AND sb.branch_name=#apply_sysbranchname#
+				AND cb.branch_name=#applay_cpybranchname# -->
+				SELECT  DISTINCT e.person_no applyuser_id,
+              			 e.person_name applyuser_name,
+		               sb.branch_name apply_sysbranchname
+		         FROM Sys_Employee e
+		         LEFT JOIN sys_branch sb
+		         ON e.branch_id=sb.branch_id
+				WHERE e.person_no=#applyuser_id#
+		</select>
+		
+		<select id="checkrpjbYON" parameterClass="DocumentMag" resultClass="DocumentMag">
+		<!-- SELECT  DISTINCT e.person_no returnuser_code,
+				       e.person_name returnuser_name,
+				       sb.branch_id return_sysbranchid,
+				       sb.branch_name return_sysbranchname,
+				       cb.branch_id return_cpybranchid,
+				       cb.branch_name return_cpybranchname
+				 FROM Sys_Employee e
+				LEFT JOIN Sys_Branch sb
+				ON e.branch_id=sb.branch_id
+				LEFT JOIN cpy_branch cb
+				ON sb.branch_id=cb.bleng_branchid
+				WHERE e.person_no=#returnuser_code#
+				AND sb.branch_name=#return_sysbranchname#
+				AND cb.branch_name=#return_cpybranchname#
+				 <isNotEmpty prepend="and" property="returnuser_name">
+				 e.person_name=#returnuser_name#   
+				 </isNotEmpty> -->
+				 SELECT  DISTINCT e.person_no returnuser_code,
+				       e.person_name returnuser_name
+				 FROM Sys_Employee e
+				WHERE e.person_no=#returnuser_code#
+				
+		</select>
+		<insert id="importdocmanagent"  parameterClass="DocumentMag">
+		      INSERT INTO dms_document (seqid,
+										receiptdate,
+										applyuserid,
+										applyuser_signname,
+										apply_sysbranchname,
+										applay_cpybranchname,
+										document_idcard,
+										document_name,
+										document_serial_beg,
+										document_serial_end,
+										return_time,
+										returnuser_code,
+										return_sysbranchname,
+										return_cpybranchname,
+										user_number,
+										obsolete_number,
+										not_used_number,
+										remarks,
+										create_date,
+										create_user,
+										modify_date,
+										modify_user,
+										redocument_idcard,
+										redocument_name,
+										redocument_serial_beg,
+										redocument_serial_end,
+										ccode,
+										applay_num,
+										return_num
+										)
+										VALUES(seq_id.nextval,
+										to_date(#receiptdate#,'yyyy-mm-dd'),
+										#applyuser_id#,
+										#applyuser_signname#,
+										#apply_sysbranchname#,
+										#applay_cpybranchname#,
+										#document_idcard#,
+										#document_name#,
+										#document_serial_beg#,
+										#document_serial_end#,
+										to_date(#return_time#,'yyyy-mm-dd'),
+										#returnuser_code#,
+										#return_sysbranchname#,
+										#return_cpybranchname#,
+										#user_number#,
+										#obsolete_number#,
+										#not_used_number#,
+										#remarks#,
+										sysdate,
+										#modify_user#,
+										sysdate,
+										#modify_user#,
+										#redocument_idcard#,
+										#redocument_name#,
+										#redocument_serial_beg#,
+										#redocument_serial_end#,
+										#ccode#,
+										#applay_num#,
+										#return_num#
+										)
+		</insert>
+		
+		<select id='documentexistYON' parameterClass="DocumentMag" resultClass="DocumentMag">
+		SELECT DISTINCT to_char(dms.receiptdate,'yyyy-mm-dd') receiptdate,
+                dms.applyuserid,
+                 dms.applyuser_signname,
+                 dms.apply_sysbranchid,
+                 dms.applay_cpybranchid,
+                 dms.document_idcard,
+                 dms.document_name,
+                 dms.document_serial_beg,
+                 dms.document_serial_end,
+                 (dms.document_serial_end-dms.document_serial_beg)+1 applay_num,
+                 to_char(dms.return_time,'yyyy-mm-dd') return_time,
+                 dms.returnuser_code,
+                 dms.return_sysbranchid,
+                 dms.return_cpybranchid,
+                 dms.user_number,
+                 dms.obsolete_number,
+                 dms.not_used_number,
+                  (dms.user_number+dms.obsolete_number+dms.not_used_number) return_num,
+                dms.remarks
+                 FROM dms_document dms 
+                 WHERE dms.document_idcard=#document_idcard# AND dms.document_name=#document_name#
+		</select>
+		
+		<insert id="insertsysEnumdanzheng" parameterClass="DocumentMag">
+		INSERT INTO Sys_Enum(serno,enum_no,enum_code,enum_name,up_enum,dept_type,crt_date,mdf_date,crt_user,mdf_user,data_flag)
+values(te_seq_id.nextval,te_seq_id.nextval,#ccode# ,#ccodename#,'danzheng','00',SYSDATE,SYSDATE,#modify_user#,#modify_user#,'1')
+		</insert>
+		
+		<select id="getIsOrNodanzheng" resultClass="Integer" parameterClass="DocumentMag">
+		 SELECT COUNT(1) FROM Sys_Enum se WHERE se.up_enum='danzheng' AND  se.enum_code=trim(#ccode#) or se.enum_name = trim(#ccodename#)
+		</select>
+ </sqlMap>

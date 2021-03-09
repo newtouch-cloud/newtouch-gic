@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="asynRequest">
+	<typeAlias alias="policyLifePeopleVOModel"	type="com.ca.cacore.ibs.model.vo.PolicyLifePeopleVOModel" />
+	<typeAlias alias="productLlifeModel" type="com.ca.cacore.msss.model.bo.ProductLlifeModel"/>
+    <typeAlias alias="policyLifeVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeVOModel"/>
+    <typeAlias alias="customerContactVOModel" type="com.ca.cacore.csm.model.vo.CustomerVOModel"/>
+    <typeAlias alias="contractLifeVOModel" type="com.ca.cacore.ibs.model.vo.ContractLifeVOModel"/>
+  	<typeAlias alias="productLlifeVOModel" type="com.ca.cacore.msss.model.vo.ProductLlifeVOModel"/>
+    <!-- 根据人员代码查询 -->
+	<select id="getSalesInfo" resultClass="policyLifePeopleVOModel" parameterClass="String">
+	select s.sales_id, s.sales_name, s.branch_id, b.branch_name ,s.sales_status
+	from smis_sales s
+	inner join sys_branch b
+	on s.branch_id = b.branch_id
+	where s.sales_id = #sales_id#
+    </select>
+    
+    <!-- 带出险种信息 -->
+    <select id="getProductInfo" parameterClass="productLlifeModel" resultClass="productLlifeModel">
+          select *
+          from pdt_product_llife p
+          where p.product_id = #product_id#
+          <isNotEmpty property="insBranch_id">
+			AND p.insbranch_id = #insBranch_id#
+		  </isNotEmpty>
+    </select>
+    
+	<!-- 带出客户信息 -->
+	<select id="getCustomerInfo" parameterClass="policyLifePeopleVOModel"
+		resultClass="policyLifePeopleVOModel">
+		select cc.seq_id as customer_seq_id,
+		cc.customer_id,
+		cc.name,
+		cc.title,
+		cc.gender,
+		cc.birthday,
+		cc.customer_type,
+		cc.certi_type,
+		cc.certi_no,
+		cc.certi_validdate,
+		cc.education,
+		cc.nationality,
+		cc.nation,
+		cc.homeplace,
+		cc.seat_address,
+		cc.height,
+		cc.weight,
+		cc.political,
+		cc.education2,
+		cc.marital_stat,
+		cc.health,
+		cc.job_type,
+		cc.job_code,
+		cc.income_type,
+		cc.bank_code,
+		cc.bank_account_no,
+		cc.bank_account_name,
+		cc.is_telmsgservice,
+		cc.remark,
+		lf.branch_id,
+		lf.address,
+		lf.zip,
+		lf.mobile,
+		lf.fax,
+		lf.telphone,
+		lf.job_tel,
+		lf.email,
+		lf.job_com,
+		lf.modifydate,
+		gender.gender_name,
+		cert.certi_type_name,
+		nation.nation_name,
+		natl.nationality_name,
+		income.incomtype_name,
+		mari.marital_stat_name,
+		poli.political_name,
+		edu.education_name,
+		heal.health_name,
+		case
+		when cc.is_telmsgservice = 'Y' then
+		'是'
+		else
+		'否'
+		end is_telmsgserviceName
+		from crm_customer cc
+		left join (select *
+		from (select t.*,
+		row_number() over(partition by t.customer_id order by t.createdate desc) rn
+		from crm_customer_contact t) tou
+		where <![CDATA[tou.rn <= 1
+         ]]>) lf
+		on cc.customer_id = lf.customer_id
+		left join SYS_Library_Gender gender
+		on gender.gender_code = cc.gender
+		left join SYS_Library_Certi_Type cert
+		on cert.certi_type_code = cc.certi_type
+		left join SYS_Library_Nation nation
+		on nation.nation_code = cc.nation
+		left join SYS_Library_Nationality natl
+		on natl.nationality_code = cc.nationality
+		left join CRM_Customer_IncomType income
+		on income.incomtype_code = cc.income_type
+		left join SYS_Library_Marital mari
+		on mari.marital_stat_code = cc.marital_stat
+		left join SYS_Library_Political poli
+		on poli.political_code = cc.political
+		left join SYS_Library_Education edu
+		on edu.education_code = cc.education2
+		left join SYS_Library_Health heal
+		on heal.health_code = cc.health
+		where 1=1
+		<isNotEmpty property="certi_type">
+			AND cc.certi_type = #certi_type#
+		</isNotEmpty>
+		<isNotEmpty property="certi_no">
+			AND cc.certi_no = #certi_no#
+		</isNotEmpty>
+		<isNotEmpty property="birthday">
+			AND cc.birthday like #birthday#
+		</isNotEmpty>
+		<isNotEmpty property="name">
+			AND cc.name = #name#
+		</isNotEmpty>
+		<isNotEmpty property="gender">
+			AND cc.gender = #gender#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 判断投保单号是否重复 -->
+	<select id="validateSendCodeRepeat" parameterClass="PolicyLifeVOModel" resultClass="PolicyLifeVOModel">
+	select * from cbs_policylife 
+	where send_code = #send_code#
+	and insBranch_id = #insBranch_id#
+	<isNotEmpty property="status">
+	  AND status = #status#
+	</isNotEmpty>
+	</select>
+	
+	<!-- 判断保单号是否重复 -->
+	<select id="validatePolicyCodeRepeat" parameterClass="contractLifeVOModel" resultClass="contractLifeVOModel">
+	select * from cbs_contractlife
+	where policy_code = #policy_code#
+	and insBranch_id = #insBranch_id#
+	</select>
+
+	<!-- 得到总公司的机构代码 -->
+	<select id="getBranchID" resultClass="String">
+		select t.branch_id from SYS_BRANCH t where t.branch_parentid is null
+	</select>
+
+<!-- 查询客户信息根据机构代码和客户代码 -->
+	<select id="getCustomerInfoByBCId" resultClass="customerContactVOModel" parameterClass="customerContactVOModel">
+		select cc.seq_id as customer_seq_id,
+		cc.customer_id,
+		cc.name,
+		cc.title,
+		cc.gender,
+		cc.birthday,
+		cc.customer_type,
+		cc.certi_type,
+		cc.certi_no,
+		cc.certi_validdate,
+		cc.education,
+		cc.nationality,
+		cc.nation,
+		cc.homeplace,
+		cc.seat_address,
+		cc.height,
+		cc.weight,
+		cc.political,
+		cc.education2,
+		cc.marital_stat,
+		cc.health,
+		cc.job_type,
+		cc.job_code,
+		cc.income_type,
+		cc.bank_code,
+		cc.bank_account_no,
+		cc.bank_account_name,
+		cc.is_telmsgservice,
+		cc.remark,
+		lf.branch_id,
+		lf.address,
+		lf.zip,
+		lf.mobile,
+		lf.fax,
+		lf.telphone,
+		lf.job_tel,
+		lf.email,
+		lf.job_com,
+		lf.modifydate
+		from crm_customer cc
+		left join (select *
+		from (select t.*,
+		row_number() over(partition by t.customer_id order by t.createdate desc) rn
+		from crm_customer_contact t) tou
+		where <![CDATA[ tou.rn <= 1 ]]> and tou.branch_id =#branch_id# ) lf
+		on cc.customer_id = lf.customer_id
+		where cc.customer_id =#customer_id#
+	</select>
+	
+    
+</sqlMap>

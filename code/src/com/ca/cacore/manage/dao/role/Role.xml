@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="role">
+   <typeAlias alias="roleModel" type="com.ca.cacore.manage.model.bo.RoleModel"/>
+   <typeAlias alias="rolePrivilege" type="com.ca.cacore.manage.model.vo.RolePrivilege"/>
+   <typeAlias alias="roleAuthsModel" type="com.ca.cacore.manage.model.bo.RoleAuthsModel"/>
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+   
+	<sql id="query_all">
+		SELECT seq_id,
+			  case when role_type='1' then '管理员权限'
+			    when role_type='2' then '普通用户权限'
+			      when role_type='3' then '来宾'
+			        end as role_type,role_id,role_name, 
+		case when status='1' then '有效'
+          when status='0' then '无效' end as status
+          ,remark,createuser,createdate,modifyuser,modifydate
+		 FROM SYS_ROLE t where 1=1 
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_type">
+			t.role_type = #role_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_id">
+			t.role_id = #role_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_name">
+			t.role_name like '$role_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="status">
+			t.status = #status#
+		</isNotEmpty>
+		order by seq_id desc
+    </sql>
+    
+    <!-- 去除更改本身的其他数据是否存在 -->
+    <select id="queryOnlyModelByOP" parameterClass="roleModel" resultClass="roleModel">
+    	SELECT * FROM SYS_ROLE t where 1 = 1  
+    	<isNotEmpty prepend="and" property="seq_id">
+			<![CDATA[t.seq_id <> #seq_id#]]> 
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_id">
+			t.role_id = #role_id# 
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="role_name">
+			t.role_name = #role_name# 
+		</isNotEmpty>
+    </select>
+	
+	<!-- 带分页查询信息 -->
+	<select id="queryRole" parameterClass="roleModel" resultClass="roleModel">
+		<include refid="query_all"/>
+	</select>
+	
+	<!-- 查询页数 -->
+	<select id="queryRole_count" parameterClass="roleModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		) where 1=1 
+	</select>
+	
+ 	<!-- 新增信息 -->
+	<insert id="insertRole" parameterClass="roleModel" >
+		 insert into SYS_ROLE (seq_id,role_type,role_id,role_name,status,remark,createUser,createDate,modifyUser,modifyDate) values (seq_id.nextval,#role_type#,#role_id#,#role_name#,#status#,#remark#,#createUser#,sysdate,#modifyUser#,sysdate) 
+	</insert>
+	
+ 	<!-- 修改信息 -->
+	<update id="updateRole" parameterClass="roleModel" >
+		update SYS_ROLE set 
+		role_type=#role_type#,
+		role_id=#role_id#,
+		role_name=#role_name#,
+		status=#status#,
+		remark=#remark#,
+		modifyUser=#modifyUser#,
+		modifyDate=sysdate 
+		where seq_id=#seq_id#
+	</update>
+	
+	<!-- 删除信息 -->
+	<delete id="deleteRole" parameterClass="roleModel" >
+		delete from SYS_ROLE where seq_id=#seq_id#
+	</delete>
+	
+	<!-- 根据主键查询信息 -->
+	<select id="queryBySeqId" parameterClass="roleModel" resultClass="roleModel">
+           SELECT * 
+		  FROM SYS_ROLE t
+		 where 1=1
+		<isNotEmpty prepend="and" property="seq_id">
+			t.seq_id = #seq_id#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 根据角色id查询出系统所有菜单和按钮以及选中的的菜单和按钮 -->
+	<select id ="selectRolePrivilege" parameterClass="roleModel" resultClass="rolePrivilege">
+	  Select sfm.menu_id,
+       sfm.menu_name,
+       sfb.button_id,
+       sfb.button_name,
+       (case
+         when sfb.button_id in (
+           select button_id  from sys_role_auths where 1=2
+           <isNotEmpty prepend="or" property="role_id">
+			role_id = #role_id#
+			</isNotEmpty>
+           )
+         then
+          'checked'
+         else
+          ''
+       end) as selected 
+   	 from sys_funcmenu sfm 
+     inner join sys_funcbutton sfb 
+      on sfm.menu_Id = sfb.menu_id 
+      and sfm.status ='1'and sfb.status ='1'
+	</select>
+	 
+	 <!-- 根据role_id进行查询 -->
+	<select id="queryRoleAuths" parameterClass="roleAuthsModel" resultClass="roleAuthsModel">
+		select * from sys_role_auths where 1 = 2
+		<isNotEmpty prepend="or" property="role_id">
+			t.role_id = #role_id#
+		</isNotEmpty>
+	</select>
+	 
+	<!-- 角色权限表根据角色id删除所有信息 -->
+	<delete id="deleteRoleAuths" parameterClass="roleAuthsModel">
+		delete from sys_role_auths t where 1 = 2 
+		<isNotEmpty prepend="or" property="role_id">
+			t.role_id = #role_id#
+		</isNotEmpty>
+	</delete>
+	
+	
+	<!-- 角色权限表插入信息 -->
+	<insert id="saveRoleAuths" parameterClass="roleAuthsModel" >
+		 insert into sys_role_auths(
+		 seq_id,
+		 role_id,
+		 menu_id,
+		 button_id,
+		 status,
+		 remark,
+		 createUser,
+		 createDate,
+		 modifyUser,
+		 modifyDate) 
+		 values (
+		 sys_role_auths_seq_id.nextval,
+		 #role_id#,
+		 #menu_id#,
+		 #button_id#,
+		 #status#,
+		 #remark#,
+		 #createUser#,
+		 sysdate,
+		 #modifyUser#,
+		 sysdate) 
+	</insert>
+	<select id="queryForVerifyData" parameterClass="roleModel" resultClass="int">
+	     select count(seq_id) from sys_role s 
+    		where 1=2 
+    	<isNotEmpty prepend="or" property="role_name">
+			s.role_name = #role_name#
+		</isNotEmpty> 
+		<isNotEmpty prepend="or" property="role_id">
+			s.role_id = #role_id#
+		</isNotEmpty>
+	</select>
+
+</sqlMap>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<!-- PDT_Lib_ChargeType  产品评估类型数据字典-->
+<sqlMap namespace="LibAssessmentType">
+	<typeAlias alias="LibAssessmentTypeModel"	type="com.ca.cacore.msss.model.bo.LibAssessmentTypeModel" />
+	<select id="queryLibAssessmentType" resultClass="LibAssessmentTypeModel">
+		SELECT * FROM PDT_Lib_Assessment_Type
+	</select>
+</sqlMap>

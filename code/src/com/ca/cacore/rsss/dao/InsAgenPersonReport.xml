@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="InsAgenPersonReport">
+		<typeAlias alias="InsAgenPersonReportModel" type="com.ca.cacore.rsss.model.vo.InsAgenPersonReportModel"/>
+	<!--查询保险代理机构人员电子档案报表-->
+	<select id="queryInsAgenPersonReport" parameterClass="InsAgenPersonReportModel" resultClass="InsAgenPersonReportModel">
+			select t.sales_id,
+		       t.sales_name,
+		       decode(t.sex, '2', '女', '男') gender,
+		       decode(t.certi_type, '11', t.certi_no, null) iden_card,
+		       con.contract_id labour_code,
+		       con.start_date labour_code_time,
+		       cre.credentials_id certificate,
+		       cre.give_date certificate_date,
+		       cre2.credentials_id certificate_no,
+		       t.dismiss_date department_time,
+		       sr.rank_name  post 
+		  from smis_sales t
+		  left join smis_sales_contract con
+		    on t.sales_id = con.sales_id
+		  left join smis_sales_credentials cre
+		    on t.sales_id = cre.sales_id
+		   and cre.credentials_type = '1'
+		  left join smis_sales_credentials cre2
+		    on t.sales_id = cre2.sales_id
+		   and cre2.credentials_type = '7'
+		  left join smis_rank sr
+            on sr.rank_id=t.rank_id 
+		  where t.branch_id like '$branch_id$%'
+	</select>
+	<!-- 导出保险代理机构人员电子档案报表-->
+	<select id="exprotInsAgenPersonReport" parameterClass="InsAgenPersonReportModel" resultClass="InsAgenPersonReportModel">
+			select t.sales_id,
+		       t.sales_name,
+		       decode(t.sex, '2', '女', '男') gender,
+		       decode(t.certi_type, '11', t.certi_no, null) iden_card,
+		       con.contract_id labour_code,
+		       con.start_date labour_code_time,
+		       cre.credentials_id certificate,
+		       cre.give_date certificate_date,
+		       cre2.credentials_id certificate_no,
+		       t.dismiss_date department_time,
+		       sr.rank_name  post 
+		  from smis_sales t
+		  left join smis_sales_contract con
+		    on t.sales_id = con.sales_id
+		  left join smis_sales_credentials cre
+		    on t.sales_id = cre.sales_id
+		   and cre.credentials_type = '1'
+		  left join smis_sales_credentials cre2
+		    on t.sales_id = cre2.sales_id
+		   and cre2.credentials_type = '7'
+		  left join smis_rank sr
+            on sr.rank_id=t.rank_id 
+		  where t.branch_id like '$branch_id$%'
+	</select>
+</sqlMap>

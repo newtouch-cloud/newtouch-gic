@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="PkgLife">
+   <typeAlias alias="PkgLifeModel" type="com.ca.cacore.msss.model.bo.PkgLifeModel"/>
+   <typeAlias alias="PkgLifeRelationModel" type="com.ca.cacore.msss.model.bo.PkgLifeRelationModel"/>
+   <typeAlias alias="PkgLifeVOModel" type="com.ca.cacore.msss.model.vo.PkgLifeVOModel"/>
+   <sql id="queryPkgLife_head">
+	SELECT *
+	  	  FROM (SELECT row_.*, rownum rownum_ 
+	  	          FROM (
+	</sql>
+	
+	<sql id="queryPkgLife_foot">
+    	<![CDATA[
+				) row_ 
+		WHERE rownum < #limit#)
+		WHERE rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  
+	<sql id="queryPkgLife_all">
+    SELECT pkgLife.seq_id,
+           pkgLife.pkg_id,
+           pkgLife.pkg_name,
+           pkgLife.pkg_abbr,
+           pkgLife.pkg_enName,
+           pkgLife.pkg_enAbbr,
+           pkgLife.start_date,
+           pkgLife.end_date,
+           pkgLife.status,
+           (CASE
+             WHEN pkgLife.status = '0' THEN
+              '无效'
+             WHEN pkgLife.status = '1' THEN
+              '有效'
+           END) AS status_name,
+           pkgLife.Remark
+     FROM PDT_Pkg_Life pkgLife
+     WHERE 1 = 1
+
+ 		<isNotEmpty  property="pkg_id">
+			AND pkgLife.pkg_id = #pkg_id#
+		</isNotEmpty>
+		<isNotEmpty  property="pkg_name">
+			AND pkgLife.pkg_name like '%$pkg_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="status">
+			AND pkgLife.status = #status#
+		</isNotEmpty>
+		
+		<isNotEmpty  property="seq_id">
+			AND pkgLife.seq_id = #seq_id#
+		</isNotEmpty>
+			
+		ORDER BY seq_id  DESC
+    </sql>
+	
+	<!-- 查询PDT_Pkg_Life信息 -->
+	<select id="queryPkgLife" parameterClass="PkgLifeVOModel" resultClass="PkgLifeVOModel">
+		<include refid="queryPkgLife_head"/>
+		<include refid="queryPkgLife_all"/>
+		<include refid="queryPkgLife_foot"/>
+	</select>
+	
+	<select id="queryPkgLife_count" parameterClass="PkgLifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryPkgLife_all"/>
+		) WHERE 1=1
+	</select>
+	
+	<select id="getPkgLifeVO" parameterClass="PkgLifeVOModel" resultClass="PkgLifeVOModel">
+		<include refid="queryPkgLife_all"/>
+	</select>
+	
+	<select id="getPkgLifeBO" parameterClass="PkgLifeVOModel" resultClass="PkgLifeModel">
+		SELECT *
+		FROM PDT_Pkg_Life
+		WHERE 1=1   
+		<isNotEmpty  property="seq_id">
+		AND seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty  property="pkg_id">
+		AND pkg_id = #pkg_id#
+		</isNotEmpty>
+		<isNotEmpty  property="pkg_name">
+		AND pkg_name = #pkg_name#
+		</isNotEmpty>
+</select>
+	
+	<!-- 添加产品组合 -->
+<insert id="insertPkgLife" parameterClass="PkgLifeModel" >
+	
+
+INSERT INTO PDT_Pkg_Life pkgLife
+        (pkgLife.seq_id,
+         pkgLife.pkg_id,
+         pkgLife.pkg_name,
+         pkgLife.pkg_abbr,
+         pkgLife.pkg_enName,
+         pkgLife.pkg_enAbbr,
+         pkgLife.status,
+         pkgLife.start_date,
+         pkgLife.end_date,
+         pkgLife.remark,
+         pkgLife.createUser,
+         pkgLife.createDate,
+         pkgLife.modifyUser,
+         pkgLife.modifyDate)
+      VALUES
+        (seq_id.nextval,
+         #pkg_id#,
+         #pkg_name#,
+         #pkg_abbr#,
+         #pkg_enName#,
+         #pkg_enAbbr#,
+         #status#,
+         #start_date#,
+         #end_date#,
+         #remark#,
+         #createUser#,
+         SYSDATE,
+         #modifyUser#,
+         SYSDATE)
+   <selectKey resultClass="int" keyProperty="seq_id" >
+    	SELECT seq_id.CURRVAL AS seq_id FROM DUAL
+   </selectKey>
+</insert>
+	
+	<!-- 添加产品组合 -->
+<insert id="insertPkgLifeRelation" parameterClass="PkgLifeRelationModel" >
+INSERT INTO PDT_Pkg_Life_Relation relation
+        (relation.seq_id,
+         relation.pkg_id,
+         relation.product_id,
+         relation.status,
+         relation.remark,
+         relation.createUser,
+         relation.createDate,
+         relation.modifyUser,
+         relation.modifyDate,
+         relation.insBranch_id)
+      VALUES
+        (seq_id.nextval,
+         #pkg_id#,
+         #product_id#,
+         #status#,
+         #remark#,
+         #createUser#,
+         SYSDATE,
+         #modifyUser#,
+         SYSDATE,
+         #insBranch_id#)
+</insert>
+	
+	<!-- 删除PDT_Pkg_Life_Relation信息 -->
+	<delete id="deletePkgLifeRelation" parameterClass="PkgLifeRelationModel" >
+		delete from PDT_Pkg_Life_Relation where pkg_id=#pkg_id#
+	</delete>
+	
+	<!-- 修改PDT_Pkg_Life信息 -->
+	<update id="updatePkgLife" parameterClass="PkgLifeModel" >
+			UPDATE PDT_Pkg_Life pkgLife
+			SET
+	         pkgLife.pkg_abbr = #pkg_abbr#,
+	         pkgLife.pkg_enName = #pkg_enName#,
+	         pkgLife.pkg_enAbbr = #pkg_enAbbr#,
+	         pkgLife.start_date = #start_date#,
+	         pkgLife.end_date = #end_date#,
+	         pkgLife.remark = #remark#,
+	         pkgLife.modifyUser = #modifyUser#,
+	         pkgLife.modifyDate = SYSDATE 
+			WHERE seq_id = #seq_id#
+</update> 
+</sqlMap>

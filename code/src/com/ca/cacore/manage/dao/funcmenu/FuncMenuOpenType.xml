@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="funcMenuOpenType">
+   <typeAlias alias="FuncMenuOpenTypeModel" type="com.ca.cacore.manage.model.bo.FuncMenuOpenTypeModel"/>
+   <!-- 查询菜单打开方式标签所有内容 -->
+   <select id="getFuncMenuOpenTypeData"  resultClass="FuncMenuOpenTypeModel">
+		select * from sys_funcmenu_opentype
+	</select>
+</sqlMap>

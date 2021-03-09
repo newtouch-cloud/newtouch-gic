@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="bussinessType">
+	<typeAlias alias="bussinessTypeModel" type="com.newtouch.report.model.vo.BusinessTypeModel"/>
+	
+	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	
+	<sql id="query_all" >
+		select branch_name,
+         Business_Flag,
+         nvl(sum(u_month_count), 0) u_month_count,
+         nvl(sum(u_month_premium), 0) u_month_premium,
+         nvl(sum(u_month_fee), 0) u_month_fee,
+         nvl(sum(u_month_paidfee), 0) u_month_paidfee,
+         nvl(sum(u_year_count), 0) u_year_count,
+         nvl(sum(u_year_premium), 0) u_year_premium,
+         nvl(sum(u_year_fee), 0) u_year_fee,
+         nvl(sum(u_year_paidfee), 0) u_year_paidfee from (
+          select 
+        (select branch_name
+   from sys_branch
+  where status = '1'
+    and branch_level = '1'
+  start with branch_id = sys.branch_id
+ connect by branch_id = prior branch_parentid) branch_name,
+       bt.Business_Flag,
+       nvl(sum(bt.u_month_count), 0) u_month_count,
+       nvl(sum(bt.u_month_premium), 0) u_month_premium,
+       nvl(sum(bt.u_month_fee), 0) u_month_fee,
+       nvl(sum(bt.u_month_paidfee), 0) u_month_paidfee,
+       nvl(sum(bt.u_year_count), 0) u_year_count,
+       nvl(sum(bt.u_year_premium), 0) u_year_premium,
+       nvl(sum(bt.u_year_fee), 0) u_year_fee,
+       nvl(sum(bt.u_year_paidfee), 0) u_year_paidfee
+  from BussinessType_sum bt
+  left join sys_branch sys
+    on bt.channel_no = sys.channelcode
+   and sys.status = '1'
+ where bt.term_date = #term#
+   and bt.channel_no in (SELECT channelcode
+                          FROM (SELECT DISTINCT branch_id       id,
+                                                branch_name     name,
+                                                branch_parentid pid,
+                                                channelcode
+                                  FROM sys_branch t
+                                 WHERE t.status = '1'
+                                 START WITH t.branch_id IN
+                                            (SELECT tda.data_auth_no
+                                               FROM t_data_auth tda
+                                              WHERE tda.is_half_check IS NULL
+                                                AND tda.object_no = #empId#
+                                                AND object_type = 'USER')
+                                CONNECT BY PRIOR t.branch_id = branch_parentid))
+   and bt.channel_no in
+       (select channelcode
+          from sys_branch
+         where status = '1'
+         start with branch_id = #branch_id#
+        connect by prior branch_id = branch_parentid)
+ group by sys.branch_id,
+          sys.branch_name,
+          bt.Business_Flag) group by branch_name,Business_Flag	order by branch_name 
+	</sql>
+	
+	
+	<select id="queryBusinessType" parameterClass="bussinessTypeModel" resultClass="bussinessTypeModel">
+		<include refid="query_head" />
+		<include refid="query_all" />
+		<include refid="query_foot" />
+	</select>
+	
+	<select id="queryBusinessType_count" parameterClass="bussinessTypeModel" resultClass="int">
+		select count(*) from (
+			<include refid="query_all"/>
+		)
+	</select>
+	
+	
+</sqlMap>

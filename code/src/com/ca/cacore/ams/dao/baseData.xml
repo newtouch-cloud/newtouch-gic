@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="baseDataManager">
+    <!-- 注入实体类messagePushManager -->
+	<typeAlias alias="baseDataVOModel" type="com.ca.cacore.ams.model.vo.BaseDataVOModel" />
+	
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>	
+	<!-- 查询 -->
+	<sql id="queryAllBaseData">
+       select 
+              data.id,
+			  data.code,
+			  data.typeid,
+			  data.typecode,
+			  data.levelnum,
+			  data.isleaf,
+			  data.name,
+			  data.status,
+			  data.startdate,
+			  data.enddate,
+			  data.description,
+			  data.treecode,
+			  data.seqno,
+			  data.createdby,
+			  data.updatedby,
+			  data.created,
+			  data.updated,
+			  data.parentid 
+		    from DD_BASEDATA data
+		    where data.isleaf='0'
+		<isNotEmpty prepend="and" property="typecode">
+			data.typecode=#typecode#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="created">
+			data.created=#created#
+		</isNotEmpty>
+		
+	</sql>
+	
+	<!-- 分页查询信息(查询出所有的记录) -->
+	<select id="queryBaseData" parameterClass="baseDataVOModel" resultClass="baseDataVOModel">
+		<include refid="query_head" />
+		<include refid="queryAllBaseData" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询所有的记录条数 -->
+	<select id="getBaseData_count" parameterClass="baseDataVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryAllBaseData" />
+		) where 1=1
+	</select>
+	
+	<select id="getBaseDataid" parameterClass="baseDataVOModel" resultClass="String">
+		select max(to_number(id)) from  DD_BASEDATA  
+		where 1=1
+	</select>
+	
+	<select id="getBaseDataTypeid" parameterClass="baseDataVOModel" resultClass="int">
+		select max(to_number(typeid)) from  DD_BASEDATA  
+		where 1=1
+	</select>
+	
+	<insert id="addBaseData" parameterClass="baseDataVOModel">
+		insert into DD_BASEDATA  
+		        ( id,  typeid,  code,  typecode,  name,  created,  updated,  levelnum,  createdby,  updatedby,  isleaf,  status,  seqno,  startdate,  enddate)         
+          values(#id#,#typeid#,#code#,#typecode#,#name#,#created#,#updated#,#levelnum#,#createdby#,#updatedby#,#isleaf#,#status#,#seqno#,#startdate#,#enddate#)
+	</insert>
+	
+	<delete id="deleteBaseData" parameterClass="baseDataVOModel">
+	   delete from DD_BASEDATA data where data.typecode=#typecode#
+	</delete>
+	
+	<delete id="deleteBaseDataid" parameterClass="baseDataVOModel">
+	   delete from DD_BASEDATA data where data.id=#id#
+	</delete>
+	
+	<select  id="queryBaseDataById" parameterClass="baseDataVOModel" resultClass="baseDataVOModel">
+	    select 
+              data.id,
+			  data.code,
+			  data.typeid,
+			  data.typecode,
+			  data.levelnum,
+			  data.isleaf,
+			  data.name,
+			  data.status,
+			  data.startdate,
+			  data.enddate,
+			  data.description,
+			  data.treecode,
+			  data.seqno,
+			  data.createdby,
+			  data.updatedby,
+			  data.created,
+			  data.updated,
+			  data.parentid 
+		    from DD_BASEDATA data
+		    where data.id=#id#
+	</select>
+	
+	<select  id="queryBaseDataByTypecode" parameterClass="baseDataVOModel" resultClass="baseDataVOModel">
+	    select 
+              data.id,
+			  data.code,
+			  data.typeid,
+			  data.typecode,
+			  data.levelnum,
+			  data.isleaf,
+			  data.name,
+			  data.status,
+			  data.startdate,
+			  data.enddate,
+			  data.description,
+			  data.treecode,
+			  data.seqno,
+			  data.createdby,
+			  data.updatedby,
+			  data.created,
+			  data.updated,
+			  data.parentid 
+		    from DD_BASEDATA data
+		    where data.isleaf='0'
+		    and   data.typecode=#typecode#
+	</select>
+	
+	<select  id="queryBaseDataListByTypecode" parameterClass="baseDataVOModel" resultClass="baseDataVOModel">
+	    select 
+              data.id,
+			  data.code,
+			  data.typeid,
+			  data.typecode,
+			  data.levelnum,
+			  data.isleaf,
+			  data.name,
+			  data.status,
+			  data.startdate,
+			  data.enddate,
+			  data.description,
+			  data.treecode,
+			  data.seqno,
+			  data.createdby,
+			  data.updatedby,
+			  data.created,
+			  data.updated,
+			  data.parentid 
+		    from DD_BASEDATA data
+		    where  data.typecode=#typecode#
+		    order by data.code desc
+	</select>
+	
+	<update id="modifyBaseData" parameterClass="baseDataVOModel">
+	       update DD_BASEDATA data
+	       set data.typecode=#typecode#,
+	           data.name=#name#,
+	           data.code=#code#
+	       where data.id=#id#
+	</update>
+	
+	
+	
+		
+</sqlMap>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Superior">
+	<typeAlias alias="superiorModel" type="com.newtouch.core.rightsmgmt.model.SuperiorModel"/>
+	
+	<select id="querySuperior" parameterClass="superiorModel" resultClass="superiorModel">
+		select opt_no,opt_name,superior_no,superior_name,
+		(case when branch_id is null then (select dept_no branch_id from t_operator where opt_no = #opt_no#) else branch_id end) branch_id,
+		(case when branch_name is null then (select branch_name from sys_branch where branch_id = (select dept_no branch_id from t_operator where opt_no = #opt_no#)) else branch_name end) branch_name from superior where 1=1
+		<isNotEmpty property="opt_no">  
+     		and opt_no = #opt_no#
+        </isNotEmpty>
+        <isNotEmpty property="superior_no">  
+     		and superior_no = #superior_no#
+        </isNotEmpty>
+        <isNotEmpty property="superior_name">  
+     		and superior_name = trim(#superior_name#)
+        </isNotEmpty>
+	</select>
+	
+	<select id="querySuperiorList" parameterClass="superiorModel" resultClass="superiorModel">
+       	<!-- select se1.person_no superior_no,  se1.person_name superior_name from sys_employee se1 left join sys_employee_info se2
+   		on se1.person_no = se2.person_no and se2.status = '1' where se1.status = '1' and se2.person_status = '1'
+    	<isNotEmpty property="opt_no">  
+      		and (se1.branch_id in (select branch_parentid from sys_branch where branch_id in
+            (select dept_no from t_operator where opt_no = #opt_no# and opt_status = '1')) 
+            or se1.branch_id in (select dept_no from t_operator where opt_no = #opt_no# and opt_status='1'))
+    	</isNotEmpty> -->
+		select opt_no superior_no, opt_name superior_name from t_operator where 1=1 and opt_status = '1'
+		<isNotEmpty property="opt_no">  
+     		and <!-- dept_no in(select branch_parentid from sys_branch where branch_id in (select dept_no from t_operator where opt_no = #opt_no#))
+    		or --> dept_no in (select dept_no from t_operator where opt_no = #opt_no#)
+        </isNotEmpty>
+	</select>
+	
+	<insert id="insertSuperior" parameterClass="superiorModel">
+		insert into superior(superior_id,opt_no, opt_name, superior_no, superior_name, create_date, branch_id, branch_name) 
+		values (seq_superior_id.nextval,#opt_no#, #opt_name#, #superior_no#, #superior_name#, sysdate, #branch_id#, #branch_name#)
+	</insert>
+	
+	<update id="updateSuperior" parameterClass="superiorModel">
+		update superior set superior_no = #superior_no#, superior_name = #superior_name#, branch_id = #branch_id#, branch_name = #branch_name# where opt_no = #opt_no#
+	</update>
+	
+	<select id="findSupersByBranchId" parameterClass="superiorModel" resultClass="superiorModel">
+		select opt_no superior_no, opt_name superior_name from t_operator where 1=1 and opt_status = '1'
+		<isNotEmpty property="branch_id">  
+     		and dept_no = #branch_id#
+        </isNotEmpty>
+		<!-- select se1.person_no superior_no,  se1.person_name superior_name from sys_employee se1 left join sys_employee_info se2
+   		on se1.person_no = se2.person_no and se2.status = '1' where se1.status = '1' and se2.person_status = '1' 
+   		<isNotEmpty property="branch_id">  
+     		and se1.branch_id = #branch_id#
+        </isNotEmpty>	 -->
+	</select>
+	
+	
+	<select id="querySuperiorInfos" parameterClass="superiorModel" resultClass="superiorModel">
+		select superior_id,superior_no, superior_name from superior where opt_no = #opt_no# order by create_date desc
+	</select>
+	
+	<delete id="deleteSuperior" parameterClass="superiorModel">
+		delete from superior where opt_no = #opt_no# and superior_id = #superior_id#
+	</delete>
+	
+	<select id="queryOpt" parameterClass="superiorModel" resultClass="superiorModel">
+		select opt_no, opt_name,
+		(select dept_no branch_id from t_operator where opt_no = #opt_no#) branch_id,
+	    (select branch_name from sys_branch where branch_id = (select dept_no branch_id from t_operator where opt_no = #opt_no#)) branch_name from t_operator where opt_status = '1' and opt_no = #opt_no#
+	</select>
+	
+	<select id="queryIsExistByName" parameterClass="String" resultClass="int">
+		select count(*) from t_operator where opt_status = '1' and opt_name = #superior_name#
+	</select>
+	
+</sqlMap>

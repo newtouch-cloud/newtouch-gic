@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="insCompanyBus">
+		<typeAlias alias="InsCompanyBusModel" type="com.ca.cacore.rsss.model.vo.InsCompanyBusModel"/>
+		<typeAlias alias="AgentPropertyModel" type="com.ca.cacore.rsss.model.vo.AgentPropertyModel"/>
+	<!--查询产险公司业务报表-->
+	<select id="queryInsCompanyBus" parameterClass="InsCompanyBusModel" resultClass="InsCompanyBusModel">
+				select a.name name,
+			       a.code code,
+			       nvl(premium_n, 0) period_prem,
+			       0.00 amount,
+			       nvl(bounty_n, 0) agent 
+			  from (select name,to_number(code) as code 
+			          from ca_htpc_irc_rept_dic
+			         where type_code='1' 
+			         order by to_number(code)) a
+			  left join (select branch_id,
+			                    rowno,
+			                    sum(premium_n) premium_n,
+			                    sum(bounty_n) bounty_n
+			               from ca_htpc_irc_rept
+			              where term_date=#firstDate# 
+			               and branch_id like '$branch_id$%'
+			                and htpc_type='bjh1' 
+			              group by branch_id,rowno) b
+			    on a.code=b.rowno
+			 order by a.code
+	</select>
+	<!-- 导出产险公司业务报表-->
+	<select id="exprotInsCompanyBus" parameterClass="InsCompanyBusModel" resultClass="InsCompanyBusModel">
+		  select a.name name,
+			       a.code code,
+			       nvl(premium_n, 0.00) period_prem,
+			       0.00 amount,
+			       nvl(bounty_n, 0.00) agent
+			  from (select name, to_number(code) as code
+			          from ca_htpc_irc_rept_dic
+			         where type_code='1' 
+			         order by to_number(code)) a
+			  left join (select branch_id,
+			                    rowno,
+			                    sum(premium_n) premium_n,
+			                    sum(bounty_n) bounty_n
+			               from ca_htpc_irc_rept
+			              where term_date=#firstDate# 
+			               and branch_id like '$branch_id$%'
+			                and htpc_type='bjh1' 
+			              group by branch_id, rowno) b
+			    on a.code =b.rowno
+			 order by a.code
+	</select>
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+	
+	<sql id="query_all" >
+		select nvl(sum(nvl(policy_count,0)),0) total_policy_count, 
+			   round(nvl(sum(nvl(amount,0)),0.0),2) total_amount, 
+			   round(nvl(sum(nvl(premium,0)),0.0),2) total_permium, 
+			   round(nvl(sum(nvl(premium_payable,0)),0.0),2) total_ppayable, 
+			   round(nvl(sum(nvl(agentcommission,0)),0.0),2) total_agcommiss,
+			   round(nvl(sum(nvl(autotrophy_premium,0)),0.0),2) total_autoprem,
+			   round(nvl(sum(nvl(autotrophy_agentcommission,0)),0.0),2) total_autoagcommiss,
+			   round(nvl(sum(nvl(thirdparty_premium,0)),0.0),2) total_trdprem,
+			   round(nvl(sum(nvl(thirdparty_agentcommission,0)),0.0),2) total_trdagcommiss,
+			   nvl(sum(nvl(policy_count_sum,0)),0) total_policycount_sum, 
+			   round(nvl(sum(nvl(amount_sum,0)),0.0),2) total_amount_sum, 
+			   round(nvl(sum(nvl(premium_sum,0)),0.0),2) total_permium_sum, 
+			   round(nvl(sum(nvl(premium_payable_sum,0)),0.0),2) total_ppayable_sum, 
+			   round(nvl(sum(nvl(agentcommission_sum,0)),0.0),2) total_agcommiss_sum,
+			   round(nvl(sum(nvl(autotrophy_premium_sum,0)),0.0),2) total_autoprem_sum,
+			   round(nvl(sum(nvl(autotrophy_agentcommission_sum,0)),0.0),2) total_autoagcommiss_sum,
+			   round(nvl(sum(nvl(thirdparty_premium_sum,0)),0.0),2) total_trdprem_sum,
+			   round(nvl(sum(nvl(thirdparty_agentcommission_sum,0)),0.0),2) total_trdagcommiss_sum
+			   from agentPropertyIns ins left join sys_branch sys on ins.branch_id = sys.branch_id 
+			   left join (SELECT DISTINCT BRANCH_ID,status FROM CPY_BRANCH WHERE STATUS = '1') cpy on ins.org_id = cpy.branch_id
+			   where 1=1 
+			   and sys.status = '1'
+			   and cpy.status = '1'
+			   and ins.branch_id in $dept_list$
+        	   and ins.risk_id like '$risk_id$%'
+        	   <isNotEmpty prepend="and" property="branch_id">
+					ins.branch_id = #branch_id#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="branch_id">
+					ins.branch_id = '0001'
+			   </isEmpty>
+			   <isNotEmpty prepend="and" property="term">
+					ins.term = #term#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="term">
+					ins.term = to_char(sysdate,'yyyy/mm')
+			   </isEmpty>
+        	   <isNotEmpty prepend="and" property="org_id">
+					ins.org_id in (select distinct branch_id from cpy_branch cpy where cpy.status = '1' start with cpy.branch_id=#org_id# 
+         			connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+			   </isNotEmpty>
+			   <isNotEmpty prepend="and" property="sign_path">
+					ins.sign_path = #sign_path#
+			   </isNotEmpty>
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	
+	<!-- 查询总条数 -->
+	<select id="queryAgentProperty_count" parameterClass="AgentPropertyModel" resultClass="Integer">
+		select count(*) from (<include refid="query_all" />)
+	</select>
+	
+	<!--查询产险公司业务报表  -->
+	<select id="queryAgentProperty" parameterClass="AgentPropertyModel" resultClass="AgentPropertyModel">
+		<!-- <include refid="query_head" /> -->
+		<include refid="query_all" />
+		<!-- <include refid="query_foot" /> -->
+	</select>
+	
+	<select id="queryTotal" parameterClass="AgentPropertyModel" resultClass="AgentPropertyModel">
+		select nvl(sum(nvl(policy_count,0)),0) total_policy_count, 
+			   round(nvl(sum(nvl(amount,0)),0.0),2) total_amount, 
+			   round(nvl(sum(nvl(premium,0)),0.0),2) total_permium, 
+			   round(nvl(sum(nvl(premium_payable,0)),0.0),2) total_ppayable, 
+			   round(nvl(sum(nvl(agentcommission,0)),0.0),2) total_agcommiss,
+			   round(nvl(sum(nvl(autotrophy_premium,0)),0.0),2) total_autoprem,
+			   round(nvl(sum(nvl(autotrophy_agentcommission,0)),0.0),2) total_autoagcommiss,
+			   round(nvl(sum(nvl(thirdparty_premium,0)),0.0),2) total_trdprem,
+			   round(nvl(sum(nvl(thirdparty_agentcommission,0)),0.0),2) total_trdagcommiss,
+			   nvl(sum(nvl(policy_count_sum,0)),0) total_policycount_sum, 
+			   round(nvl(sum(nvl(amount_sum,0)),0.0),2) total_amount_sum, 
+			   round(nvl(sum(nvl(premium_sum,0)),0.0),2) total_permium_sum, 
+			   round(nvl(sum(nvl(premium_payable_sum,0)),0.0),2) total_ppayable_sum, 
+			   round(nvl(sum(nvl(agentcommission_sum,0)),0.0),2) total_agcommiss_sum,
+			   round(nvl(sum(nvl(autotrophy_premium_sum,0)),0.0),2) total_autoprem_sum,
+			   round(nvl(sum(nvl(autotrophy_agentcommission_sum,0)),0.0),2) total_autoagcommiss_sum,
+			   round(nvl(sum(nvl(thirdparty_premium_sum,0)),0.0),2) total_trdprem_sum,
+			   round(nvl(sum(nvl(thirdparty_agentcommission_sum,0)),0.0),2) total_trdagcommiss_sum
+			   from agentPropertyIns ins left join sys_branch sys on ins.branch_id = sys.branch_id 
+			   left join (SELECT DISTINCT BRANCH_ID,status FROM CPY_BRANCH WHERE STATUS = '1')  cpy on ins.org_id = cpy.branch_id
+			   where 1=1 
+			   and sys.status = '1'
+			   and cpy.status = '1'
+			   and ins.branch_id in $dept_list$ 
+        	   <isNotEmpty prepend="and" property="branch_id">
+					ins.branch_id = #branch_id#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="branch_id">
+					ins.branch_id = '0001'
+			   </isEmpty>
+			   <isNotEmpty prepend="and" property="term">
+					ins.term = #term#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="term">
+					ins.term = to_char(sysdate,'yyyy/mm')
+			   </isEmpty>
+        	   <isNotEmpty prepend="and" property="org_id">
+					ins.org_id in (select distinct branch_id from cpy_branch cpy where cpy.status = '1' start with cpy.branch_id=#org_id# 
+         			connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+			   </isNotEmpty>
+			   <isNotEmpty prepend="and" property="sign_path">
+					ins.sign_path = #sign_path#
+			   </isNotEmpty>
+	</select>
+</sqlMap>

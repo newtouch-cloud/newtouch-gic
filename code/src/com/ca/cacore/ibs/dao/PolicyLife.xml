@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="PolicyLife">
+   <typeAlias alias="policyLifeHolderModel" type="com.ca.cacore.ibs.model.bo.PolicyLifeHolderModel"/>
+   <typeAlias alias="policyLifeInsuredModel" type="com.ca.cacore.ibs.model.bo.PolicyLifeInsuredModel"/>
+   <typeAlias alias="policyLifeBeneficiaryModel" type="com.ca.cacore.ibs.model.bo.PolicyLifeBeneficiaryModel"/>
+   <!--投保单险种model -->
+   <typeAlias alias="policyLifeProductFeePremVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeProductFeePremVOModel"/>
+   <typeAlias alias="policyLifePremModel" type="com.ca.cacore.ibs.model.bo.PolicyLifePremModel"/>
+   
+   
+   <!--投保单model-->
+   <typeAlias alias="policyLifePeopleVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifePeopleVOModel"/>
+   <typeAlias alias="contractLifePeopleVOModel" type="com.ca.cacore.ibs.model.vo.ContractLifePeopleVOModel"/>
+   <!-- 投保单的新vo -->
+   <typeAlias alias="policyLifeInfoVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeInfoVOModel"/>
+	<!-- 投保单添加险种动态下拉选数据封装 -->
+	<typeAlias alias="policyLifeTypeSelect" type="com.ca.cacore.ibs.model.vo.PolicyLifeTypeSelect"/>
+    <!--新增客户信息-->
+	  <insert id="addCustome" parameterClass="policyLifePeopleVOModel" >
+ 		       insert into CRM_Customer t(
+		       seq_id,customer_id,customer_type,name,title
+			   ,gender,birthday,certi_type,certi_no,education,nationality
+			   ,nation,homeplace,seat_address,height,weight
+			   ,political,education2,marital_stat,health,job_type
+			   ,job_code,income_type,bank_code ,bank_account_no ,bank_account_name
+			   ,status,remark,createuser,createdate,modifyuser
+			   ,modifydate ,Certi_ValidDate,Is_TelMsgService) 
+	            values 
+	            ( #seq_id#,#customer_id#,#customer_type#,#name#,#title#
+			   ,#gender#,#birthday#,#certi_type#,#certi_no#,#education#,#nationality#
+			   ,#nation#,#homeplace#,#seat_address#,#height# ,#weight#
+			   ,#political#,#education2#,#marital_stat#,#health#,#job_type#
+			   ,#job_code#,#income_type#,#bank_code#,#bank_account_no#,#bank_account_name#
+			   ,#status#,#remark#,#createUser#,sysdate,#modifyUser#
+			   ,sysdate,#certi_validDate#,#is_telMsgService#)
+	  </insert>
+	
+      <!--新增客户联系信息-->
+	  <insert id="addCustomerContactModel" parameterClass="policyLifePeopleVOModel" >
+	       insert into CRM_Customer_Contact t(
+		       	t.seq_id,t.branch_id,t.customer_id,t.address,t.zip
+				,t.mobile,t.fax,t.telphone,t.email,t.job_com
+				,t.job_tel,t.status,t.remark,t.log_seq_id
+				,t.log_bustype,t.log_busdate,t.log_date,t.log_remark
+				,t.createuser,t.createdate,t.modifyuser,t.modifydate) 
+	            values 
+	            (seq_id.nextval,#branch_id#,#customer_id#,#address#,#zip#
+				,#mobile#,#fax#,#telphone#,#email#,#job_com#
+				,#job_tel#,#status#,#remark#,#log_seq_id#
+				,#log_bustype#,sysdate,sysdate,#log_remark#
+				,#createUser#,sysdate,#modifyUser#,sysdate)
+	  </insert>
+	
+	  <!-- 增加客户日志表 -->
+	  <insert id="addCustomerLog" parameterClass="policyLifePeopleVOModel" >
+		insert into CRM_Customer_Log
+		(seq_id,customer_id,customer_type,name,title,
+		gender,birthday,certi_type,certi_no,education,
+		nationality,nation,homeplace,seat_address,height,
+		weight,political,education2,marital_stat,health,
+		job_type,job_code,income_type,bank_code,bank_account_no,
+		bank_account_name,Certi_ValidDate,Is_TelMsgService,status,
+		remark,log_seq_id,log_bustype,log_busdate,log_date,
+		log_remark,createuser,createdate,modifyuser,modifydate)
+		values
+		(seq_id.nextval,#customer_id#,#customer_type#,#name#,#title#,
+		#gender#,#birthday#,#certi_type#,#certi_no#,#education#,
+		#nationality#,#nation#,#homeplace#,#seat_address#,#height#,
+		#weight#,#political#,#education2#,#marital_stat#,#health#,
+		#job_type#,#job_code#,#income_type#,#bank_code#,#bank_account_no#,
+		#bank_account_name#,#certi_validDate#,#is_telMsgService#,#status#,
+		#remark#,#log_seq_id#,#log_bustype#,sysdate,sysdate,
+		#log_remark#,#createUser#,sysdate,#modifyUser#,sysdate)
+	</insert>
+	
+	<!-- 更新顾客表 -->
+	<update id="updateCustomerInfo" parameterClass="policyLifePeopleVOModel">
+		update crm_customer
+		set NAME =#name#, TITLE=#title#, GENDER = #gender#, BIRTHDAY = #birthday#,
+		    CERTI_TYPE = #certi_type#, CERTI_NO = #certi_no#, EDUCATION = #education#,
+		    NATIONALITY = #nationality#, NATION = #nation#, HOMEPLACE = #homeplace#,
+		    SEAT_ADDRESS = #seat_address#, HEIGHT = #height#, WEIGHT = #weight#, 
+		    POLITICAL = #political#,EDUCATION2 = #education2#,MARITAL_STAT = #marital_stat#,
+		    HEALTH = #health#,JOB_TYPE = #job_type#,JOB_CODE = #job_code#,INCOME_type = #income_type#,
+		    BANK_CODE = #bank_code#,BANK_ACCOUNT_NO = #bank_account_no#,BANK_ACCOUNT_NAME = #bank_account_name#,
+		    STATUS = #status#,REMARK = #remark#,MODIFYUSER = #modifyUser#,MODIFYDATE = sysdate,
+		    Certi_ValidDate = #certi_validDate#,Is_TelMsgService = #is_telMsgService#
+		where customer_id = #customer_id#
+	</update>
+	
+    <!--新增投保人 -->
+	<insert id="addPolicyLifeHolder" parameterClass="policyLifeHolderModel" >
+	    insert into cbs_policylife_holder
+		   (seq_id,        branch_id,       insbranch_id,    policy_id,     customer_id,
+		    app_name,      app_certi_code,  app_certi_no,    app_address,   app_tel,
+		    app_zip,       app_age,         remark,          createUser,    createDate,
+		    modifyUser,    modifyDate)
+		 values
+		   (seq_id.nextval,#branch_id#,     #insbranch_id#,  #policy_id#,   #customer_id#,
+		    #app_name#,    #app_certi_code#,#app_certi_no#,  #app_address#, #app_tel#,
+		    #app_zip#,     #app_age#,       #remark#,        #createUser#,  sysdate,
+		    #modifyUser#,  sysdate)
+	</insert>
+	
+	<!--新增被保人 -->
+	<insert id="addPolicyLifeInsured" parameterClass="policyLifeInsuredModel" >
+	    insert into cbs_policylife_insured
+	     (seq_id,         branch_id,      insbranch_id,    policy_id,             customer_id, 
+	      relation1,      relation2,      insurant_name,   insurant_certi_code,   insurant_certi_no, 
+	      insurant_tel,   insurant_age,   remark,          createUser,            createDate, 
+	      modifyUser,     modifyDate)
+	   values
+	     (seq_id.nextval, #branch_id#,    #insbranch_id#,   #policy_id#,           #customer_id#, 
+	      #relation1#,    #relation2#,    #insurant_name#,  #insurant_certi_code#, #insurant_certi_no#, 
+	      #insurant_tel#, #insurant_age#, #remark#,         #createUser#,          sysdate, 
+	      #modifyUser#,   sysdate)
+	</insert>
+	
+	<!--新增受益人 -->
+	<insert id="addPolicyLifeBeneficiary" parameterClass="policyLifeBeneficiaryModel" >
+	      insert into cbs_policylife_beneficiary
+         (seq_id,         branch_id,         insbranch_id,      policy_id,           customer_id, 
+          bene_age,       bene_certi_code,   bene_certi_no,     bene_tel,            bene_order,
+          bene_rate,      bene_type,         insurant_id,       relation1,           relation2, 
+          remark,         createuser,        createdate,        modifyuser,          modifydate)
+         values
+         (seq_id.nextval, #branch_id#,       #insBranch_id#,    #policy_id#,         #customer_id#, 
+          #bene_age#,     #bene_certi_code#, #bene_certi_no#,   #bene_tel#,          #bene_order#,
+          #bene_rate#,    #bene_type#,       #insurant_id#,     #relation1#,         #relation2#, 
+          #remark#,       #createUser#,      sysdate,           #modifyUser#,        sysdate)
+	</insert>
+	<!--新增投保单 -->
+	<insert id="addPolicyLife" parameterClass="policyLifeInfoVOModel" >
+	   	insert into cbs_policylife
+  		(seq_id,          policy_id,          branch_id,         insBranch_id,        send_code, 
+  		 policy_code,     agent_id,           service_id,        holder_id,           insurant_id, 
+  		 relation_id,     sell_way,           pay_mode,          pay_mode_next,        policy_year, 
+  		 policy_period,   period_prem,        money_id,          bank_code,            account_type, 
+  		 bank_accName,    bank_account,       overdue_manage,    hold_date,            scan_time, 
+  		 validate_date,   sign_date,          rtn_date,          end_date,             pause_time, 
+  		 is_answered,     high_policy,        status,            remark,               createuser,          
+  		 createdate,      modifyuser,         modifydate,        inner_send_code)
+		 values
+ 	 	(#seq_id#,        #policy_id#,        #branch_id#,       #insBranch_id#,       #send_code#,
+ 	 	 #policy_code#,   #agent_id#,         #service_id#,      #holder_id#,          #insurant_id#,
+ 	 	 #relation_id#,   #sell_way#,         #pay_mode#,        #pay_mode_next#,      #policy_year#,
+ 	 	 #policy_period#, #period_prem#,      #money_id#,        #bank_code#,          #account_type#,
+ 	 	 #bank_accName#,  #bank_account#,     #overdue_manage#,  #hold_date#,          #scan_time#,
+ 	 	 #validate_date#, #sign_date#,        #rtn_date#,        #end_date#,           #pause_time#,
+ 	 	 #is_answered#,   #high_policy#,      #status#,          #remark#,             #createUser#,
+ 	 	 sysdate,         #modifyUser#,       sysdate,           #inner_send_code#)
+	</insert>
+	
+	<!--新增险种信息-->
+	<insert id="addPolicyLifeProduct" parameterClass="policyLifeProductFeePremVOModel" >
+	 insert into cbs_policylife_product
+ 	    (seq_id,          item_id,           branch_id,           insbranch_id,          policy_id, 
+ 	     send_code,       app_id,            insurant_id,         relation_id,           product_id, 
+ 	     ins_type,        product_type,      product_type2,       product_type3,         sell_way, 
+ 	     charge_type,     charge_next,       charge_period,       pay_mode,              pay_mode_next, 
+ 	     policy_year,     charge_year,       coverage_period,     coverage_year,         period_type, 
+ 	     unit,            amount,            period_prem,         money_id,              overdue_manage, 
+ 	     hold_date,       scan_time,         validate_date,       due_time,              next_due_time, 
+ 	     sign_date,       rtn_date,          end_date,            pause_time,            is_answered, 
+ 	     high_policy,     insure_stop,       ins_status,          remark,                createuser, 
+ 	     createdate,      modifyuser,        modifydate,          auth_payAge,           auth_draw,
+ 	     auth_firstPay,   dividend_choice,   is_autoRen)
+	  values
+  	    (#seq_id#,        #item_id#,         #branch_id#,         #insBranch_id#,        #policy_id#,
+  	     #send_code#,     #app_id#,          #insurant_id#,       #relation_id#,         #product_id#,
+  	     #ins_type#,      #product_type#,    #product_type2#,     #product_type3#,       #sell_way#,
+  	     #charge_type#,   #charge_next#,     #charge_period#,     #pay_mode#,            #pay_mode_next#,
+  	     #policy_year#,   #charge_year#,     #coverage_period#,   #coverage_year#,       #period_type#,
+  	     #unit#,          #amount#,          #period_prem#,       #money_id#,            #overdue_manage#,      
+  	     #hold_date#,     #scan_time#,       #validate_date#,     #due_time#,            #next_due_time#,       
+  	     #sign_date#,     #rtn_date#,        #end_date#,          #pause_time#,          #is_answered#,
+  	     #high_policy#,   #insure_stop#,     #ins_status#,        #remark#,              #createUser#,
+  	     sysdate,         #modifyUser#,      sysdate,             #auth_payAge#,         #auth_draw#,
+  	     #auth_firstPay#, #dividend_choice#, #is_autoRen#)    
+	</insert>
+
+	<!--查询客户联系信息 -->
+	<select id="getCustomerSeq_id" parameterClass="String" resultClass="int">
+		select cus.seq_id   from CRM_Customer cus
+		where cus.customer_id = #customer_id#
+	</select>
+	
+	<!-- 添加寿险投保单费用分险种明细信息 -->
+	<insert id="addPolicyLifeProductFee" parameterClass="policyLifeProductFeePremVOModel">
+		insert into cbs_policylife_product_fee
+		   (seq_id,fee_id,branch_id,insbranch_id,policy_id,
+		    send_code,agent_id,service_id,product_id,product_type,
+		    product_type2,product_type3,period_type,coverage_period,coverage_year,
+		    ins_type,sell_way,charge_type,charge_year,policy_year,
+		    policy_period,fee_type,period_prem,actual_prem,pay_mode,
+		    money_id,bank_code,bank_account,hold_date,due_time,
+		    received_date,fee_status,posted,post_id,cred_id,
+		    post_time,insurant_id,remark,createuser,createdate,
+		    modifyuser,modifydate)
+		values
+		   (#seq_id#,#fee_id#,#branch_id#,#insBranch_id#,#policy_id#,
+	  	    #send_code#,#agent_id#,#service_id#,#product_id#,#product_type#,
+		    #product_type2#,#product_type3#,#period_type#,#coverage_period#,#coverage_year#,
+		    #ins_type#,#sell_way#,#charge_type#,#charge_year#,#policy_year#,
+		    #policy_period#,#fee_type#,#period_prem#,#actual_prem#,#pay_mode#,
+		    #money_id#,#bank_code#,#bank_account#,#hold_date#,#due_time#,
+		    #received_date#,#fee_status#,#posted#,#post_id#,#cred_id#,
+		    #post_time#,#insurant_id#,#remark#,#createUser#,sysdate,
+		    #modifyUser#,sysdate)
+	</insert>
+
+	<!-- 添加寿险投保单费用信息 -->
+	<insert id="addPolicyLifePrem" parameterClass="policyLifeProductFeePremVOModel">
+       insert into CBS_PolicyLife_Prem
+          (Seq_Id,Prem_Id,Branch_Id,Insbranch_Id, Policy_Id,
+           Send_Code, Agent_Id,Service_Id,Customer_Id,Insurant_Id,
+           Policy_Year, Policy_Period,Fee_Type,Money_Id, Pay_Mode,
+           Bank_Code,Bank_Account,Period_Prem,Actual_Prem,Due_Time,
+           Fee_Status,Remark, Createuser,Createdate, Modifyuser,
+           Modifydate)
+       values
+          (#seq_id#, seq_id.nextval, #branch_id#,#insBranch_id#, #policy_id#,
+           #send_code#, #agent_id#,#service_id#,#customer_id#,#insurant_id#,
+           #policy_year#,#policy_period#,#fee_type#,#money_id#,#pay_mode#,
+           #bank_code#,#bank_account#,#period_prem#,#actual_prem#,#due_time#,
+           #fee_status#,#remark#,#createUser#,sysdate, #modifyUser#,
+           sysdate)
+	</insert>
+	
+	<!-- 查询投保单明细 -->
+	<select id="getPolicyLifeView" parameterClass="Long" resultClass="policyLifeInfoVOModel">
+		select plf.*,
+		r1.relation_name,
+		sales_service.sales_name service_name,
+		sales_agent.sales_name agent_name,
+		b.branch_name
+		from cbs_policylife plf
+		left join cbs_applicant_relation1 r1
+		on plf.relation_id =
+		r1.relation_code
+		left join smis_sales sales_agent
+		on sales_agent.sales_id = plf.agent_id
+		left join smis_sales sales_service
+		on sales_service.sales_id = plf.service_id
+		left join sys_branch b
+		on b.branch_id = plf.branch_id
+		where plf.policy_id = #policy_id#
+	</select>
+	
+	<!-- 根据保单id更新投保单信息 -->
+	<update id="updatePolicyLife" parameterClass="policyLifeInfoVOModel">
+		update cbs_policylife
+		set branch_id = #branch_id#,
+		insBranch_id = #insBranch_id#,
+		send_code = #send_code#,
+		agent_id = #agent_id#,
+		service_id = #service_id#,
+		holder_id = #holder_id#,
+		insurant_id = #insurant_id#,
+		relation_id = #relation_id#,
+		sell_way = #sell_way#,
+		pay_mode = #pay_mode#,
+		pay_mode_next = #pay_mode_next#,
+		policy_year = #policy_year#,
+		policy_period = #policy_period#,
+		period_prem = #period_prem#,
+		money_id = #money_id#,
+		bank_code = #bank_code#,
+		account_type = #account_type#,
+		bank_accName = #bank_accName#,
+		bank_account = #bank_account#,
+		overdue_manage = #overdue_manage#,
+		hold_date = #hold_date#,
+		scan_time = #scan_time#,
+		validate_date = #validate_date#,
+		sign_date = #sign_date#,
+		rtn_date = #rtn_date#,
+		end_date = #end_date#,
+		pause_time = #pause_time#,
+		is_answered = #is_answered#,
+		high_policy = #high_policy#,
+		status = #status#,
+		remark = #remark#,
+		modifyuser = #modifyUser#,
+		modifydate = sysdate
+		where policy_id = #policy_id#
+	</update>
+
+	<!-- 根据保单号和客户id更新投保人信息 -->
+	<update id="updateHolder" parameterClass="policyLifeHolderModel">
+		update cbs_policylife_holder
+		set branch_id = #branch_id#,
+		customer_id = #customer_id#,
+		insbranch_id = #insbranch_id#,
+		app_name = #app_name#,
+		app_certi_code = #app_certi_code#,
+		app_certi_no = #app_certi_no#,
+		app_address = #app_address#,
+		app_tel = #app_tel#,
+		app_zip = #app_zip#,
+		app_age = #app_age#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where policy_id = #policy_id#
+	</update>
+
+	<!-- 根据保单号和客户id更新被保人信息 -->
+	<update id="updateInsurant" parameterClass="policyLifeInsuredModel">
+		update cbs_policylife_insured
+		set branch_id = #branch_id#,
+		customer_id = #customer_id#,
+		insbranch_id = #insbranch_id#,
+		relation1 = #relation1#,
+		relation2 = #relation2#,
+		insurant_name = #insurant_name#,
+		insurant_certi_code = #insurant_certi_code#,
+		insurant_certi_no = #insurant_certi_no#,
+		insurant_tel = #insurant_tel#,
+		insurant_age = #insurant_age#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where policy_id = #policy_id#
+	</update>
+
+	<!-- 根据保单号和客户id更新收益人信息 -->
+	<update id="updateBene" parameterClass="policyLifeBeneficiaryModel">
+		update cbs_policylife_beneficiary
+		set branch_id = #branch_id#,
+		customer_id = #customer_id#,
+		insbranch_id = #insBranch_id#,
+		bene_age = #bene_age#,
+		bene_certi_code = #bene_certi_code#,
+		bene_certi_no = #bene_certi_no#,
+		bene_tel = #bene_tel#,
+		bene_order = #bene_order#,
+		bene_rate = #bene_rate#,
+		bene_type = #bene_type#,
+		insurant_id = #insurant_id#,
+		relation1 = #relation1#,
+		relation2 = #relation2#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where  policy_id = #policy_id#
+	</update>
+
+	<!-- 根据投保单号和产品号更新投保单产品 -->
+	<update id="updateProduct" parameterClass="policyLifeProductFeePremVOModel">
+		update cbs_policylife_product
+		set branch_id = #branch_id#,
+		insbranch_id = #insBranch_id#,
+		send_code = #send_code#,
+		app_id = #app_id#,
+		insurant_id = #insurant_id#,
+		relation_id = #relation_id#,
+		ins_type = #ins_type#,
+		product_type = #product_type#,
+		product_type2 = #product_type2#,
+		product_type3 = #product_type3#,
+		sell_way = #sell_way#,
+		charge_type = #charge_type#,
+		charge_next = #charge_next#,
+		charge_period = #charge_period#,
+		pay_mode = #pay_mode#,
+		pay_mode_next = #pay_mode_next#,
+		policy_year = #policy_year#,
+		charge_year = #charge_year#,
+		coverage_period = #coverage_period#,
+		coverage_year = #coverage_year#,
+		period_type = #period_type#,
+		unit = #unit#,
+		amount = #amount#,
+		period_prem = #period_prem#,
+		money_id = #money_id#,
+		overdue_manage = #overdue_manage#,
+		hold_date = #hold_date#,
+		scan_time = #scan_time#,
+		validate_date = #validate_date#,
+		due_time = #due_time#,
+		next_due_time = #next_due_time#,
+		sign_date = #sign_date#,
+		rtn_date = #rtn_date#,
+		end_date = #end_date#,
+		pause_time = #pause_time#,
+		is_answered = #is_answered#,
+		high_policy = #high_policy#,
+		insure_stop = #insure_stop#,
+		ins_status = #ins_status#,
+		auth_payAge = #auth_payAge#,
+		auth_draw = #auth_draw#,
+		auth_firstPay = #auth_firstPay#,
+		dividend_choice = #dividend_choice#,
+		is_autoRen = #is_autoRen#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where seq_id = #seq_id#
+	</update>
+
+	<!-- 根据投保单号更新投保单产品 费用信息 -->
+	<update id="updatePolicyLifePrem" parameterClass="policyLifeProductFeePremVOModel">
+		update CBS_PolicyLife_Prem
+		set branch_id = #branch_id#,
+		insbranch_id = #insBranch_id#,
+		send_code = #send_code#,
+		agent_id = #agent_id#,
+		service_id = #service_id#,
+		customer_id = #customer_id#,
+		insurant_id = #insurant_id#,
+		policy_year = #policy_year#,
+		policy_period = #policy_period#,
+		fee_type = #fee_type#,
+		money_id = #money_id#,
+		pay_mode = #pay_mode#,
+		bank_code = #bank_code#,
+		bank_account = #bank_account#,
+		period_prem = #period_prem#,
+		actual_prem = #actual_prem#,
+		due_time = #due_time#,
+		fee_status = #fee_status#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where policy_id = #policy_id#
+		and insurant_id = #insurant_id#
+	</update> 
+	
+	<!-- 根据投保单号和产品号更新投保单分险种明细 -->
+	<update id="updatePolicyLifeProductFee" parameterClass="policyLifeProductFeePremVOModel">
+		update cbs_policylife_product_fee
+		set branch_id = #branch_id#,
+		insbranch_id = #insBranch_id#,
+		send_code = #send_code#,
+		agent_id = #agent_id#,
+		service_id = #service_id#,
+		insurant_id = #insurant_id#,
+		product_type = #product_type#,
+		product_type2 = #product_type2#,
+		product_type3 = #product_type3#,
+		period_type = #period_type#,
+		coverage_period = #coverage_period#,
+		coverage_year = #coverage_year#,
+		ins_type = #ins_type#,
+		sell_way = #sell_way#,
+		charge_type = #charge_type#,
+		charge_year = #charge_year#,
+		policy_year = #policy_year#,
+		policy_period = #policy_period#,
+		fee_type = #fee_type#,
+		period_prem = #period_prem#,
+		actual_prem = #actual_prem#,
+		pay_mode = #pay_mode#,
+		money_id = #money_id#,
+		bank_code = #bank_code#,
+		bank_account = #bank_account#,
+		hold_date = #hold_date#,
+		due_time = #due_time#,
+		Received_Date = #received_date#,
+		fee_status = #fee_status#,
+		posted = #posted#,
+		post_id = #post_id#,
+		cred_id = #cred_id#,
+		post_time = #post_time#,
+		remark = #remark#,
+		modifyUser = #modifyUser#,
+		modifyDate = sysdate
+		where seq_id = #seq_id#
+	</update>
+	
+	<!-- 得到seq_id -->
+	<select id="getSeq_id" resultClass="int">
+	  select approval_id.nextval from dual
+	</select>
+	
+	<insert id="addPolicyLifeLog" parameterClass="policyLifeInfoVOModel">
+    insert into CBS_PolicyLife_Log
+      (seq_id, policy_id, branch_id, insBranch_id, send_code, 
+       policy_code, agent_id, service_id, holder_id, insurant_id, 
+       relation_id, sell_way, pay_mode, pay_mode_next, policy_year,
+       policy_period, period_prem, money_id, bank_code, account_type, 
+       bank_accName, bank_account, overdue_manage, hold_date, scan_time,
+       validate_date, sign_date, rtn_date, end_date, pause_time, 
+       is_answered, high_policy, status, remark,log_seq_id,
+       log_bustype,log_busdate,log_date,log_remark ,createuser, 
+       createdate, modifyuser, modifydate)
+    values
+      (seq_id.nextval,#policy_id#,#branch_id#,#insBranch_id#,#send_code#,
+      #policy_code#,#agent_id#,#service_id#,#holder_id#,#insurant_id#,
+      #relation_id#,#sell_way#,#pay_mode#,#pay_mode_next#,#policy_year#,
+      #policy_period#,#period_prem#,#money_id#,#bank_code#,#account_type#,
+      #bank_accName#,#bank_account#,#overdue_manage#,#hold_date#,#scan_time#,
+      #validate_date#,#sign_date#,#rtn_date#,#end_date#,#pause_time#,
+      #is_answered#,#high_policy#,#status#,#remark#,#log_seq_id#,
+      #log_bustype#,sysdate,sysdate,#log_remark#,#createUser#,
+      sysdate,#modifyUser#,sysdate)
+	</insert>
+	
+	<insert id="addProductLog" parameterClass="policyLifeProductFeePremVOModel">
+	  insert into CBS_PolicyLife_Product_Log
+     (seq_id, item_id, branch_id, insbranch_id, policy_id, 
+      send_code, app_id, insurant_id, relation_id, product_id, 
+      ins_type, product_type, product_type2, product_type3, sell_way, 
+      charge_type, charge_next, charge_period, pay_mode, pay_mode_next, 
+      policy_year, charge_year, coverage_period, coverage_year, period_type, 
+      unit, amount, period_prem, money_id, overdue_manage, 
+      hold_date, scan_time, validate_date, due_time, next_due_time, 
+      sign_date, rtn_date, end_date, pause_time, is_answered, 
+      high_policy, insure_stop, ins_status, remark, createuser, 
+      createdate, modifyuser, modifydate,auth_payAge,auth_draw,
+      auth_firstPay,dividend_choice,is_autoRen,log_seq_id,log_bustype,
+      log_busdate,log_date,log_remark )
+	  values
+  	 (seq_id.nextval,seq_id.nextval,#branch_id#,#insBranch_id#,#policy_id#,
+  	  #send_code#,#app_id#,#insurant_id#,#relation_id#,#product_id#,
+  	  #ins_type#,#product_type#,#product_type2#,#product_type3#,#sell_way#,
+  	  #charge_type#,#charge_next#,#charge_period#,#pay_mode#,#pay_mode_next#,
+  	  #policy_year#,#charge_year#,#coverage_period#,#coverage_year#,#period_type#,
+  	  #unit#,#amount#,#period_prem#,#money_id#,#overdue_manage#,
+  	  #hold_date#,#scan_time#,#validate_date#,#due_time#,#next_due_time#,
+  	  #sign_date#,#rtn_date#,#end_date#,#pause_time#,#is_answered#,
+  	  #high_policy#,#insure_stop#,#ins_status#,#remark#,#createUser#,
+  	  sysdate,#modifyUser#,sysdate,#auth_payAge#,#auth_draw#,
+  	  #auth_firstPay#,#dividend_choice#,#is_autoRen#,#log_seq_id#,#log_bustype#,
+  	  sysdate,sysdate,#log_remark#)    
+	</insert>
+	
+	<insert id="addPolicyLifePremLog" parameterClass="policyLifeProductFeePremVOModel">
+	 insert into CBS_PolicyLife_Prem_Log
+        (Seq_Id,Prem_Id, Branch_Id, Insbranch_Id, Policy_Id,
+         Send_Code, Agent_Id,Service_Id, Customer_Id,Insurant_Id,
+         Policy_Year,Policy_Period,Fee_Type, Money_Id, Pay_Mode,
+         Bank_Code,Bank_Account, Period_Prem, Actual_Prem,Due_Time,
+         Fee_Status, Remark,log_seq_id,log_bustype,log_busdate,
+         log_date,log_remark,Createuser,Createdate, Modifyuser,
+         Modifydate)
+     values
+        (seq_id.nextval,seq_id.nextval,#branch_id#,#insBranch_id#,#policy_id#,
+         #send_code#, #agent_id#,#service_id#, #customer_id#,#insurant_id#,
+         #policy_year#,#policy_period#,#fee_type#, #money_id#,#pay_mode#,
+         #bank_code#,#bank_account#,#period_prem#, #actual_prem#, #due_time#,
+         #fee_status#,#remark#,#log_seq_id#,#log_bustype#,sysdate,
+         sysdate,#log_remark#,#createUser#, sysdate,#modifyUser#,
+         sysdate)
+	</insert>
+	
+	<insert id="addPolicyLifeProductFeeLog" parameterClass="policyLifeProductFeePremVOModel">
+	 insert into CBS_PolicyLife_Product_Fee_Log
+		(seq_id,fee_id,branch_id,insbranch_id,policy_id,
+		 send_code,agent_id,service_id,product_id,product_type,
+		 product_type2,product_type3,period_type,coverage_period,coverage_year,
+		 ins_type,sell_way,charge_type,charge_year,policy_year,
+		 policy_period,fee_type,period_prem,actual_prem,pay_mode,
+		 money_id,bank_code,bank_account,hold_date,due_time,
+		 received_date,fee_status,posted,post_id,cred_id,
+		 post_time,insurant_id,remark,log_seq_id,log_bustype,
+		 log_busdate,log_date,log_remark,createuser,createdate,
+		 modifyuser,modifydate)
+	 values
+		(seq_id.nextval,seq_id.nextval,#branch_id#,#insBranch_id#,#policy_id#,
+		 #send_code#,#agent_id#,#service_id#,#product_id#,#product_type#,
+		 #product_type2#,#product_type3#,#period_type#,#coverage_period#,#coverage_year#,
+		 #ins_type#,#sell_way#,#charge_type#,#charge_year#,#policy_year#,
+		 #policy_period#,#fee_type#,#period_prem#,#actual_prem#,#pay_mode#,
+		 #money_id#,#bank_code#,#bank_account#,#hold_date#,#due_time#,
+		 #received_date#,#fee_status#,#posted#,#post_id#,#cred_id#,
+		 #post_time#,#insurant_id#,#remark#, #log_seq_id#,#log_bustype#,
+         sysdate,sysdate,#log_remark#,#createUser#,sysdate,
+		 #modifyUser#,sysdate)
+	</insert>
+	
+<!-- 查询缴费方式信息 -->
+	<select id="queryProductChargeType" parameterClass="policyLifeProductFeePremVOModel" resultClass="policyLifeTypeSelect">
+		select chargetype.*,plc.charge_type_name from pdt_product_charge_type chargetype 
+		left join pdt_lib_chargetype plc
+			on plc.charge_type_code=chargetype.charge_type_code
+		where chargetype.product_id =  #product_id# and chargetype.insBranch_id =  #insBranch_id#
+	</select>
+		<!-- 查询保障期限类型信息 -->
+	<select id="queryProductCoveragePeriod" parameterClass="policyLifeProductFeePremVOModel" resultClass="policyLifeTypeSelect">
+		select coverageperiod.*,plc.coverage_period_name from pdt_product_coverage_period coverageperiod 
+		left join pdt_lib_coverageperiod plc
+			on plc.coverage_period_code=coverageperiod.coverage_period_code
+		where coverageperiod.product_id =  #product_id# and coverageperiod.insBranch_id =  #insBranch_id#
+	</select>
+		<!-- 查询缴费期限类型 -->
+	<select id="queryProductChargePeriod" parameterClass="policyLifeProductFeePremVOModel" resultClass="policyLifeTypeSelect">
+		select chargeperiod.*,plc.charge_period_name from pdt_product_charge_period chargeperiod 
+		left join pdt_lib_chargeperiod plc
+			on plc.charge_period_code=chargeperiod.charge_period_code
+		where chargeperiod.product_id =  #product_id# and chargeperiod.insBranch_id =  #insBranch_id#
+	</select>
+	
+	<select id="sumPolicylifePrem" parameterClass="Long" resultClass="policyLifeProductFeePremVOModel">
+	   select insurant_id, sum(Period_Prem) period_prem
+       from CBS_PolicyLife_Product_Fee
+       where policy_id= #policy_id#
+        group by Insurant_Id
+	</select>
+</sqlMap>

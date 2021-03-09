@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="customerType">
+   <typeAlias alias="customerTypeModel" type="com.ca.cacore.csm.model.bo.CustomerTypeModel"/>
+
+	<select id="getTypes" resultClass="customerTypeModel" >
+		select type_code,type_name  from crm_customer_type
+	</select>
+	
+	
+
+</sqlMap>

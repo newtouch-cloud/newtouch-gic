@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="workNature">
+	<typeAlias alias="workNatureModel" type="com.newtouch.report.model.vo.WorkNatureModel"/>
+	
+	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	
+	<sql id="query_all" >
+		select A.*,B.branch_name from (select 
+       	nvl(sum(case when wk.work_nature='专职委派' then 1 else 0 end),0) num1,
+       	nvl(sum(case when wk.work_nature='兼职委派' then 1 else 0 end),0) num2,
+       	nvl(sum(case when wk.work_nature in ('正式员工','试用期员工') then 1 else 0 end),0) num3,
+       	nvl(sum(case when wk.work_nature in ('劳务合同','退休返聘') then 1 else 0 end),0) num4,
+       	nvl(sum(case when wk.work_nature='劳务派遣' then 1 else 0 end),0) num5,
+       	nvl(sum(case when wk.work_nature='个人代理' then 1 else 0 end),0) num6
+ 	   	from sys_employee wk
+ 	   	left join sys_branch b on wk.team_id = b.branch_id
+ 	 	where 1=1 and wk.status = '1' and b.status = '1'
+ 	 	<!-- and wk.person_status = '1' and wk.end_date is null -->
+ 	 	and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+				wk.team_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)A,
+         (select branch_name from sys_branch where branch_id = #branch_id# and status = '1') B
+	</sql>
+	
+	
+	<select id="queryWorkNature" parameterClass="workNatureModel" resultClass="workNatureModel">
+		<!-- <include refid="query_head" /> -->
+		<include refid="query_all" />
+		<!-- <include refid="query_foot" /> -->
+	</select>
+	
+	<select id="queryWorkNature_count" parameterClass="workNatureModel" resultClass="int">
+		select count(*) from (
+			<include refid="query_all"/>
+		)
+	</select>
+	
+	<sql id="query_all1" >
+		select nvl(sum(A.num1),0) num1,
+       	nvl(sum(A.num2),0) num2,
+       	nvl(sum(A.num3),0) num3,
+       	nvl(sum(A.num4),0) num4,
+       	nvl(sum(A.num5),0) num5,
+       	nvl(sum(A.num6),0) num6,
+ 		B.branch_name from ((select 
+       	nvl(sum(case when wk.work_nature='专职委派' then 1 else 0 end),0) num1,
+       	nvl(sum(case when wk.work_nature='兼职委派' then 1 else 0 end),0) num2,
+       	nvl(sum(case when wk.work_nature in ('正式员工','试用期员工') then 1 else 0 end),0) num3,
+       	nvl(sum(case when wk.work_nature in ('劳务合同','退休返聘') then 1 else 0 end),0) num4,
+       	nvl(sum(case when wk.work_nature='劳务派遣' then 1 else 0 end),0) num5,
+       	nvl(sum(case when wk.work_nature='个人代理' then 1 else 0 end),0) num6
+ 	   	from sys_employee wk
+ 	   	left join sys_branch b on wk.team_id = b.branch_id
+ 	 	where 1=1 and wk.status = '1' and b.status = '1'
+ 	 	and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        union(select 
+       	nvl(sum(case when wk.work_nature='专职委派' then 1 else 0 end),0) num1,
+       	nvl(sum(case when wk.work_nature='兼职委派' then 1 else 0 end),0) num2,
+       	nvl(sum(case when wk.work_nature in ('正式员工','试用期员工') then 1 else 0 end),0) num3,
+       	nvl(sum(case when wk.work_nature in ('劳务合同','退休返聘') then 1 else 0 end),0) num4,
+       	nvl(sum(case when wk.work_nature='劳务派遣' then 1 else 0 end),0) num5,
+       	nvl(sum(case when wk.work_nature='个人代理' then 1 else 0 end),0) num6
+ 	   	from sys_employee wk
+ 	   	left join sys_branch b on wk.team_id = b.branch_id 
+ 	 	where 1=1 and wk.status = '1' and b.status = '1'	 
+ 	 	and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id in (select sh.branch_id from sys_branch sh where sh.status = '1' 
+			start with sh.branch_id in (select branch_id from sys_branch where branch_parentid = #branch_id# and status = '1' and branch_level != #branch_level# and branch_level != '1') 
+			connect by prior sh.branch_id=sh.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        <!-- <isEqual property="branch_level" compareValue="3">
+        union (select 
+       	nvl(sum(case when wk.work_nature='专职委派' then 1 else 0 end),0) num1,
+       	nvl(sum(case when wk.work_nature='兼职委派' then 1 else 0 end),0) num2,
+       	nvl(sum(case when wk.work_nature in ('正式员工','试用期员工') then 1 else 0 end),0) num3,
+       	nvl(sum(case when wk.work_nature in ('劳务合同','退休返聘') then 1 else 0 end),0) num4,
+       	nvl(sum(case when wk.work_nature='劳务派遣' then 1 else 0 end),0) num5,
+       	nvl(sum(case when wk.work_nature='个人代理' then 1 else 0 end),0) num6
+ 	   	from sys_employee wk
+ 	   	left join sys_branch b on wk.team_id = b.branch_id 
+ 	 	where 1=1 and wk.status = '1' and b.status = '1'	 
+ 	 	and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id in (select sh.branch_id from sys_branch sh where sh.status = '1' 
+			start with sh.branch_id in (select branch_id from sys_branch where branch_parentid = #branch_id# and status = '1' and branch_level = #branch_level# - 1) 
+			connect by prior sh.branch_id=sh.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        </isEqual> -->) A,
+         (select branch_name from sys_branch where branch_id = #branch_id# and status = '1') B
+         group by B.branch_name 
+	</sql>
+	
+	<select id="queryWorkNature1" parameterClass="workNatureModel" resultClass="workNatureModel">
+		<!-- <include refid="query_head" /> -->
+		<include refid="query_all1" />
+		<!-- <include refid="query_foot" /> -->
+	</select>
+	
+	
+	<select id="queryWorkNature_count1" parameterClass="workNatureModel" resultClass="int">
+		select count(*) from (
+			<include refid="query_all1"/>
+		)
+	</select>
+	
+	
+	<select id="queryTotal" parameterClass="workNatureModel" resultClass="int">
+		select count(*) total  from sys_employee wk left join sys_branch sys on wk.team_id = sys.branch_id 
+		where wk.status = '1' and wk.work_nature in ('专职委派','兼职委派','正式员工','试用期员工','劳务合同','退休返聘','劳务派遣','个人代理')
+ 	 	and sys.status = '1' and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>
+	</select>
+	
+	<select id="queryTotal1" parameterClass="workNatureModel" resultClass="int">
+		select nvl(sum(total),0) from ((select count(*) total  from sys_employee wk left join sys_branch sys on wk.team_id = sys.branch_id 
+		where wk.status = '1' and wk.work_nature in ('专职委派','兼职委派','正式员工','试用期员工','劳务合同','退休返聘','劳务派遣','个人代理')
+ 	 	and sys.status='1' and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        union(
+        select count(*) total  from sys_employee wk left join sys_branch sys on wk.team_id = sys.branch_id 
+		where wk.status = '1' and wk.work_nature in ('专职委派','兼职委派','正式员工','试用期员工','劳务合同','退休返聘','劳务派遣','个人代理')
+ 	 	and sys.status='1' and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			<!-- wk.team_id in (select branch_id from sys_branch where branch_parentid = #branch_id# and branch_level != #branch_level# and status = '1' and branch_level != '1') -->	
+			wk.team_id in (select sh.branch_id from sys_branch sh where sh.status = '1' 
+			start with sh.branch_id in (select branch_id from sys_branch where branch_parentid = #branch_id# and status = '1' and branch_level != #branch_level# and branch_level != '1') 
+			connect by prior sh.branch_id=sh.branch_parentid) 
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        <!-- <isEqual property="branch_level" compareValue="3">
+        union (select count(*) total  from sys_employee wk left join sys_branch sys on wk.team_id = sys.branch_id 
+		where wk.status = '1' and wk.work_nature in ('专职委派','兼职委派','正式员工','试用期员工','劳务合同','退休返聘','劳务派遣','个人代理')
+ 	 	and sys.status='1' and wk.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			wk.team_id in (select sh.branch_id from sys_branch sh where sh.status = '1' 
+			start with sh.branch_id in (select branch_id from sys_branch where branch_parentid = #branch_id# and status = '1' and branch_level = #branch_level# - 1) 
+			connect by prior sh.branch_id=sh.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="entry_date1">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date >= #entry_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="entry_date2">  
+     		and
+     		<![CDATA[
+     			(wk.entry_date <= #entry_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date1">  
+     		and
+     		<![CDATA[
+     			(wk.end_date >= #end_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="end_date2">  
+     		and
+     		<![CDATA[
+     			(wk.end_date <= #end_date2#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date1">  
+     		and
+     		<![CDATA[
+     			(wk.create_date >= #sys_date1#)
+     		]]>
+        </isNotEmpty>
+        <isNotEmpty property="sys_date2">  
+     		and
+     		<![CDATA[
+     			(wk.create_date <= #sys_date2#)
+     		]]>
+        </isNotEmpty>)
+        </isEqual> -->)
+	</select>
+	
+	<select id="queryBranchId" parameterClass="workNatureModel" resultClass="String">
+		select branch_id from sys_branch where status = '1' and branch_parentid = #branch_id# and branch_level = #branch_level#  and status = '1' order by branch_id
+	</select>
+	
+	<select id="queryBranchLevel" parameterClass="workNatureModel" resultClass="String">
+		select branch_level from sys_branch where status = '1' and branch_id = #branch_id# 
+	</select>
+</sqlMap>

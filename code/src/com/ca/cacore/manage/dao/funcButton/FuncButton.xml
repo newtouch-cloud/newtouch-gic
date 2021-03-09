@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+                 
+<sqlMap namespace="funcButton">
+   <typeAlias alias="funcButtonModel" type="com.ca.cacore.manage.model.bo.FuncButtonModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+	<sql id="query_all">
+		SELECT button.seq_id,
+		       button.menu_id,
+		       button.button_id,
+		       button.button_name,
+		       (case
+		         when button.status = '1' then
+		          '有效'
+		         else
+		          '无效'
+		       end) as status,
+		       button.remark,
+		       button.createUser,
+		       button.createDate,
+		       button.modifyUser,
+		       button.modifyDate,
+		       menu.menu_name
+		  FROM SYS_FuncButton button
+		  left join SYS_FuncMenu menu
+		    on button.menu_id = menu.menu_id
+		 WHERE 1 = 1
+		<isNotEmpty property="menu_id">
+			AND  menu.menu_name '%$menu_name$%' 
+		</isNotEmpty> 
+		<isNotEmpty property="button_id">
+			AND button.button_id=#button_id#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND button.status=#status#
+		</isNotEmpty>
+		<isNotEmpty property="seq_id">
+			AND button.seq_id=#seq_id#
+		</isNotEmpty>
+		ORDER BY button.seq_id DESC
+    </sql>
+    
+	<!-- 查询信息 -->
+	<select id="queryFuncButton" parameterClass="funcButtonModel" resultClass="funcButtonModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="queryFuncButton_count" parameterClass="funcButtonModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		)
+	</select>
+	
+ <!-- 新增信息-->
+     
+	<insert id="insertFuncButton" parameterClass="funcButtonModel" >
+	  insert into SYS_FuncButton(
+	  	seq_id,
+	  	menu_id,
+	  	button_id,
+	  	button_name,
+	  	status,
+	  	remark,
+		createUser,
+		createDate,
+		modifyUser,
+		modifyDate) 
+	  values(
+	  	seq_id.nextval,
+	  	#menu_id#,
+	  	#button_id#,
+	  	#button_name#,
+	  	'1',
+		#remark#,
+		#createUser#,
+		sysdate,
+		#modifyUser#,
+		sysdate)
+	</insert>
+
+	<!-- 修改信息-->
+	<update id="updateFuncButton" parameterClass="funcButtonModel" >
+		 update sys_funcbutton
+		   set 
+		       menu_id = #menu_id#,
+		       button_id = #button_id#,
+		       button_name = #button_name#,
+		       status = #status#,
+		       remark = #remark#,
+		       modifyUser = #modifyUser#,
+		       modifyDate = sysdate
+		 where seq_id = #seq_id#
+	</update> 
+	
+	 
+	 
+	<!-- 查询信息 -->
+	<select id="queryBySeqIdInt" parameterClass="funcButtonModel" resultClass="int">
+          SELECT count(*)  
+		  FROM SYS_FuncButton t
+		 where 1=1                    
+		<isNotEmpty property="seq_id">
+			AND t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty property="menu_id">
+			AND t.menu_id = #menu_id#
+		</isNotEmpty>
+		<isNotEmpty property="button_id">
+			AND t.button_id = #button_id#
+		</isNotEmpty>
+	</select>
+	<!-- 查询信息 -->
+	<select id="queryBySeqId" parameterClass="funcButtonModel" resultClass="funcButtonModel">
+          SELECT * 
+		  FROM SYS_FuncButton t
+		 where 1=1                    
+		<isNotEmpty property="seq_id">
+			AND t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty property="menu_id">
+			AND t.menu_id = #menu_id#
+		</isNotEmpty>
+		<isNotEmpty property="button_id">
+			AND t.button_id = #button_id#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 删除信息 -->
+	<delete id="deleteFuncButton" parameterClass="funcButtonModel" >
+		delete from SYS_FuncButton where seq_id=#seq_id#
+	</delete>
+	
+</sqlMap>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="CustomeGD">
+		<typeAlias alias="CustomeGDVOModel" type="com.ca.cacore.rsss.model.vo.CustomeGDVOModel"/>
+	<!--查询客户群体分布情况表-->
+	<select id="queryCustomeGD" parameterClass="CustomeGDVOModel" resultClass="CustomeGDVOModel">
+			select ceil((sysdate - cus.birthday) / 365) age,
+           typ.incomtype_name incom,
+           mar.marital_stat_name marry,
+           count(cma.policyno) pronum,
+           nvl(sum(cma.netpremium), 0) premiun,
+           decode(count(cma.policyno),0,nvl(sum(cma.netpremium), 0),nvl(sum(cma.netpremium), 0)/count(cma.policyno))  preavg 
+      from crm_customer cus
+      left join cbs_smc_cmain cma
+        on cma.policyno = cus.policyno
+      left join crm_customer_incomtype typ
+        on cus.income_type = typ.incomtype_code
+      left join sys_library_marital mar
+        on cus.marital_stat = mar.marital_stat_code
+        left join cbs_smc_cmain csc
+        on csc.policyno=cma.policyno 
+        where to_char(csc.operatedate,'yyyy-mm')=#statistic_month#
+     group by ceil((sysdate - cus.birthday) / 365),cus.name,
+              typ.incomtype_name,
+              mar.marital_stat_name
+	</select>
+	<!-- 导出客户群体分布情况表-->
+	<select id="exportCustomeGD" parameterClass="CustomeGDVOModel" resultClass="CustomeGDVOModel">
+		select ceil((sysdate - cus.birthday) / 365) age,
+           typ.incomtype_name incom,
+           mar.marital_stat_name marry,
+           count(cma.policyno) pronum,
+           nvl(sum(cma.netpremium), 0) premiun,
+           decode(count(cma.policyno),0,nvl(sum(cma.netpremium), 0),nvl(sum(cma.netpremium), 0)/count(cma.policyno))  preavg 
+      from crm_customer cus
+      left join cbs_smc_cmain cma
+        on cma.policyno = cus.policyno
+      left join crm_customer_incomtype typ
+        on cus.income_type = typ.incomtype_code
+      left join sys_library_marital mar
+        on cus.marital_stat = mar.marital_stat_code
+        left join cbs_smc_cmain csc
+        on csc.policyno=cma.policyno 
+        where to_char(csc.operatedate,'yyyy-mm')=#statistic_month#
+     group by ceil((sysdate - cus.birthday) / 365),cus.name,
+              typ.incomtype_name,
+              mar.marital_stat_name
+	</select>
+</sqlMap>

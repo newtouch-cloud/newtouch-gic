@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="exportReport">
+   <typeAlias alias="businessReportVOModel1" type="com.ca.cacore.rsss.model.vo.BusinessReportVOModel1"/>
+   <typeAlias alias="businessReportVOModel2" type="com.ca.cacore.rsss.model.vo.BusinessReportVOModel2"/>
+   <typeAlias alias="holdReportVOModel" type="com.ca.cacore.rsss.model.vo.HoldReportVOModel"/>
+
+   
+	
+	<!-- 查询专业保险中介机构业务人员持证情况报表 -->
+	<select id="queryHoldReport" parameterClass="holdReportVOModel" resultClass="holdReportVOModel">
+		SELECT nvl(branch_p.branch_name,
+				(SELECT b.branch_name FROM Sys_Branch b WHERE b.branch_id = #branch_id#)) branch_name
+      			,SUM(CASE WHEN sales.back_busmonth = to_char(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2),'yyyymm') 
+                AND sales.sales_status IN (1,5,6) THEN 1
+                ELSE 0 END) salesNum
+      			,SUM(CASE WHEN sales.back_busmonth = to_char(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2),'yyyymm') 
+                AND sales.sales_status IN (1,5,6) AND cred.sales_id IS NOT NULL THEN 1
+                ELSE 0 END) certificateSales
+  		FROM Smis_Sales_Backup sales
+       		 LEFT JOIN Sys_Branch branch ON sales.branch_id = branch.branch_id 
+       		 LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%'
+      		 LEFT JOIN SMIS_Sales_Credentials cred on cred.Sales_Id = sales.Sales_Id and cred.Credentials_Type = '1' 
+		WHERE branch_p.branch_level = DECODE((SELECT branch_select.branch_level FROM Sys_Branch branch_select WHERE branch_select.branch_id=#branch_id#),1,2,2,4,4)
+  			  AND branch_p.Branch_Parentid =  #branch_id#
+ 		GROUP BY rollup(branch_p.branch_name)
+	</select>
+	
+	<!-- 查询保险代理机构业务汇总表(一) -->
+	<select id="queryBusinessReport1" parameterClass="businessReportVOModel1" resultClass="businessReportVOModel1">
+		SELECT pname product_name
+	      ,xuhao line 
+	      ,premsum period_num
+	      ,premsum2 total_num
+	      ,pfeesum period_prem
+	      ,pfeesum2 total_prem
+	      ,0 period_unreceived_prem
+	      ,0 total_unreceived_prem
+	      ,insfeesum period_fee
+	      ,insfeesum2 total_fee
+		  FROM (
+		SELECT nvl(pname,'小计') pname
+		      ,DECODE(pname,'人寿保险',13,'意外伤害保险',18,'健康保险',19,23) xuhao
+		      ,sum(premsum) premsum
+		      ,sum(premsum2）premsum2
+		      ,sum(pfeesum) pfeesum
+		      ,sum(pfeesum2) pfeesum2
+		      ,0
+		      ,0
+		      ,sum(insfeesum) insfeesum
+		      ,sum(insfeesum2) insfeesum2
+		  FROM (
+		SELECT ptype1.product_type_name pname
+		      ,count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum
+		      ,count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum2
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum2           
+		      ,0
+		      ,0
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN insfee.fee 
+		                ELSE 0 END) insfeesum
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN insfee.fee
+		                ELSE 0 END) insfeesum2  
+		  FROM PDT_Product_Type1 ptype1
+		       LEFT JOIN CBS_ContractLife_Product_Fee pfee ON pfee.product_type = ptype1.product_type_code AND pfee.fee_status = '6'
+		       LEFT JOIN CBS_ContractLife_InsFee insfee ON insfee.insbranch_id = pfee.insbranch_id AND insfee.policy_code = pfee.policy_code 
+		            AND insfee.branch_id = pfee.branch_id AND insfee.Product_Type = pfee.product_type AND insfee.fee_status = '6' 
+		       LEFT JOIN sys_branch branch ON branch.branch_id = pfee.branch_id 
+		       LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%' AND branch_p.branch_id = #branch_id#
+		 GROUP BY ptype1.product_type_name)
+		 GROUP BY ROLLUP(pname)
+		 UNION ALL
+		SELECT ptype2.product_type_name pname
+		      ,DECODE(ptype2.product_type_code,1,14,2,15,3,16,4,17,NULL) xuhao
+		      ,count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum
+		      ,count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum2
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum2           
+		      ,0
+		      ,0
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN insfee.fee 
+		                ELSE 0 END) insfeesum
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN insfee.fee
+		                ELSE 0 END) insfeesum2  
+		  FROM PDT_Product_Type2 ptype2
+		       LEFT JOIN CBS_ContractLife_Product_Fee pfee ON pfee.product_type2 = ptype2.product_type_code AND pfee.product_type = '1' AND pfee.fee_status = '6'
+		       LEFT JOIN CBS_ContractLife_InsFee insfee ON insfee.insbranch_id = pfee.insbranch_id AND insfee.policy_code = pfee.policy_code AND insfee.branch_id = pfee.branch_id
+		       AND insfee.Product_Type = pfee.product_type AND insfee.product_type2 = pfee.product_type2 AND insfee.fee_status = '6' 
+		       LEFT JOIN sys_branch branch ON branch.branch_id = pfee.branch_id 
+		       LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%' AND branch_p.branch_id = #branch_id#
+		 GROUP BY ptype2.product_type_name,ptype2.product_type_code) 
+		 ORDER BY xuhao ASC
+	</select>
+	
+	<!-- 查询保险代理机构业务汇总表(二) -->	
+	<select id="queryBusinessReport2" parameterClass="businessReportVOModel2" resultClass="businessReportVOModel2">
+		SELECT nvl(bname,'总公司') branch_name
+		      ,sum(branchnum) branch_num 
+		      ,sum(branchcomparenum) branch_taux
+		      ,sum(salesnum) staffNum
+		      ,sum(salescomparenum) staffTaux
+		      ,sum(premsum) period_num
+		      ,sum(premsum2) total_num
+		      ,sum(pfeesum) period_prem
+		      ,sum(pfeesum2) total_prem
+		      ,sum(unreceivedpfee) period_unreceived_prem
+		      ,sum(unreceivedpfee2) total_unreceived_prem
+		      ,sum(insfeesum) period_fee
+		      ,sum(insfeesum2) total_fee
+		  FROM 
+		((SELECT bname
+		      ,branchnum
+		      ,branchcomparenum 
+		      ,ROWNUM rn
+		  FROM (
+		SELECT branch_p.branch_name bname
+		      ,SUM(CASE WHEN branch.Found_Date BETWEEN trunc(last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))),'MONTH')
+		            AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) AND branch.Status = '1' THEN 1 ELSE 0 END) branchnum
+		      ,SUM(CASE WHEN branch.Found_Date BETWEEN trunc(last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))),'MONTH')
+		            AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) AND branch.Status = '1' THEN 1 ELSE 0 END) - 
+		       SUM(CASE WHEN branch.Found_Date BETWEEN add_months(trunc(last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))),'MONTH'),-3)
+		            AND add_months(last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))),-3) AND branch.Status = '1' THEN 1 ELSE 0 END) branchcomparenum 
+		 FROM Sys_Branch branch
+		       LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%' 
+		 WHERE branch_p.branch_level = '2'
+		 GROUP BY branch_p.branch_name)) a LEFT JOIN (
+		SELECT salesnum
+		      ,salescomparenum
+		      ,ROWNUM rn
+		  FROM (
+		SELECT SUM(CASE WHEN sales.Back_BusMonth = to_char(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2),'yyyymm') AND sales.sales_status IN (1,5,6) THEN 1 ELSE 0 END) salesnum    
+		      ,SUM(CASE WHEN sales.Back_BusMonth = to_char(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2),'yyyymm') AND sales.sales_status IN (1,5,6) THEN 1 ELSE 0 END) - 
+		       SUM(CASE WHEN sales.Back_BusMonth = to_char(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),-10),'yyyymm') AND sales.sales_status IN (1,5,6) THEN 1 ELSE 0 END) salescomparenum
+		  FROM Sys_Branch branch
+		       LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%' 
+		       LEFT JOIN SMIS_SALES_BACKUP SALES ON branch.branch_id = sales.branch_id
+		 WHERE branch_p.branch_level = '2'
+		 GROUP BY branch_p.branch_name)) b ON a.rn = b.rn LEFT JOIN (
+		SELECT premsum
+		      ,premsum2
+		      ,pfeesum
+		      ,pfeesum2
+		      ,unreceivedpfee
+		      ,unreceivedpfee2
+		      ,insfeesum
+		      ,insfeesum2
+		      ,ROWNUM rn
+		  FROM (
+		SELECT count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum
+		      ,count(DISTINCT(CASE WHEN pfee.Hold_Date  BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.Policy_Code 
+		                ELSE NULL END)) premsum2
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum
+		      ,SUM(CASE WHEN pfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN pfee.actual_prem 
+		                ELSE 0 END) pfeesum2           
+		      ,0 unreceivedpfee
+		      ,0 unreceivedpfee2
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'MONTH') 
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2))) 
+		                THEN insfee.fee 
+		                ELSE 0 END) insfeesum
+		      ,SUM(CASE WHEN insfee.Hold_Date BETWEEN trunc(to_date(#statistic_time#,'yyyymm'),'YYYY')
+		                AND last_day(TRUNC(Add_months((TRUNC(to_date(#statistic_time#,'YYYYMM'),'Q')),2)))
+		                THEN insfee.fee
+		                ELSE 0 END) insfeesum2  
+		  FROM sys_branch branch
+		       LEFT JOIN Sys_Branch branch_p ON branch.branch_allpath LIKE branch_p.branch_allpath||'%'
+		       LEFT JOIN CBS_ContractLife_Product_Fee pfee ON pfee.fee_status = '6' AND branch.branch_id = pfee.branch_id
+		       LEFT JOIN CBS_ContractLife_InsFee insfee ON insfee.insbranch_id = pfee.insbranch_id AND insfee.policy_code = pfee.policy_code 
+		            AND insfee.branch_id = pfee.branch_id AND insfee.fee_status = '6' AND insfee.product_type = pfee.product_type 
+		            AND insfee.product_type2 = pfee.product_type2 AND insfee.product_type3 = pfee.product_type3
+		 WHERE branch_p.branch_level = '2'
+		 GROUP BY branch_p.branch_name)) c ON a.rn = c.rn)
+		 GROUP BY ROLLUP(bname)
+	</select>
+	
+	
+</sqlMap>

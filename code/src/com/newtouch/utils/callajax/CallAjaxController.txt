@@ -1,0 +1,42 @@
+// <msg></msg>
+		// map.put("type","alert");
+		// map.put("msg","提示信息");
+		// <字段值 type="focus">""</字段值>
+		// map1.put("type","focus");
+		// map1.put("field","value");
+		// <字段值 type="style">样式</字段值>
+		// map2.put("type","style");
+		// map2.put("field","value");
+		// <字段值 type="msg">提示信息</字段值>
+		// map3.put("type","msg");
+		// map3.put("field","value");
+		// <字段值 type="readonly">value</字段值>
+		// map4.put("type","readonly");
+		// map4.put("field","value");
+		// <字段值 type="disabled">value</字段值>
+		// map5.put("type","disabled");
+		// map5.put("field","value");
+		// <字段值 type="edit">value</字段值>
+		// map6.put("type","edit");
+		// map6.put("field","value");
+		// <字段值 type="select" selected="默认选择">
+		// <value>name</value>
+		// <value>name</value>
+		// <value>name</value>
+		// </字段值>
+		// map01.put(value1,name1);
+		// map01.put(value2,name2);
+		// map01.put(value3,name3);
+		// map01.put(value4,name4);
+		// map01.put("selected",val2);
+		// map7.put("type","select");
+		// map7.put("field",list);
+		// <字段值 type="input">value</字段值>
+		// map8.put("type","input");
+		// map8.put("field","value");
+
+{alert:[{msg:1111},{msg:2222},{msg:3333}]}
+{focus:[{key,value}]}
+{msg:[{key,value},{key,value},{key,value}]}
+{readonly:[{key,value},{key,value},{key,value}]}
+

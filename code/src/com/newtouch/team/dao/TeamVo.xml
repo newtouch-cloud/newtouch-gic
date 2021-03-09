@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="TeamVo">
+    
+   <typeAlias alias="teamManagementVoModel" type="com.newtouch.team.model.vo.TeamManagementVoModel"/>
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<sql id="query_all">
+	<![CDATA[ 
+	select SMIS_TEAM.branch_id,sys_branch.branch_name,SMIS_TEAM.team_id,SMIS_TEAM.status,
+       SMIS_TEAM.team_name,SMIS_TEAM.group_type,SMIS_TEAM.found_date,SMIS_TEAM.recall_date,
+       SMIS_TEAM.team_type
+    from SMIS_TEAM
+    left join sys_branch
+    on SMIS_TEAM.branch_id = sys_branch.branch_id
+    where SMIS_TEAM.branch_id is not null and SMIS_TEAM.branch_id in $deptlist$ and 1=1
+   ]]>
+   <isNotEmpty property="branch_id">
+      AND SMIS_TEAM.branch_id=#branch_id#
+   </isNotEmpty>
+    <isNotEmpty property="team_name">
+      AND  SMIS_TEAM.team_name like '%$team_name$%'
+   </isNotEmpty>
+   <isNotEmpty property="status">
+      AND SMIS_TEAM.status=#status#
+   </isNotEmpty>
+   <isNotEmpty property="found_date">
+      AND SMIS_TEAM.found_date >= #found_date#
+   </isNotEmpty>
+   <isNotEmpty property="recall_date">
+     AND #recall_date# >= SMIS_TEAM.found_date
+   </isNotEmpty>
+   
+   <isNotEmpty property="team_type">
+      AND SMIS_TEAM.team_type=#team_type#
+   </isNotEmpty>
+   
+  </sql>
+  
+   <sql id="query_sysdate">
+		select to_char(sysdate,'yyyy-mm-dd') from dual
+	</sql>
+  <!-- 查看所有团队 -->
+     <select id="SeleteTeam"  parameterClass="teamManagementVoModel" resultClass="teamManagementVoModel">
+   
+     <include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+    
+</select>
+	<!-- 总数 -->
+	<select id="queryCount" parameterClass="teamManagementVoModel"
+		resultClass="int">
+
+		select count(*) from (
+		<include refid="query_all" />
+		)
+	</select>
+	<!-- 查询系统时间 -->
+	<select id="querySysdate" parameterClass="teamManagementVoModel"
+		resultClass="java.sql.Date">
+
+		select sysdate from dual
+	</select>
+	<!-- 注销团队 -->
+	<update id="logoutTeam" parameterClass="TeamManagementVoModel">
+		update smis_team
+		set status = '0',recall_date=#recall_date#
+		where team_id=#team_id#
+	</update>
+    <!-- 修改团队 -->
+	<update id="UpdateTeam" parameterClass="TeamManagementVoModel">
+		update smis_team
+		set team_name=#team_name#,modifyuser=#modifyuser#,modifydate=#modifydate#
+		where team_id=#team_id# 
+	</update>
+	<!-- 查询单个团队 -->
+	<select id="SelectOneTeam" parameterClass ="java.lang.String" resultClass="TeamManagementVoModel">
+	select team_id,team_name,branch_id from smis_team where team_id=#team_id# 
+	</select>
+	<!-- 查询团队/部门总数 -->
+	<!--<select id="TeamCount" parameterClass ="TeamManagementVoModel" resultClass="int">
+	    select count(team_id)+1 from smis_team
+	     where team_type=#team_type# 
+	</select>-->
+
+	<select id="TeamCount" parameterClass ="TeamManagementVoModel" resultClass="int">
+		select count(team_id)+1 from smis_team
+		where branch_id =#branch_id#
+	</select>
+	<!-- 新增团队 -->
+	<insert id="AddTeam" parameterClass="TeamManagementVoModel">
+		insert into smis_team t(team_type,team_name,found_date,branch_id,team_id,createuser,modifyuser,createdate,modifydate) 
+		values (#team_type#,#team_name#,#found_date#,#branch_id#,#team_id#,#createuser#,#modifyuser#,#createdate#,#modifydate#)
+	</insert>
+	<!-- 添加检查 -->
+	<select id="CheckTeam" parameterClass ="TeamManagementVoModel" resultClass="TeamManagementVoModel">
+	
+	select * from (select team_name from smis_team where branch_id = #branch_id#
+		) t where 1=2
+    	<isNotEmpty prepend="or" property="team_name">
+			t.team_name = #team_name# 
+		</isNotEmpty> 
+</select>
+	
+</sqlMap>

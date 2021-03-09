@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<!-- PDT_Lib_ChargeType  缴费方式数据字典-->
+<sqlMap namespace="LibChargeType">
+	<typeAlias alias="LibChargeTypeModel"	type="com.ca.cacore.msss.model.bo.LibChargeTypeModel" />
+	<select id="queryLibChargeType" resultClass="LibChargeTypeModel">
+		SELECT * FROM PDT_Lib_ChargeType
+	</select>
+</sqlMap>

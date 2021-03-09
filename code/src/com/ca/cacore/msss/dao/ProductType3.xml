@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<!-- PDT_Product_Type3 产品分类3数据字典（财务对接用）	-->
+<sqlMap namespace="ProductType3">
+	<typeAlias alias="ProductType3Model"	type="com.ca.cacore.msss.model.bo.ProductType3Model" />
+	<select id="queryProductType3" resultClass="ProductType3Model">
+		SELECT * FROM PDT_Product_Type3
+	</select>
+</sqlMap>

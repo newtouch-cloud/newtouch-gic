@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="policymanager">
+<typeAlias alias="PolicyManager" type="com.newtouch.customerManager.model.IPolicyManagerModel"/>
+	<sql id="query_head">
+		select * from (select row_.*, rownum rownum_ from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	<sql id ="queryAll" >
+	    select ipm1.seq_id,
+               sys.branch_id             ord_id,
+               ipm1.org_name,
+               ipm1.statistics_type,
+               ipm1.channel_type,
+               ipm1.channel_no,
+               ipm1.insurance_type_name,
+               ipm1.product_name,
+               ipm1.sign_date,
+               ipm1.accomplish_date,
+               ipm1.statistics_date,
+               ipm1.insure_no,
+               ipm1.policy_no,
+               ipm1.serial_no,
+               ipm1.applicant_name,
+               ipm1.insured_name,
+               ipm1.lpn,
+               ipm1.premium,
+               ipm1.repair_coding,
+               ipm1.rack_no,
+               ipm1.check_date,
+               ipm1.begin_date,
+               ipm1.end_date,
+               ipm1.approval_date,
+               ipm1.fee_ratio,
+               ipm1.fee,
+               ipm1.clean_charge,
+               ipm1.wei_rate,
+               ipm1.commission,
+               ipm1.cash,
+               ipm1.status,
+               ipm1.person_name,
+               ipm1.person_no,
+               ipm1.insurance_class_no,
+               ipm1.insurance_type_no,
+               ipm1.product_no,
+               ipm1.insured_cid,
+               ipm1.insured_company_type,
+               ipm1.insured_papertype,
+               ipm1.insured_add,
+               ipm1.insured_mailbox,
+               ipm1.insured_phone,
+               ipm1.insured_tel,
+               ipm1.insurance_class_name,
+               ipm1.endor_no,
+               ipm1.car_type,
+               ipm1.vin,
+               ipm1.engine_no,
+               ipm1.car_class,
+               ipm1.use_type,
+               ipm1.first_date,
+               ipm1.clause_type,
+               ipm1.net_premium,
+               ipm1.vehicel_tax,
+               ipm1.car_branchname,
+               ipm1.print_date,
+               ipm1.approval_flag,
+               ipm1.amount,
+               ipm1.premium_tax,
+               ipm1.endor_type,
+               ipm1.province_orgid,
+               ipm1.province_orgname,
+               ipm1.city_orgid,
+               ipm1.city_orgname,
+               ipm1.area_orgid,
+               ipm1.area_orgname,
+               ipm1.responsible_no,
+               ipm1.responsible_name,
+               ipm1.person_cid,
+               ipm1.create_date,
+               ipm1.create_user,
+               ipm1.mdf_date,
+               ipm1.mdf_user,
+               ipm1.car_name,
+               ipm1.org_id,
+               ipm1.ins_validate,
+               ipm1.data_type,
+               ipm1.change_nu,
+               ipm1.owner_no,
+               ipm1.owner_name,
+               ipm1.inter_flag,
+               ipm1.business_flag,
+               ipm1.service_fee,
+               ipm1.remarks,
+               ipm1.car_use_year,
+               ipm1.car_value,
+               ipm1.settled_date,
+               ipm1.settled_date         settled_date1,
+               ipm1.endor_date,
+               ipm1.endor_valid
+               <!-- ipm1.settle_time -->
+          from INS_CMAIN ipm1 
+          left join sys_branch sys 
+            on ipm1.channel_no = sys.channelcode 
+           and sys.status = '1' 
+         where 1 = 1 
+           and ipm1.data_type = '0' 
+        <isNotEmpty  property="branch_id_Branch" >
+         <!-- and ipm.ord_id = #branch_id_Branch# -->
+         and sys.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1' 
+	                   start with sh.branch_id=#branch_id_Branch# 
+	            connect by prior sh.branch_id=sh.branch_parentid   
+	            )
+    </isNotEmpty>
+    <isNotEmpty  property="branch_id" >
+         <!-- and ipm.org_id = #branch_id# -->
+         and ipm1.area_orgid in (select branch_id from cpy_branch cpy
+         where cpy.status = '1' start with cpy.branch_id=#branch_id#  
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid) 
+    </isNotEmpty>
+    <isNotEmpty property= "policy_no">
+    	and ipm1.policy_no = #policy_no#
+    </isNotEmpty >
+	<isNotEmpty  property="createDateL" >
+        and ipm1.begin_date  >= #createDateL#
+    </isNotEmpty>
+    <isNotEmpty  property="createDateG" >
+        and #createDateG# >=ipm1.begin_date 
+    </isNotEmpty>
+    <isNotEmpty  property="sign_date" >
+        and ipm1.sign_date = #sign_date#
+    </isNotEmpty>
+    <isNotEmpty  property="check_date_L" >
+        and ipm1.check_date >= #check_date_L#
+    </isNotEmpty>
+    <isNotEmpty  property="check_date_G" >
+        and #check_date_G# >= ipm1.check_date 
+    </isNotEmpty>
+    <isNotEmpty  property="ins_validate_L" >
+        and ipm1.ins_validate >= #ins_validate_L#
+    </isNotEmpty>
+    <isNotEmpty  property="ins_validate_G" >
+        and #ins_validate_G# >= ipm1.ins_validate 
+    </isNotEmpty>
+    <isNotEmpty  property="approval_date_L" >
+        and ipm1.approval_date >= #approval_date_L#
+    </isNotEmpty>
+    <isNotEmpty  property="approval_date_G" >
+        and #approval_date_G# >= ipm1.approval_date 
+    </isNotEmpty>
+    <isNotEmpty property= "repair_coding">
+    	and ipm1.repair_coding = #repair_coding#
+    </isNotEmpty >
+    <isNotEmpty property= "insurance_type_no">
+    	and ipm1.insurance_type_no = #insurance_type_no#
+    </isNotEmpty >
+    <isNotEmpty property= "settled_date">
+    	and ipm1.settled_date = #settled_date#
+    	<!-- and sa.settle_date = #settled_date#  -->
+    	<!-- and (case when sa.settle_time is null then sa.settle_date
+		else to_char(sa.settle_time,'yyyy-mm') end) = #settled_date# -->
+    </isNotEmpty >
+     <isNotEmpty property= "user_jurisdiction">
+    and sys.branch_id in (SELECT ID
+          FROM (SELECT DISTINCT BRANCH_ID       ID,
+                                BRANCH_NAME     NAME,
+                                BRANCH_PARENTID PID      
+                  FROM SYS_BRANCH T 
+                 WHERE T.STATUS = '1' 
+                 START WITH T.BRANCH_ID IN 
+                            (SELECT TDA.DATA_AUTH_NO   
+                               FROM T_DATA_AUTH TDA 
+                              WHERE TDA.IS_HALF_CHECK IS NULL 
+                                AND TDA.OBJECT_NO = #user_jurisdiction# 
+                                AND OBJECT_TYPE = 'USER') 
+                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID))
+         <!--自己添加-->
+    and ipm1.ORD_ID=sys.branch_id
+    </isNotEmpty >
+        union all 
+        select ipm3.seq_id,
+               sys.branch_id             ord_id,
+               ipm2.org_name,
+               ipm2.statistics_type,
+               ipm2.channel_type,
+               ipm2.channel_no,
+               ipm2.insurance_type_name,
+               ipm2.product_name,
+               ipm2.sign_date,
+               ipm2.accomplish_date,
+               ipm2.statistics_date,
+               ipm2.insure_no,
+               ipm3.policy_no,
+               ipm2.serial_no,
+               ipm2.applicant_name,
+               ipm2.insured_name,
+               ipm2.lpn,
+               ipm3.premium,
+               ipm2.repair_coding,
+               ipm2.rack_no,
+               ipm2.check_date,
+               ipm2.begin_date,
+               ipm2.end_date,
+               ipm3.approval_date,
+               ipm2.fee_ratio,
+               ipm3.fee,
+               ipm2.clean_charge,
+               ipm3.wei_rate,
+               ipm3.commission,
+               ipm2.cash,
+               ipm2.status,
+               ipm2.person_name,
+               ipm2.person_no,
+               ipm2.insurance_class_no,
+               ipm2.insurance_type_no,
+               ipm2.product_no,
+               ipm2.insured_cid,
+               ipm2.insured_company_type,
+               ipm2.insured_papertype,
+               ipm2.insured_add,
+               ipm2.insured_mailbox,
+               ipm2.insured_phone,
+               ipm2.insured_tel,
+               ipm2.insurance_class_name,
+               ipm3.endor_no,
+               ipm3.car_type,
+               ipm2.vin,
+               ipm2.engine_no,
+               ipm2.car_class,
+               ipm2.use_type,
+               ipm2.first_date,
+               ipm2.clause_type,
+               ipm3.net_premium,
+               ipm3.vehicel_tax,
+               ipm2.car_branchname,
+               ipm2.print_date,
+               ipm2.approval_flag,
+               ipm3.amount,
+               ipm3.premium_tax,
+               ipm2.endor_type,
+               ipm2.province_orgid,
+               ipm2.province_orgname,
+               ipm2.city_orgid,
+               ipm2.city_orgname,
+               ipm2.area_orgid,
+               ipm2.area_orgname,
+               ipm2.responsible_no,
+               ipm2.responsible_name,
+               ipm2.person_cid,
+               ipm2.create_date,
+               ipm2.create_user,
+               ipm2.mdf_date,
+               ipm2.mdf_user,
+               ipm2.car_name,
+               ipm2.org_id,
+               ipm3.ins_validate,
+               ipm3.data_type,
+               ipm3.change_nu,
+               ipm3.owner_no,
+               ipm3.owner_name,
+               ipm2.inter_flag,
+               ipm2.business_flag,
+               ipm2.service_fee,
+               ipm2.remarks,
+               ipm2.car_use_year,
+               ipm2.car_value,
+               ipm3.settled_date,
+               ipm3.settled_date         settled_date1,
+               ipm2.endor_date,
+               ipm2.endor_valid
+               <!-- ipm3.settle_time -->
+          from INS_CMAIN ipm3
+         inner join INS_CMAIN ipm2
+            on ipm3.policy_no = ipm2.policy_no   
+           and ipm2.data_type = '0'  
+          left join sys_branch sys  
+            on ipm2.channel_no = sys.channelcode  
+           and sys.status = '1'  
+         where 1 = 1
+           and ipm3.data_type = '1'
+	<isNotEmpty  property="branch_id_Branch" >
+         <!-- and ipm.ord_id = #branch_id_Branch# -->
+         and sys.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id_Branch#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+    </isNotEmpty>
+    <isNotEmpty  property="branch_id" >
+         <!-- and ipm.org_id = #branch_id# -->
+         and ipm2.org_id in (select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#branch_id# 
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+    </isNotEmpty>
+    <isNotEmpty property= "policy_no">
+    	and ipm3.policy_no = #policy_no#
+    </isNotEmpty >
+	<isNotEmpty  property="createDateL" >
+        and ipm2.begin_date  >= #createDateL#
+    </isNotEmpty>
+    <isNotEmpty  property="createDateG" >
+        and #createDateG# >=ipm2.begin_date 
+    </isNotEmpty>
+    <isNotEmpty  property="sign_date" >
+        and ipm2.sign_date = #sign_date#
+    </isNotEmpty>
+    <isNotEmpty  property="check_date_L" >
+        and ipm2.check_date >= #check_date_L#
+    </isNotEmpty>
+    <isNotEmpty  property="check_date_G" >
+        and #check_date_G# >= ipm2.check_date 
+    </isNotEmpty>
+    <isNotEmpty  property="ins_validate_L" >
+        and ipm3.ins_validate >= #ins_validate_L#
+    </isNotEmpty>
+    <isNotEmpty  property="ins_validate_G" >
+        and #ins_validate_G# >= ipm3.ins_validate 
+    </isNotEmpty>
+    <isNotEmpty  property="approval_date_L" >
+        and ipm3.approval_date >= #approval_date_L#
+    </isNotEmpty>
+    <isNotEmpty  property="approval_date_G" >
+        and #approval_date_G# >= ipm3.approval_date 
+    </isNotEmpty>
+    <isNotEmpty property= "repair_coding">
+    	and ipm2.repair_coding = #repair_coding#
+    </isNotEmpty >
+    <isNotEmpty property= "insurance_type_no">
+    	and ipm2.insurance_type_no = #insurance_type_no#
+    </isNotEmpty >
+    <isNotEmpty property= "settled_date">
+    	and ipm3.settled_date = #settled_date#
+    	<!-- and sa.settle_date = #settled_date#  -->
+    	<!-- and (case when sa.settle_time is null then sa.settle_date
+		else to_char(sa.settle_time,'yyyy-mm') end) = #settled_date# -->
+    </isNotEmpty >
+     <isNotEmpty property= "user_jurisdiction">
+    and sys.branch_id in (SELECT ID
+          FROM (SELECT DISTINCT BRANCH_ID       ID,
+                                BRANCH_NAME     NAME,
+                                BRANCH_PARENTID PID
+                  FROM SYS_BRANCH T
+                 WHERE T.STATUS = '1'
+                 START WITH T.BRANCH_ID IN
+                            (SELECT TDA.DATA_AUTH_NO 
+                               FROM T_DATA_AUTH TDA 
+                              WHERE TDA.IS_HALF_CHECK IS NULL 
+                                AND TDA.OBJECT_NO = #user_jurisdiction# 
+                                AND OBJECT_TYPE = 'USER')
+                CONNECT BY PRIOR T.BRANCH_ID = BRANCH_PARENTID))
+    </isNotEmpty >
+    </sql>
+	<select id = "inPolicyQuery_count" parameterClass="PolicyManager" resultClass="int">
+		select count(*) from (
+		<include refid="queryAll"/>
+		)
+	</select>
+	<select id = "InPolicyQuery" parameterClass="PolicyManager" resultClass="PolicyManager">
+		<include refid="query_head"/>
+		<include refid="queryAll"/>order by policy_no
+		<include refid="query_foot"/>
+	</select>
+	<select id = "InPolicyMsg" parameterClass="PolicyManager" resultClass="PolicyManager">
+		select 
+			ipm.seq_id, ipm.ord_id, ipm.org_name, ipm.statistics_type, ipm.channel_type, ipm.channel_no, ipm.insurance_type_name, ipm.product_name, ipm.sign_date, ipm.accomplish_date, ipm.statistics_date, ipm.insure_no, ipm.policy_no, ipm.serial_no, ipm.applicant_name, ipm.insured_name, ipm.lpn, ipm.premium, ipm.repair_coding, ipm.rack_no, ipm.check_date, ipm.begin_date, ipm.end_date, ipm.approval_date, ipm.fee_ratio, ipm.fee, ipm.clean_charge, ipm.wei_rate, ipm.commission, ipm.cash, ipm.status, ipm.person_name, ipm.person_no, ipm.insurance_class_no, ipm.insurance_type_no, ipm.product_no, ipm.insured_cid, ipm.insured_company_type, ipm.insured_papertype, ipm.insured_add, ipm.insured_mailbox, ipm.insured_phone, ipm.insured_tel, ipm.insurance_class_name, ipm.endor_no, ipm.car_type, ipm.vin, ipm.engine_no, ipm.car_class, ipm.use_type, ipm.first_date, ipm.clause_type, ipm.net_premium, ipm.vehicel_tax, ipm.car_branchname, ipm.print_date, ipm.approval_flag, ipm.amount, ipm.premium_tax, ipm.endor_type, ipm.province_orgid, ipm.province_orgname, ipm.city_orgid, ipm.city_orgname, ipm.area_orgid, ipm.area_orgname, ipm.responsible_no, ipm.responsible_name, ipm.person_cid, ipm.create_date, ipm.create_user, ipm.mdf_date, ipm.mdf_user, ipm.car_name, ipm.org_id, ipm.ins_validate, ipm.data_type, ipm.change_nu, ipm.owner_no, ipm.owner_name, ipm.inter_flag, ipm.business_flag, ipm.service_fee, ipm.remarks, ipm.car_use_year, ipm.car_value, ipm.settled_date
+		from INS_CMAIN ipm  where  ipm.policy_no =#policy_no#
+	</select>
+</sqlMap>

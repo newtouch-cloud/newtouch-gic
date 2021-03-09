@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="protocolmanage">
+	<typeAlias alias="protocolmanageModel"
+		type="com.newtouch.protocol.model.vo.ProtocolManageModel" />
+
+	<typeAlias alias="ProtocolCategoryModel"
+		type="com.newtouch.protocol.model.vo.ProtocolCategoryModel" />
+
+	<typeAlias alias="ContractType" type="com.newtouch.protocol.model.vo.ContractType" />
+
+
+
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_  
+		where rownum   < #limit#)
+		where rownum_  >= #start#
+		]]>
+	</sql>
+	<!-- 协议管理-增加-信息入库 -->
+	<insert id="addProtocol" parameterClass="java.util.List">
+		insert into cd_agreement(
+		seq_id,
+		agreement_no,
+		protocol_category,
+		contract_type,
+		branch_id,
+		branch_name,
+		party_a,
+		party_b,
+		party_c,
+		ins_branch,
+		ins_branchname,
+		push_code,
+		enterprise_type,
+		credit_code,
+		isconsult,
+		bank_name,
+		bank_code,
+		party_b_name,
+		party_b_phone,
+		amount,
+		dateofsign,
+		startdate,
+		enddate,
+		sup_protocol_no,
+		sup_protocol_content,
+		sup_protocol_stadate,
+		status,
+		sign_type,
+		remarks,
+		create_date,
+		flag_data
+		)
+		<iterate open="(" close=")" conjunction="union all">
+			select
+			#list[].seq_id#,
+			#list[].agreement_no#,
+			#list[].protocol_category#,
+			#list[].contract_type#,
+			#list[].branch_id#,
+			#list[].branch_name#,
+			#list[].party_a#,
+			#list[].party_b#,
+			#list[].party_c#,
+			#list[].ins_branch#,
+			#list[].ins_branchname#,
+			#list[].push_code#,
+			#list[].enterprise_type#,
+			#list[].credit_code#,
+			#list[].isconsult#,
+			#list[].bank_name#,
+			#list[].bank_code#,
+			#list[].party_b_name#,
+			#list[].party_b_phone#,
+			#list[].amount#,
+			to_date(#list[].dateofsign#,'yyyy-mm-dd'),
+			to_date(#list[].startdate#,'yyyy-mm-dd'),
+			to_date(#list[].enddate#,'yyyy-mm-dd'),
+			#list[].sup_protocol_no#,
+			#list[].sup_protocol_content#,
+			#list[].sup_protocol_stadate#,
+			'1',
+			#list[].sign_type#,
+			#list[].remarks#,
+			sysdate,
+			'1'
+			from dual
+		</iterate>
+	</insert>
+
+
+	<!-- 协议管理修改状态 -->
+	<update id="updateProtocolStatus" parameterClass="ProtocolManageModel">
+		update cd_agreement
+		set status = '3',
+		enddate =
+		to_date(#enddate#,'yyyy/MM/dd'),
+		reason = #reason#
+		where seq_id =
+		#seq_id#
+		<!-- and agreement_type='2' -->
+	</update>
+
+
+
+
+	<!-- 根据输入条件-查询协议管理信息 -->
+	<sql id="queryProtocols">
+		select CD.SEQ_ID,
+		CD.BRANCH_ID,
+		CD.BRANCH_NAME,
+		cd.party_a,
+		cd.party_b,
+		cd.party_c,
+		case when cd.PROTOCOL_CATEGORY!='2' then CD.INS_BRANCH
+		else
+		cd.push_code end ins_branch,
+		CD.AGREEMENT_NO,
+	        CD.enterprise_type,
+		CD.credit_code,
+	        CD.isconsult,
+	        CD.bank_name,
+		CD.bank_code,
+		CD.party_b_name,
+		CD.party_b_phone,
+	        CD.amount,
+		TO_CHAR(CD.STARTDATE,
+		'YYYY-MM-DD') STARTDATE,
+		TO_CHAR(CD.ENDDATE, 'YYYY-MM-DD') ENDDATE,
+		TO_CHAR(CD.DATEOFSIGN, 'YYYY-MM-DD') DATEOFSIGN,
+		CD.SIGN_TYPE,
+		CD.INS_BRANCHNAME,
+		CD.STATUS,
+		CD.CONTRACT_TYPE,
+		CD.PROTOCOL_CATEGORY,
+		CD.remarks
+		from
+		cd_agreement cd
+		left join sys_branch si on cd.branch_id=si.branch_id
+		where 1=1 and flag_data!=0 and cd.branch_id in $dept_list$
+		<!-- and cd.agreement_type='2' -->
+		<isNotEmpty property="branch_id">
+			<!-- and cd.branch_id = #branch_id# -->
+			 and cd.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+			
+		</isNotEmpty>
+		<isNotEmpty property="ins_branch">
+			<!-- and cd.ins_branch = #ins_branch# -->
+			and cd.ins_branch in (select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#ins_branch# 
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="agreement_no">
+			AND cd.agreement_no=#agreement_no#
+		</isNotEmpty>
+		<isNotEmpty property="enddate1">   
+		<![CDATA[
+				AND to_char(cd.enddate,'yyyy-MM-dd') >= #enddate1#
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="enddate2">   
+		<![CDATA[
+				AND to_char(cd.enddate,'yyyy-MM-dd') <= #enddate2# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="dateofsign1">   
+		<![CDATA[
+				AND to_char(cd.dateofsign,'yyyy-MM-dd') >= #dateofsign1# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="dateofsign2">   
+		<![CDATA[
+				AND to_char(cd.dateofsign,'yyyy-MM-dd') <= #dateofsign2# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="isOverdue">
+			<isEqual property="isOverdue" compareValue="1">
+	  		  <![CDATA[
+				AND CD.ENDDATE < SYSDATE + 31
+   				AND CD.ENDDATE > SYSDATE
+				]]>
+			</isEqual>
+			<isEqual property="isOverdue" compareValue="0">
+	  		  <![CDATA[
+				AND (CD.ENDDATE > SYSDATE + 31
+   				OR CD.ENDDATE < SYSDATE)
+				]]>
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="sign_type">   
+		<![CDATA[
+				AND cd.sign_type=#sign_type#
+				]]>
+		</isNotEmpty>
+
+		<isNotEmpty property="status">   
+		<![CDATA[
+				AND cd.status=#status#
+				]]>
+		</isNotEmpty>
+		<isEmpty>
+				AND cd.status=1
+		</isEmpty>
+		<isNotEmpty property="protocol_category">   
+		<![CDATA[
+				AND cd.protocol_category=#protocol_category#
+				]]>
+		</isNotEmpty>
+		order by cd.create_date desc
+	</sql>
+
+	<!-- 查询所有协议管理信息 -->
+	<select id="queryProtocols" parameterClass="ProtocolManageModel"
+		resultClass="ProtocolManageModel">
+		<include refid="query_head" />
+		<include refid="queryProtocols" />
+		<include refid="query_foot" />
+	</select>
+
+	<!-- 查询协议管理信息-分页 -->
+	<select id="queryProtocols_count" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		select count(*) from (
+		<include refid="queryProtocols" />
+		)
+	</select>
+	<!-- 协议管理明细 -->
+	<select id="getProtocolView" parameterClass="ProtocolManageModel"
+		resultClass="ProtocolManageModel">
+		select cd.seq_id,
+		CD.BRANCH_ID,
+		CD.BRANCH_NAME,
+		CD.INS_BRANCH,
+		CD.AGREEMENT_NO,
+		TO_CHAR(CD.STARTDATE, 'YYYY-MM-DD') STARTDATE,
+		TO_CHAR(CD.ENDDATE, 'YYYY-MM-DD') ENDDATE,
+		TO_CHAR(CD.DATEOFSIGN,
+		'YYYY-MM-DD') DATEOFSIGN,
+		CD.SIGN_TYPE,
+		CD.INS_BRANCHNAME,
+		CD.STATUS,
+		CD.CONTRACT_TYPE,
+		CD.PROTOCOL_CATEGORY,
+		CD.party_a,
+		CD.party_b,
+		CD.party_c,
+		cd.amount,
+		cd.remarks,
+		CD.push_code,
+		CD.enterprise_type,
+		CD.credit_code,
+		CD.isconsult,
+		CD.bank_name,
+		CD.bank_code,
+		cd.picture_path
+		<!-- cd.seq_id, cd.branch_id, cd.branch_name, cd.agreement_no, to_char(cd.startdate,'YYYY-MM-DD') 
+			startdate, to_char(cd.enddate,'YYYY-MM-DD') enddate, to_char(cd.dateofsign,'YYYY-MM-DD') 
+			dateofsign -->
+		from cd_agreement cd
+		left join sys_branch si
+		on
+		si.Branch_id=cd.branch_id
+
+		where 1=1
+		and cd.seq_id=#seq_id#
+	</select>
+	<!-- 协议管理修改 -->
+	<update id="updateProtocol" parameterClass="ProtocolManageModel">
+		update cd_agreement
+		set branch_id=#branch_id#,
+		branch_name=#branch_name#,
+		startdate=to_date(#startdate#,'yyyy-mm-dd'),
+		enddate=to_date(#enddate#,'yyyy-mm-dd'),
+		dateofsign=to_date(#dateofsign#,'yyyy-mm-dd'),
+		protocol_category=#protocol_category#,
+		contract_type=#contract_type#,
+		party_a=#party_a#,
+		party_b=#party_b#,
+		bank_name=#bank_name#,
+		bank_code=#bank_code#,
+		ins_branch=#ins_branch#,
+		ins_branchname=#ins_branchname#,
+		push_code=#push_code#,
+		credit_code=#credit_code#,
+		isconsult=#isconsult#,
+		sign_type=#sign_type#,
+		status=#status#,
+		party_c=#party_c#,
+		amount=#amount#,
+		remarks=#remarks#
+		where seq_id = #seq_id#
+	</update>
+
+
+	<!-- 插入pdf文件保存路径addProtocolPdf -->
+	<update id="addProtocolPdf" parameterClass="ProtocolManageModel">
+		update cd_agreement
+		set picture_path = #picture_path# where seq_id=#seq_id#
+	</update>
+
+	<!-- 保险公司协议号唯一性校验 -->
+	<select id="queryCountAgreement_no" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		select count(*) from cd_agreement where
+		agreement_no=#agreement_no#
+
+	</select>
+	<!-- 查询所有协议号总数 -->
+	<select id="queryAgreement_no" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		select count(*)+1 from cd_agreement where
+		branch_id=#branch_id#
+	</select>
+
+
+	<insert id="addProtocolNew" parameterClass="java.util.List">
+		insert into cd_agreement(
+		agreement_no,
+		protocol_category,
+		contract_type,
+		branch_id,
+		branch_name,
+		party_a,
+		party_b,
+		party_c,
+		ins_branch,
+		ins_branchname,
+		push_code,
+		enterprise_type,
+		credit_code,
+		isconsult,
+		bank_name,
+		bank_code,
+		party_b_name,
+		party_b_phone,
+		amount,
+		dateofsign,
+		startdate,
+		enddate,
+		sup_protocol_no,
+		sup_protocol_content,
+		sup_protocol_stadate,
+		status,
+		sign_type,
+		remarks,
+		create_date,
+		flag_data
+		)
+		<iterate open="(" close=")" conjunction="union all">
+			select
+			#list[].agreement_no#,
+			#list[].protocol_category#,
+			#list[].contract_type#,
+			#list[].branch_id#,
+			#list[].branch_name#,
+			#list[].party_a#,
+			#list[].party_b#,
+			#list[].party_c#,
+			#list[].ins_branch#,
+			#list[].ins_branchname#,
+			#list[].push_code#,
+			#list[].enterprise_type#,
+			#list[].credit_code#,
+			#list[].isconsult#,
+			#list[].bank_name#,
+			#list[].bank_code#,
+			#list[].party_b_name#,
+			#list[].party_b_phone#,
+			#list[].amount#,
+			to_date(#list[].dateofsign#,'yyyy-mm-dd'),
+			to_date(#list[].startdate#,'yyyy-mm-dd'),
+			to_date(#list[].enddate#,'yyyy-mm-dd'),
+			#list[].sup_protocol_no#,
+			#list[].sup_protocol_content#,
+			#list[].sup_protocol_stadate#,
+			#list[].status#,
+			#list[].sign_type#,
+			#list[].remarks#,
+			sysdate,
+			'1'
+			from
+			dual
+		</iterate>
+	</insert>
+
+	<!-- 查询导出信息 -->
+	<select id="queryProtocolsAll" parameterClass="ProtocolManageModel"
+		resultClass="ProtocolManageModel">
+		select CD.SEQ_ID,
+		CD.agreement_no,
+		CD.protocol_category,
+		CD.contract_type,
+		CD.branch_id,
+		CD.branch_name,
+		CD.party_a,
+		CD.party_b,
+		CD.party_c,
+		CD.amount,
+		CD.ins_branch,
+		CD.ins_branchname,
+		CD.push_code,
+		CD.enterprise_type,
+		CD.credit_code,
+		CD.isconsult,
+		CD.bank_name,
+		CD.bank_code,
+		CD.party_b_name,
+		CD.party_b_phone,
+	    CD.amount,
+		TO_CHAR(CD.STARTDATE, 'YYYY-MM-DD') STARTDATE,
+		TO_CHAR(CD.ENDDATE,
+		'YYYY-MM-DD') ENDDATE,
+		TO_CHAR(CD.DATEOFSIGN, 'YYYY-MM-DD') DATEOFSIGN,
+		CD.sup_protocol_no,
+		CD.sup_protocol_content,
+		CD.sup_protocol_stadate,
+		case when CD.status='1' then '有效'
+		when CD.status='2' then '到期自动终止'
+		when
+		CD.status='3' then '提前终止' end status,
+		case when CD.sign_type='0' then
+		'续签'
+		when CD.sign_type='1' then '新签' end sign_type,
+		CD.remarks
+		from
+		cd_agreement cd
+		left join sys_branch si on cd.branch_id=si.branch_id
+		where 1=1 and flag_data!=0 and cd.branch_id in $dept_list$
+		<!-- and cd.agreement_type='2' -->
+		<isNotEmpty property="branch_id">
+			<!-- and cd.branch_id = #branch_id# -->
+			and cd.branch_id in (select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#branch_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+		</isNotEmpty>
+		<isNotEmpty property="ins_branch">
+			<!-- and cd.ins_branch = #ins_branch# -->
+			and cd.ins_branch in (select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#ins_branch# 
+         connect by prior cpy.branch_id=cpy.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty property="agreement_no">
+			AND cd.agreement_no=#agreement_no#
+		</isNotEmpty>
+		<isNotEmpty property="enddate1">   
+		<![CDATA[
+				AND to_char(cd.enddate,'yyyy-MM-dd') >= #enddate1#
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="enddate2">   
+		<![CDATA[
+				AND to_char(cd.enddate,'yyyy-MM-dd') <= #enddate2# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="dateofsign1">   
+		<![CDATA[
+				AND to_char(cd.dateofsign,'yyyy-MM-dd') >= #dateofsign1# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="dateofsign2">   
+		<![CDATA[
+				AND to_char(cd.dateofsign,'yyyy-MM-dd') <= #dateofsign2# 
+				]]>
+		</isNotEmpty>
+		<isNotEmpty property="isOverdue">
+			<isEqual property="isOverdue" compareValue="1">
+	  		  <![CDATA[
+				AND CD.ENDDATE < SYSDATE + 31
+   				AND CD.ENDDATE > SYSDATE
+				]]>
+			</isEqual>
+			<isEqual property="isOverdue" compareValue="0">
+	  		  <![CDATA[
+				AND (CD.ENDDATE > SYSDATE + 31
+   				OR CD.ENDDATE < SYSDATE)
+				]]>
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="sign_type">   
+		<![CDATA[
+				AND cd.sign_type=#sign_type#
+				]]>
+		</isNotEmpty>
+
+		<isNotEmpty property="status">   
+		<![CDATA[
+				AND cd.status=#status#
+				]]>
+		</isNotEmpty>
+
+		<isNotEmpty property="protocol_category">   
+		<![CDATA[
+				AND cd.protocol_category=#protocol_category#
+				]]>
+		</isNotEmpty>
+		order by cd.create_date desc
+	</select>
+
+
+	<select id="findCategory" parameterClass="ProtocolCategoryModel"
+		resultClass="ProtocolCategoryModel">
+		SELECT T.ENUM_CODE CODE, T.ENUM_NAME NAME, T.ENUM_PARENTID
+		TYPE
+		FROM T_ENUM T
+		WHERE T.ENUM_PARENTID = 'protocol_category'
+	</select>
+
+	<select id="findContract" parameterClass="ContractType"
+		resultClass="ContractType">
+		SELECT T.ENUM_CODE CODE,
+		T.ENUM_NAME NAME,
+		T.ENUM_PARENTID
+		TYPE,
+		T.ENUM_REMARK PARENTID
+		FROM T_ENUM T
+		WHERE T.ENUM_PARENTID =
+		'contract_type'
+	</select>
+
+
+
+	<!-- 根据协议号查询信息信息 -->
+	<select id="queryProtocolsAgr" parameterClass="ProtocolManageModel"
+		resultClass="ProtocolManageModel">
+		select CD.SEQ_ID,
+		CD.agreement_no,
+		CD.protocol_category,
+		CD.contract_type,
+		CD.branch_id,
+		CD.branch_name,
+		CD.party_a,
+		CD.party_b,
+		CD.ins_branch,
+		CD.ins_branchname,
+		CD.push_code,
+		CD.enterprise_type,
+		CD.credit_code,
+		CD.isconsult,
+		CD.bank_name,
+		CD.bank_code,
+		CD.party_b_name,
+		CD.party_b_phone,
+		<!-- CD.amount, -->
+		TO_CHAR(CD.STARTDATE, 'YYYY-MM-DD') STARTDATE,
+		TO_CHAR(CD.ENDDATE,
+		'YYYY-MM-DD') ENDDATE,
+		TO_CHAR(CD.DATEOFSIGN, 'YYYY-MM-DD') DATEOFSIGN,
+		CD.sup_protocol_no,
+		CD.sup_protocol_content,
+		CD.sup_protocol_stadate,
+		CD.status,
+		cd.sign_type,
+		CD.remarks
+		from cd_agreement cd
+		left join
+		sys_branch si on cd.branch_id=si.branch_id
+		where 1=1 and flag_data!=0
+		<isNotEmpty property="agreement_no">
+			AND cd.agreement_no=#agreement_no#
+		</isNotEmpty>
+		order by cd.create_date desc
+	</select>
+
+	<select id="sysBranch" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		SELECT COUNT(1)
+		FROM SYS_BRANCH A
+		WHERE A.BRANCH_ID =
+		#branch_id#
+		AND A.BRANCH_NAME = #branch_name#
+	</select>
+
+	<select id="cpyBranch" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		SELECT COUNT(1)
+		FROM CPY_BRANCH A
+		WHERE A.BRANCH_ID =
+		#ins_branch#
+		AND A.BRANCH_NAME = #ins_branchname#
+	</select>
+	<select id="findAgreementNo" resultClass="ProtocolManageModel">
+		SELECT
+		SUBSTR(AGREEMENT_NO, length(AGREEMENT_NO)-4, 5) AGREEMENT_NO
+		FROM (SELECT A.* FROM
+		CD_AGREEMENT A WHERE A.CREATE_DATE IS NOT NULL ORDER BY A.CREATE_DATE
+		DESC)
+		WHERE ROWNUM = 1
+	</select>
+
+
+	<select id="findSupProtocol" parameterClass="ProtocolManageModel"
+		resultClass="int">
+		SELECT COUNT(1)
+		FROM CD_AGREEMENT_SUP A
+		WHERE A.agreement_no
+		= #agreement_no#
+	</select>
+
+	<insert id="saveSupProtocol" parameterClass="ProtocolManageModel">
+		insert into
+		CD_AGREEMENT_SUP
+		(agreement_no,
+		startdate,
+		sup_protocol_no,
+		sup_protocol_content,
+		sup_protocol_stadate,
+		create_date
+		)
+		values
+		(
+		#agreement_no#,
+		to_date(#startdate#,'yyyy-MM-dd'),
+		#sup_protocol_no#,
+		#sup_protocol_content#,
+		to_date(to_char(#sup_protocol_stadate#,'yyyy-MM-dd'),'yyyy-MM-dd'),
+		sysdate
+		)
+	</insert>
+
+	<update id="updateSupProtocol" parameterClass="ProtocolManageModel">
+		update
+		cd_agreement set sup_protocol_no=#sup_protocol_no#,
+		sup_protocol_content=#sup_protocol_content#,
+		sup_protocol_stadate=#sup_protocol_stadate#,
+		startdate=to_date(to_char(#sup_protocol_stadate#,'yyyy-MM-dd'),'yyyy-MM-dd')
+		where agreement_no = #agreement_no#
+	</update>
+</sqlMap>

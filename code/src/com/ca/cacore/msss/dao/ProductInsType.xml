@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<!-- PDT_Product_InsType  主附险分类数据字典	-->
+<sqlMap namespace="ProductInsType">
+	<typeAlias alias="ProductInsTypeModel"	type="com.ca.cacore.msss.model.bo.ProductInsTypeModel" />
+	<select id="queryProductInsType" resultClass="ProductInsTypeModel">
+		SELECT * FROM PDT_Product_InsType
+	</select>
+</sqlMap>

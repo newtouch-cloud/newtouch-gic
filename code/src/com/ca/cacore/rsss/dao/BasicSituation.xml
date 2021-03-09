@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="BasicSituation">
+		<typeAlias alias="BasicSituationModel" type="com.ca.cacore.rsss.model.vo.BasicSituationModel"/>
+		<typeAlias alias="BasicInfomationModel" type="com.ca.cacore.rsss.model.vo.BasicInfomationModel"/>
+		
+	<!--查询产险公司业务报表-->
+	<select id="queryBasicSituation" parameterClass="BasicSituationModel" resultClass="BasicSituationModel">
+		  select ty.rep_name basic_station,
+	         nvl(rep.rep_value, 0) num,
+	         ty.rep_row line
+	    from ca_sales_basic_rep_type ty
+	    left join ca_sales_basic_rep rep
+	      on ty.rep_row = rep.rep_row
+	     and rep.rep_month = to_date(#firstDate#, 'yyyy-mm-dd')
+	   order by ty.rep_row
+	</select>
+	<!-- 导出产险公司业务报表-->
+	<select id="exprotBasicSituation" parameterClass="BasicSituationModel" resultClass="BasicSituationModel">
+	 select ty.rep_name basic_station,
+	         nvl(rep.rep_value, 0) num,
+	         ty.rep_row line
+	    from ca_sales_basic_rep_type ty
+	    left join ca_sales_basic_rep rep
+	      on ty.rep_row = rep.rep_row
+	     and rep.rep_month = to_date(#firstDate#, 'yyyy-mm-dd')
+	   order by ty.rep_row
+	</select>
+	
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+	
+	<sql id="query_all" >
+		select baseinfo, nvl(baseinfo_value, 0) baseinfo_value
+  			from (select b1.*, b2.baseinfo_value
+          			from (select *
+                  			from (select distinct baseinfo, orders from basicinformation),
+                       		 	 (select distinct (branch_id) branch_id, term from basicinformation
+                         		  where term = #term#)) b1
+          			left join basicinformation b2
+            		on b1.branch_id = b2.branch_id
+           			and b2.term = #term#
+           			and b1.baseinfo = b2.baseinfo)
+ 			where 1 = 1
+   			and branch_id in $dept_list$
+   			and branch_id = #branch_id#
+   			and term = #term#
+ 			order by orders
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	
+	<!-- 查询总条数 -->
+	<select id="queryBasicInfomation_count" parameterClass="BasicInfomationModel" resultClass="Integer">
+		select count(*) from (<include refid="query_all" />)
+	</select>
+	
+	<!-- 查询基本情况表 -->
+	<select id="queryBasicInfomation" parameterClass="BasicInfomationModel" resultClass="BasicInfomationModel">
+		<!-- <include refid="query_head" /> -->
+		<include refid="query_all" />
+		<!-- <include refid="query_foot" /> -->
+	</select>
+	
+	
+	<select id="queryBasicInfomation1" parameterClass="BasicInfomationModel" resultClass="BasicInfomationModel">
+		select numbers,
+			   compared,<!-- compared -->
+			   is_practice,
+			   gleaderNum,
+			   gleaderIsPracticeNum,
+			   businessNum,
+			   businessIsPracticeNum,
+			   noBusinessNum,
+			   noBusinessIsPracticeNum,
+			   policyNum
+		from basicInformation_sum
+		where 1 = 1
+   			and branch_id in $dept_list$
+   			and branch_id = #branch_id#
+   			and term = #term#
+	</select>
+</sqlMap>

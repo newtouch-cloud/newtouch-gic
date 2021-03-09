@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="protocol">
+   <typeAlias alias="protocolModel"  type="com.ca.cacore.maas.model.bo.ProtocolModel"/>
+	
+	<!-- 协议管理-增加-信息入库 -->
+	<insert id="addProtocol"  parameterClass="protocolModel">
+		insert into cd_agreement (
+			   seq_id,ins_branch,ins_branchname,branch_id,branch_name,
+			   startdate,enddate,dateofsign,agreement_no,agreement_type,status) 
+		values(#seq_id#,#ins_branch#,#ins_branchname#,#branch_id#,#branch_name#,
+			   TO_DATE(#startdate#,'YYYY-MM-DD'),TO_DATE(#enddate#,'YYYY-MM-DD'),TO_DATE(#dateofsign#,'YYYY-MM-DD'),#agreement_no#,'1','1')
+	</insert>
+	
+	<!-- 协议管理-状态-标签查询 -->
+	<select id="queryProtocolStatus" resultClass="protocolModel">
+		select status_code,status_name from sys_library_commonstatus order by ordernum
+	</select>
+	
+	<sql id="query_head">
+		select * 
+	  	  from (select row_.*, rownum rownum_  
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_  
+		where rownum   < #limit#)
+		where rownum_  >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 根据输入条件-查询协议管理信息 -->
+	<sql id="queryProtocols">
+			   select ca.seq_id,
+               ca.ins_branch,
+               ca.ins_branchname,
+               ca.branch_id,
+               ca.branch_name,
+               ca.agreement_no,
+               to_char(ca.startdate,'YYYY-MM-DD') startdate,
+             to_char(ca.enddate,'YYYY-MM-DD') enddate,
+             to_char(ca.dateofsign,'YYYY-MM-DD') dateofsign,
+          case     ca.status  
+           when '1'   then '有效'
+           when '0'   then '无效'
+             end status
+          from cd_agreement ca  
+       where 1=1 and ca.agreement_type='1' and ca.status='1'
+	  <isNotEmpty property="ins_branch">
+			AND ca.ins_branch =#ins_branch#
+	  </isNotEmpty>
+	   order by ca.seq_id desc
+	</sql>
+	
+	 <!-- 查询所有协议管理信息 -->
+	<select id="queryProtocols" parameterClass="protocolModel" resultClass="protocolModel">
+		<include refid="query_head" />
+		<include refid="queryProtocols" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询协议管理信息-分页 -->
+	<select id="queryProtocols_count" parameterClass="protocolModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryProtocols" />
+		)
+	</select>
+   <!-- 协议管理 -->
+	<select id="getProtocolView" parameterClass="protocolModel" resultClass="protocolModel">
+		  select ca.seq_id,
+               ca.ins_branch,
+               ca.ins_branchname,
+               ca.branch_id,
+               ca.branch_name,
+               ca.agreement_no,
+               to_char(ca.startdate,'YYYY-MM-DD') startdate,
+             to_char(ca.enddate,'YYYY-MM-DD') enddate,
+             to_char(ca.dateofsign,'YYYY-MM-DD') dateofsign,
+          case     ca.status  
+           when '1'   then '有效'
+           when '0'   then '无效'
+             end status
+          from cd_agreement ca  
+        where 1=1
+        and   ca.agreement_no=#agreement_no# and agreement_type='1'
+       
+      </select>
+     <!-- 协议管理修改 -->
+     <update id="updateProtocol" parameterClass="protocolModel" >
+        update cd_agreement  
+           set startdate = TO_DATE(#startdate#,'YYYY-MM-DD'),enddate=TO_DATE(#enddate#,'YYYY-MM-DD'),dateofsign=TO_DATE(#dateofsign#,'YYYY-MM-DD')
+        where agreement_no = #agreement_no# and agreement_type='1'
+     </update>
+     
+     <!-- 查询-协议管理报表-导出 -->
+	<select id="queryProtocolForExport" parameterClass="protocolModel" resultClass="protocolModel">
+		<include refid="queryProtocols"/>
+	</select>
+	
+	<!-- 查询签订人信息：校驗使用 -->
+	<select id="getProtocolInfo" parameterClass="protocolModel" resultClass="protocolModel">
+	    select sales_id code,
+	           sales_name name  
+	    from smis_sales 
+	    where sales_id=#code#
+	</select>
+	<!-- 保险公司代理人协议机构查询重复 -->
+	<select id="queryCountBranch" parameterClass="String" resultClass="int">
+		select count(*) from cd_agreement where branch_id=#branch_id#
+	</select>
+	<!-- 保险公司协议号唯一性校验 -->
+	<select id="queryCountAgreement_no" parameterClass="protocolModel" resultClass="int">
+		select count(*) from cd_agreement where agreement_no=#agreement_no#  and branch_id != #branch_id#
+		
+	</select>
+	<!-- 根据保险公司id查询产品 -->
+	<!-- <select id="getProductName" parameterClass="protocolModel" resultClass="protocolModel">
+		select csr.product_name from CBS_SMC_RISKCODE csr where csr.company_id=#branch_id#
+	</select> -->
+	<!-- 根据产品名称查询产品编号 -->
+	<!-- <select id="getProductCode" parameterClass="protocolModel" resultClass="protocolModel">
+		select csr.product_code from CBS_SMC_RISKCODE csr where csr.product_name=#product_name#
+	</select> -->
+	<!-- 协议管理修改状态 -->
+     <update id="updateProtocolStatus" parameterClass="protocolModel" >
+        update cd_agreement   
+           set status = '0'
+        where agreement_no = #agreement_no# and agreement_type='1'
+     </update>
+     
+     <!-- 协议校验时间和机构 -->
+     <select id="checkagreement" parameterClass="protocolModel" resultClass="protocolModel">
+	    select ca.seq_id,
+	             ca.ins_branch,
+	             ca.ins_branchname,
+	             ca.branch_id,
+	             ca.branch_name,
+	             ca.agreement_no,
+	             to_char(ca.startdate,'YYYY-MM-DD') startdate,
+		         to_char(ca.enddate,'YYYY-MM-DD') enddate,
+		         to_char(ca.dateofsign,'YYYY-MM-DD') dateofsign,
+	             ca.status
+	        from cd_agreement ca 
+        where 1=1
+        and   ca.ins_branch=#ins_branch# and ca.branch_id=#branch_id# and agreement_type='1'
+	</select>
+</sqlMap>

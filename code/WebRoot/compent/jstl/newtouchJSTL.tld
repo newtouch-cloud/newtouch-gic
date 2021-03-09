@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib version="2.0" xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd">
+
+	<tlib-version>1.0</tlib-version>
+	<jsp-version>1.2</jsp-version>
+	<short-name>n</short-name>
+	<uri>/newtouchJSTL</uri>
+
+	<tag>
+		<name>Select</name>
+		<tag-class>com.newtouch.core.view.jsptag.select.SelectTag
+		</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>name</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>value</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>queryId</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>style</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>classPath</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>disable</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>id</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>isBlank</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>onChange</name>
+			<required>false</required>
+		</attribute>
+	</tag>
+	<tag>
+		<name>Button</name>
+		<tag-class>com.newtouch.core.view.jsptag.button.ButtonTag
+		</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>name</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>id</name>
+			<required>
+				false
+			</required>
+		</attribute>
+		<attribute>
+			<name>value</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>style</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>onClick</name>
+			<required>false</required>
+		</attribute>
+		
+		<attribute>
+			<name>type</name>
+			<required>false</required>
+		</attribute>
+	</tag>
+</taglib>

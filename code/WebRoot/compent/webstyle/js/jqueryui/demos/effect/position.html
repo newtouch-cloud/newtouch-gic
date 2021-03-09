@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+  <style type="text/css">
+#targetElement { width:240px;height:200px;background-color:#999;margin:30px auto; }
+.positionDiv { width:50px;height:50px;opacity:0.6; }
+#position1 {background-color:#F00;}
+#position2 {background-color:#0F0;}
+#position3 {background-color:#00F;}
+#position4 {background-color:#FF0;}
+</style>
+
+  <script>
+  $(document).ready(function() {
+    
+$("#position1").position({
+  my: "center",
+  at: "center",
+  of: "#targetElement"
+});
+$("#position2").position({
+  my: "left top",
+  at: "left top",
+  of: "#targetElement"
+});
+$("#position3").position({
+  my: "right center",
+  at: "right bottom",
+  of: "#targetElement"
+});
+$(document).mousemove(function(ev){
+  $("#position4").position({
+    my: "left bottom",
+    of: ev,
+    offset: "3 -3",
+    collision: "flip",
+    using:function(){alert("bigger");}
+  });
+});
+
+  });
+  </script>
+</head>
+<body style="font-size:62.5%;">
+  
+<div id="targetElement">
+  <div class="positionDiv" id="position1"></div>
+  <div class="positionDiv" id="position2"></div>
+  <div class="positionDiv" id="position3"></div>
+  <div class="positionDiv" id="position4"></div>
+</div>
+
+</body>
+</html>

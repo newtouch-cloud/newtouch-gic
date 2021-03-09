@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="userAuths"> 
+   <typeAlias alias="userAuths" type="com.ca.cacore.manage.model.vo.UserAuths_Role_BranchModel"/>
+   
+	<select id="queryUserByRoel" parameterClass="userAuths" resultClass="userAuths">
+		select sr.role_id, sr.role_name,sua.username from sys_role sr
+          left join sys_user_auths sua on sua.role_id = sr.role_id
+         where sua.status = '1' and sr.status = '1'
+    <isNotEmpty prepend="and" property="userName">
+			sua.userName = #userName#
+		</isNotEmpty>
+    </select>    
+	
+	<select id="queryUserByBranch" parameterClass="userAuths" resultClass="userAuths">
+		 select sb.branch_name,sb.branch_id,sua.username,sua.role_id from sys_branch sb
+  left join sys_user_auths sua on sb.branch_id = sua.branch_id
+ where sua.status = '1' and sb.status = '1' 
+    <isNotEmpty prepend="and" property="role_id">
+			sua.role_id = #role_id#
+		</isNotEmpty>
+    </select>    
+    
+</sqlMap>

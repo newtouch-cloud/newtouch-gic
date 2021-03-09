@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="policyLifeManage">
+   <typeAlias alias="policyLifePeopleVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifePeopleVOModel"/>
+   <typeAlias alias="policyLifeProductVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeProductVOModel"/>
+   <typeAlias alias="policyLifeProductFeePremVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeProductFeePremVOModel"/>
+   <typeAlias alias="policyLifeVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeVOModel"/>
+ 	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+
+	<!-- 查询所有的投保单 -->
+	<sql id="query_all_policyLife">
+		select distinct plf.seq_id,
+                plf.branch_id,
+                plf.send_code,
+                branch.branch_name,
+                plf.insbranch_id,
+                insbranch.insbranch_name,
+                r1.relation_name,
+                plf.policy_id,
+                plf.policy_code,
+                plf.agent_id,
+                sales_agent.sales_name   agent_name,
+                plf.service_id,
+                sales_service.sales_name service_name,
+                holder.app_name,
+                insured.insurant_name,
+                plf.hold_date,
+                plf.validate_date,
+                plf.status,
+                status.status_name
+			  from cbs_policylife plf
+			  left join sys_branch branch
+			    on branch.branch_id = plf.branch_id
+			  left join smis_sales sales_agent
+			    on sales_agent.sales_id = plf.agent_id
+			  left join smis_sales sales_service
+			    on sales_service.sales_id = plf.service_id
+			  left join cbs_policylife_holder holder
+			    on holder.customer_id = plf.holder_id
+			  left join cbs_policylife_insured insured
+			    on insured.customer_id = plf.insurant_id
+			  left join cbs_policy_status status
+			    on status.status_code = plf.status
+			  left join sys_insbranch insbranch
+			    on insbranch.insbranch_id = plf.insbranch_id
+			  left join cbs_applicant_relation1 r1
+			    on plf.relation_id = r1.relation_code
+			 where plf.policy_id = holder.policy_id
+			   and plf.policy_id = insured.policy_id
+			   <!-- and plf.status != 6 -->
+		<isNotEmpty property="branch_id">
+			AND plf.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND plf.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="send_code">
+			AND plf.send_code=#send_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			AND sales_agent.sales_name like
+			'%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			AND holder.app_name like
+			'%$app_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND plf.status=#status#
+		</isNotEmpty>
+	</sql>
+
+	<!-- 修改状态的时候：查询投保单不包括待核保和无效投保单 -->
+	<sql id="query_some_policyLife">
+		select distinct plf.seq_id,
+		plf.branch_id,
+		plf.send_code,
+		branch.branch_name,
+		plf.insbranch_id,
+		insbranch.insbranch_name,
+		r1.relation_name,
+		plf.policy_id,
+		plf.policy_code,
+		plf.agent_id,
+		sales_agent.sales_name agent_name,
+		plf.service_id,
+		sales_service.sales_name service_name,
+		holder.app_name,
+		insured.insurant_name,
+		plf.hold_date,
+		plf.validate_date,
+		plf.status,
+		status.status_name
+		from cbs_policylife plf
+		left join sys_branch branch
+		on branch.branch_id = plf.branch_id
+		left join smis_sales sales_agent
+		on sales_agent.sales_id = plf.agent_id
+		left join smis_sales sales_service
+		on sales_service.sales_id = plf.service_id
+		left join cbs_policylife_holder holder
+		on holder.customer_id = plf.holder_id
+		left join cbs_policylife_insured insured
+		on insured.customer_id = plf.insurant_id
+		left join cbs_policy_status status
+		on status.status_code = plf.status
+		left join sys_insbranch insbranch
+		on insbranch.insbranch_id = plf.insbranch_id
+		left join cbs_applicant_relation1 r1
+		on plf.relation_id = r1.relation_code
+		where plf.policy_id = holder.policy_id
+		and plf.policy_id = insured.policy_id
+		and plf.status not in (6,200)
+		<isNotEmpty property="branch_id">
+			AND plf.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND plf.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="send_code">
+			AND plf.send_code=#send_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			AND sales_agent.sales_name like
+			'%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			AND holder.app_name like
+			'%$app_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND plf.status=#status#
+		</isNotEmpty>
+	</sql>
+	
+	<!-- 修改的时候：查询的相应的投保单（不包括首期带承保、待核保和保单进入正常有效状态） -->
+	<sql id="query_policyLifeForModify">
+		select distinct plf.seq_id,
+		plf.branch_id,
+		plf.send_code,
+		branch.branch_name,
+		plf.insbranch_id,
+		insbranch.insbranch_name,
+		r1.relation_name,
+		plf.policy_id,
+		plf.policy_code,
+		plf.agent_id,
+		sales_agent.sales_name agent_name,
+		plf.service_id,
+		sales_service.sales_name service_name,
+		holder.app_name,
+		insured.insurant_name,
+		plf.hold_date,
+		plf.validate_date,
+		plf.status,
+		status.status_name
+		from cbs_policylife plf
+		left join sys_branch branch
+		on branch.branch_id = plf.branch_id
+		left join smis_sales sales_agent
+		on sales_agent.sales_id = plf.agent_id
+		left join smis_sales sales_service
+		on sales_service.sales_id = plf.service_id
+		left join cbs_policylife_holder holder
+		on holder.customer_id = plf.holder_id
+		left join cbs_policylife_insured insured
+		on insured.customer_id = plf.insurant_id
+		left join cbs_policy_status status
+		on status.status_code = plf.status
+		left join sys_insbranch insbranch
+		on insbranch.insbranch_id = plf.insbranch_id
+		left join cbs_applicant_relation1 r1
+		on plf.relation_id = r1.relation_code
+		where plf.policy_id = holder.policy_id
+		and plf.policy_id = insured.policy_id
+		and plf.status not in (53,14,6)
+		<isNotEmpty property="branch_id">
+			AND plf.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND plf.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="send_code">
+			AND plf.send_code=#send_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			AND sales_agent.sales_name like
+			'%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			AND holder.app_name like
+			'%$app_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND plf.status=#status#
+		</isNotEmpty>
+	</sql>
+	
+
+	<!-- 查询保单信息列表 -->
+	<select id="queryPolicyLife" parameterClass="policyLifeVOModel"
+		resultClass="policyLifeVOModel">
+		<include refid="query_head" />
+		<include refid="query_all_policyLife" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!--维护的时候查询的投保单 -->
+	<select id="queryPolicyLifeModify" parameterClass="policyLifeVOModel"
+		resultClass="policyLifeVOModel">
+		<include refid="query_head" />
+		<include refid="query_policyLifeForModify" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 状态变更：查询-->
+	<select id="querySomePolicyLife" parameterClass="policyLifeVOModel"
+		resultClass="policyLifeVOModel">
+		<include refid="query_head" />
+		<include refid="query_some_policyLife" />
+		<include refid="query_foot" />
+	</select>
+
+	<!-- 查询投保人列表 -->
+	<select id="getHolderList" parameterClass="Long"
+		resultClass="policyLifePeopleVOModel">
+		select cc.seq_id ,
+		cc.customer_id,
+		cc.name,
+		cc.title,
+		cc.gender,
+		cc.birthday,
+		cc.customer_type,
+		cc.certi_type,
+		cc.certi_no,
+		cc.certi_validdate,
+		cc.education,
+		cc.nationality,
+		cc.nation,
+		cc.homeplace,
+		cc.seat_address,
+		cc.height,
+		cc.weight,
+		cc.political,
+		cc.education2,
+		cc.marital_stat,
+		cc.health,
+		cc.job_type,
+		cc.job_code,
+		cc.income_type,
+		cc.bank_code,
+		cc.bank_account_no,
+		cc.bank_account_name,
+		cc.is_telmsgservice,
+		cc.remark,
+		br.branch_name,
+		lf.branch_id,
+		lf.address,
+		lf.zip,
+		lf.mobile,
+		lf.fax,
+		lf.telphone,
+		lf.job_tel,
+		lf.email,
+		lf.job_com,
+		lf.modifydate,
+		ct.certi_type_name,
+		h.app_age age,
+		g.gender_name
+		from crm_customer cc
+		left join (select *
+		from (select t.*,
+		row_number() over(partition by t.customer_id order by t.createdate desc) rn
+		from crm_customer_contact t) tou
+		where <![CDATA[tou.rn <= 1
+         ]]>) lf
+		on cc.customer_id = lf.customer_id
+		left join sys_branch br
+		on lf.branch_id = br.branch_id
+		inner join cbs_policylife_holder h
+		on h.customer_id = cc.customer_id
+		inner join SYS_Library_Certi_Type ct
+		on ct.certi_type_code = h.app_certi_code
+		inner join SYS_Library_Gender g
+		on g.gender_code = cc.gender
+		where h.policy_id = #policy_id#
+	</select>
+
+	<!-- 查询被保人列表 -->
+	<select id="getInsurantList" parameterClass="Long"
+		resultClass="policyLifePeopleVOModel">
+		select cc.seq_id,
+		cc.customer_id,
+		cc.name,
+		cc.title,
+		cc.gender,
+		cc.birthday,
+		cc.customer_type,
+		cc.certi_type,
+		cc.certi_no,
+		cc.certi_validdate,
+		cc.education,
+		cc.nationality,
+		cc.nation,
+		cc.homeplace,
+		cc.seat_address,
+		cc.height,
+		cc.weight,
+		cc.political,
+		cc.education2,
+		cc.marital_stat,
+		cc.health,
+		cc.job_type,
+		cc.job_code,
+		cc.income_type,
+		cc.bank_code,
+		cc.bank_account_no,
+		cc.bank_account_name,
+		cc.is_telmsgservice,
+		cc.remark,
+		br.branch_name,
+		lf.branch_id,
+		lf.address,
+		lf.zip,
+		lf.mobile,
+		lf.fax,
+		lf.telphone,
+		lf.job_tel,
+		lf.email,
+		lf.job_com,
+		lf.modifydate,
+		ct.certi_type_name,
+		g.gender_name,
+	    i.relation1,
+        i.relation2,
+        i.insurant_age age,
+		r1.relation_name relation1_name,
+		re2.relation_name relation2_name
+		from crm_customer cc
+		left join (select *
+		from (select t.*,
+		row_number() over(partition by t.customer_id order by t.createdate desc) rn
+		from crm_customer_contact t) tou
+		where <![CDATA[tou.rn <= 1
+         ]]>) lf
+		on cc.customer_id = lf.customer_id
+		left join sys_branch br
+		on lf.branch_id = br.branch_id
+		inner join cbs_policylife_insured i
+		on i.customer_id = cc.customer_id
+		inner join cbs_applicant_relation1 r1
+		on r1.relation_code = i.relation1
+		inner join cbs_applicant_relation2 re2
+		on re2.relation_code = i.relation2
+		inner join SYS_Library_Certi_Type ct
+		on ct.certi_type_code = i.insurant_certi_code
+		inner join SYS_Library_Gender g
+		on g.gender_code = cc.gender
+		where i.policy_id = #policy_id#
+	</select>
+
+	<!-- 查询收益人列表 -->
+	<select id="getBeneficiaryList" parameterClass="Long"
+		resultClass="policyLifePeopleVOModel">
+		select cc.seq_id ,
+		cc.customer_id,
+		b.bene_type,
+        b.bene_order,
+        b.bene_rate,
+        b.insurant_id,
+        b.bene_age age,
+        b.relation1,
+        b.relation2,
+        bt.bene_type_name,
+        i.insurant_name,
+		cc.name,
+		cc.title,
+		cc.gender,
+		cc.birthday,
+		cc.customer_type,
+		cc.certi_type,
+		cc.certi_no,
+		cc.certi_validdate,
+		cc.education,
+		cc.nationality,
+		cc.nation,
+		cc.homeplace,
+		cc.seat_address,
+		cc.height,
+		cc.weight,
+		cc.political,
+		cc.education2,
+		cc.marital_stat,
+		cc.health,
+		cc.job_type,
+		cc.job_code,
+		cc.income_type,
+		cc.bank_code,
+		cc.bank_account_no,
+		cc.bank_account_name,
+		cc.is_telmsgservice,
+		cc.remark,
+		br.branch_name,
+		lf.branch_id,
+		lf.address,
+		lf.zip,
+		lf.mobile,
+		lf.fax,
+		lf.telphone,
+		lf.job_tel,
+		lf.email,
+		lf.job_com,
+		lf.modifydate,
+		ct.certi_type_name,
+		g.gender_name,
+		r1.relation_name relation1_name,
+		re2.relation_name relation2_name
+		from crm_customer cc
+		left join (select *
+		from (select t.*,
+		row_number() over(partition by t.customer_id order by t.createdate desc) rn
+		from crm_customer_contact t) tou
+		where <![CDATA[tou.rn <= 1
+         ]]>) lf
+		on cc.customer_id = lf.customer_id
+		left join sys_branch br
+		on lf.branch_id = br.branch_id
+		inner join cbs_policylife_beneficiary b
+		on b.customer_id = cc.customer_id
+		inner join cbs_applicant_relation1 r1
+		on r1.relation_code = b.relation1
+		inner join cbs_applicant_relation2 re2
+		on re2.relation_code = b.relation2
+		inner join SYS_Library_Certi_Type ct
+		on ct.certi_type_code = b.bene_certi_code
+		inner join SYS_Library_Gender g
+		on g.gender_code = cc.gender
+		inner join CBS_Beneficiary_Type bt
+        on bt.bene_type_code = b.bene_type
+        inner join cbs_policylife_insured i
+        on i.customer_id = b.insurant_id
+		where b.policy_id = #policy_id#
+		and  i.policy_id = b.policy_id
+	</select>
+
+	<!-- 查询险种列表 -->
+	<select id="getProductList" parameterClass="Long" resultClass="policyLifeProductVOModel">
+		select distinct p.*,
+		pp.product_name,
+		i.insurant_name,
+		p.amount,
+		ct.charge_type_name,
+		cp.charge_period_name,
+		pp.renew
+		from cbs_policylife_product p
+		left join cbs_policylife_insured i
+		on p.insurant_id = i.customer_id
+		left join PDT_Product_Llife pp
+		on pp.product_id = p.product_id
+		left join PDT_Lib_ChargeType ct
+		on ct.charge_type_code = p.charge_type
+		left join Pdt_Lib_Chargeperiod cp
+		on cp.charge_period_code = p.charge_period
+		where p.policy_id = #policy_id#
+		      and p.insbranch_id = pp.insbranch_id
+	</select>
+
+	<!-- 根据seq_id查询投保单信息 -->
+	<select id="getPolicyLifeBySeq" parameterClass="policyLifeVOModel"
+		resultClass="policyLifeVOModel">
+		select plf.*,
+		plf.status bef_status,
+		h.app_name,
+		r1.relation_name,
+		sales_service.sales_name service_name,
+		sales_agent.sales_name agent_name,
+		b.branch_name
+		from cbs_policylife plf
+		left join cbs_applicant_relation1 r1
+		on plf.relation_id = r1.relation_code
+		left join smis_sales sales_agent
+		on sales_agent.sales_id = plf.agent_id
+		left join smis_sales sales_service
+		on sales_service.sales_id = plf.service_id
+		left join sys_branch b
+		on b.branch_id = plf.branch_id
+		inner join cbs_policylife_holder h
+		on h.policy_id = plf.policy_id
+		where  1=1
+		<isNotEmpty property="seq_id">
+			AND plf.seq_id=#seq_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND plf.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="send_code">
+			AND plf.send_code=#send_code#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 修改投保单的状态 -->
+	<update id="modifyPlfStatus" parameterClass="policyLifeVOModel">
+	update cbs_policylife 
+	set status = #status# ,modifyUser = #modifyUser# , modifyDate = sysdate
+	 where send_code = #send_code# and insBranch_id = #insBranch_id#
+	</update>
+
+	<!-- 查询投保人明细信息 -->
+	<select id="getHolderView" parameterClass="policyLifePeopleVOModel" resultClass="policyLifePeopleVOModel">
+		select distinct cus.*,
+		contact.*,
+		plf.relation_id relation
+		from crm_customer cus
+		inner join cbs_policylife plf
+		on plf.holder_id = cus.customer_id
+		inner join crm_customer_contact contact
+		on contact.customer_id = cus.customer_id
+		where cus.customer_id = #customer_id#
+		and plf.policy_id = #policy_id#
+	</select>
+
+	<!-- 查询被保人明细信息 -->
+	<select id="getInsurantView" parameterClass="policyLifePeopleVOModel"
+		resultClass="policyLifePeopleVOModel">
+		select distinct cus.*,
+		contact.*,
+		i.relation1,
+		i.relation2
+		from crm_customer cus
+		inner join cbs_policylife_insured i
+		on i.customer_id = cus.customer_id
+		inner join crm_customer_contact contact
+		on contact.customer_id = cus.customer_id
+		where cus.customer_id = #customer_id#
+		and i.policy_id = #policy_id#
+	</select>
+
+	<!-- 查询受益人明细信息 -->
+	<select id="getBenefView" parameterClass="policyLifePeopleVOModel"
+		resultClass="policyLifePeopleVOModel">
+		select distinct cus.*,
+		contact.*,
+		b.relation1,
+		b.relation2,
+		b.insurant_id
+		from crm_customer cus
+		inner join crm_customer_contact contact
+		on contact.customer_id = cus.customer_id
+		inner join cbs_policylife_beneficiary b
+		on b.customer_id = cus.customer_id
+		inner join cbs_policylife_insured i
+		on i.customer_id = b.insurant_id
+		where cus.customer_id = #customer_id#
+		and b.policy_id = #policy_id#
+	</select>
+
+	<!-- 查看险种明细 -->
+	<select id="getProductView" parameterClass="int"
+		resultClass="policyLifeProductVOModel">
+		select p.*, i.insurant_name, pro.product_name
+		from cbs_policylife_product p
+		inner join cbs_policylife_insured i
+		on p.insurant_id = i.customer_id
+		inner join PDT_Product_Llife pp
+		on pp.product_id = p.product_id
+		inner join pdt_product_llife pro
+		on pro.product_id = p.product_id
+		where p.seq_id = #seq_id#
+	</select>
+	
+	<!-- 查询客户表明细 -->
+	<select id="getCustomerInfo" resultClass="policyLifePeopleVOModel" parameterClass="String">
+	select distinct cus.*,contact.* 
+	from crm_customer cus inner join crm_customer_contact contact
+    on contact.customer_id = cus.customer_id
+    where cus.customer_id = #customer_id#
+	</select>
+	
+	<!-- 更新顾客表 -->
+	<update id="updateCustomers" parameterClass="policyLifePeopleVOModel">
+		update crm_customer
+		set NAME =#name#,
+		TITLE=#title#,
+		GENDER = #gender#,
+		BIRTHDAY = #birthday#,
+		CERTI_TYPE = #certi_type#,
+		CERTI_NO = #certi_no#,
+		EDUCATION = #education#,
+		NATIONALITY = #nationality#,
+		NATION = #nation#,
+		HOMEPLACE = #homeplace#,
+		SEAT_ADDRESS = #seat_address#,
+		HEIGHT = #height#,
+		WEIGHT = #weight#,
+		POLITICAL = #political#,
+		EDUCATION2 = #education2#,
+		MARITAL_STAT = #marital_stat#,
+		HEALTH = #health#,
+		JOB_TYPE = #job_type#,
+		JOB_CODE = #job_code#,
+		INCOME_type = #income_type#,
+		BANK_CODE = #bank_code#,
+		BANK_ACCOUNT_NO = #bank_account_no#,
+		BANK_ACCOUNT_NAME = #bank_account_name#,
+		STATUS = #status#,
+		REMARK = #remark#,
+		MODIFYUSER = #modifyUser#,
+		MODIFYDATE = sysdate,
+		Certi_ValidDate = #certi_validDate#,
+		Is_TelMsgService = #is_telMsgService#
+		where customer_id = #customer_id#
+	</update>
+
+	<!-- 更新顾客联系信息表 -->
+	<update id="updateCustomerContact" parameterClass="policyLifePeopleVOModel">
+		update crm_customer_contact
+		set ADDRESS = #address#,
+		ZIP = #zip#,
+		MOBILE = #mobile#,
+		FAX = #fax#,
+		TELPHONE = #telphone#,
+		EMAIL = #email#,
+		JOB_COM = #job_com#,
+		JOB_TEL = #job_tel#,
+		STATUS = #status#,
+		REMARK = #remark#,
+		LOG_SEQ_ID = #log_seq_id#,
+		LOG_BUSTYPE = #log_bustype#,
+		LOG_BUSDATE = #log_busdate#,
+		LOG_REMARK = #log_remark#,
+		MODIFYUSER = #createUser#,
+		MODIFYDATE = sysdate
+		where customer_id = #customer_id#
+	</update>
+	
+	
+	<!-- 添加投保单的修改状态历史 -->
+	<insert id="addPolicyChangeHis" parameterClass="policyLifeVOModel">
+	 insert into  CBS_PolicyLife_Status_Change(seq_id,branch_id,insBranch_id,policy_id,bef_status,aft_status,remark,Createuser,Createdate,Modifyuser,Modifydate)
+     values(seq_id.nextval,#branch_id#,#insBranch_id#,#policy_id#,#bef_status#,#aft_status#,#remark#,#createUser#,sysdate, #modifyUser#,sysdate)
+	</insert>
+	
+	<!-- 查询保单总数 -->
+	<select id="queryPolicyLife_count" parameterClass="policyLifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all_policyLife" />
+		)
+	</select>
+	
+	<!-- 查询不为首期待承保的投保单总数 -->
+	<select id="querySomePolicyLife_count" parameterClass="policyLifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_some_policyLife" />
+		)
+	</select>
+	
+		<!-- 修改查询投保单总数 -->
+	<select id="queryPolicyLifeModify_count" parameterClass="policyLifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_policyLifeForModify" />
+		)
+	</select>
+	
+	
+</sqlMap>

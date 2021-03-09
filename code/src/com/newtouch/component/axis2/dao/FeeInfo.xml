@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="FeeInfo">
+   <typeAlias alias="feeInfoVoModel"  type="com.newtouch.component.axis2.model.FeeInfoVoModel"/>
+	
+	<!-- 查询手续费相关信息用于对账-->
+	<select id="queryFeeInfo" parameterClass="feeInfoVoModel" resultClass="feeInfoVoModel">
+		<!-- select a.cplyno contNo,      a.Cedrno batchPolNo,     a.NPAYTMS pCount,
+               a.NTERMNO pSerialNo,  '' dataType,             a.CSLSCDE agentCode,
+       		   0 prem,               0 feeRate,              a.Ncmmdue fee,
+       		   a.CCURNO feeCurreny,  a.CDPTCDE comCode
+  		  from cbs_smc_commplan a
+  		 where a.CPLYNO = #contNo#  and  a.NTERMNO = #pSerialNo# -->
+  		 select a.cplyno contNo,      a.Cedrno batchPolNo,     a.NPAYTMS pCount,
+               a.NTERMNO pSerialNo,  '' dataType,             a.CSLSCDE agentCode,
+       		   nvl(a.netpremium,0) prem,   0 feeRate,          a.Ncmmdue fee,
+       		   nvl(a.taxnetPremium,0) taxnetPremium,      nvl(a.TAXFNUM,0)taxFnum,     nvl(a.taxvalNetpremium,0) taxvalNetpremium,
+       		   nvl(a.TAXVALFNUM,0) taxvalFnum,nvl(a.TRAVELTAX,0) travelTax,
+       		   a.CCURNO feeCurreny,  a.CDPTCDE comCode
+  		  from cbs_smc_commplan a
+  		 where a.CPLYNO = #contNo#  and  a.NTERMNO = #pSerialNo# 
+  		 <isNotEmpty property="batchPolNo">
+			AND a.CEDRNO=#batchPolNo#
+		 </isNotEmpty>
+	</select>
+	<select id="queryAgentInfo" parameterClass="feeInfoVoModel" resultClass="feeInfoVoModel">
+  		 SELECT * FROM ams_announcement a WHERE a.branch_id=(
+         SELECT b.branch_id FROM smis_sales b WHERE b.sales_id=#agentCode#) AND a.announcement_type_code='3'
+	</select>
+</sqlMap>

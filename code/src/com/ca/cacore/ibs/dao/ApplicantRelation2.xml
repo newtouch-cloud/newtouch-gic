@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="applicantRelation2">
+	<typeAlias alias="pplicantRelation2Model"	type="com.ca.cacore.ibs.model.bo.ApplicantRelation2Model" />
+	<select id="queryApplicantRelation2" resultClass="pplicantRelation2Model">
+		select * from CBS_Applicant_Relation2
+	</select>
+	
+	<select id="queryApplicantRelation1" resultClass="pplicantRelation2Model">
+		select * from CBS_Applicant_Relation1
+	</select>
+</sqlMap>

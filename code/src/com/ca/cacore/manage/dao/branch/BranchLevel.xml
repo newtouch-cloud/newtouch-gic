@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="branchLevel">
+   <typeAlias alias="branchLevelModel" type="com.ca.cacore.manage.model.bo.BranchLevelModel"/>
+   <!-- 查询机构级别信息标签所有内容 -->
+   <select id="getBranchLevelData"  resultClass="branchLevelModel">
+		select * from sys_branch_level
+	</select>
+	
+	 <select id="getBranchLevelDataNew"  resultClass="branchLevelModel">
+		 select *
+	      from sys_branch_level a
+	     where a.branch_level_code != '1'
+	     order by a.branch_level_code
+	</select>
+</sqlMap>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<!-- PDT_Lib_ChargeType  保障期限类型数据字典-->
+<sqlMap namespace="LibCoveragePeriod">
+	<typeAlias alias="LibCoveragePeriodModel"	type="com.ca.cacore.msss.model.bo.LibCoveragePeriodModel" />
+	<select id="queryLibCoveragePeriod" resultClass="LibCoveragePeriodModel">
+		SELECT * FROM PDT_Lib_CoveragePeriod
+	</select>
+</sqlMap>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- ss 职级xml -->                 
+<sqlMap namespace="rankInfoManager">
+  	<typeAlias alias="basicLawsVOModel" type="com.ca.cacore.lms.model.vo.BasicLawsVOModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 基本法主查询 sql-->
+	<sql id="getAllRanks">
+		select 
+			tb.dept_type,		tr.serno,		tb.basiclaw_no,			tb.impmeansver_name,		tr.rank_no,		tr.rank_name, 
+			tr.rank_seq,		tr.rank_seniority,		tb.start_date,				tb.end_date,	tr.start_date,
+			tr.end_date    
+		from      t_rank  tr , t_basiclaws  tb  
+		where  tb.basiclaw_no = tr.impmeansver_no 
+		and   tr.data_flag=1
+		where  1=1
+	    <isNotEmpty property="dept_type">
+			and tb.dept_type = #dept_type# 
+		</isNotEmpty>
+        <isNotEmpty property="basiclaw_no">
+			and tb.basiclaw_no = #basiclaw_no#
+		</isNotEmpty> 
+		<isNotEmpty property="impmeansver_name">
+			and tb.impmeansver_name like '%$impmeansver_name$%'
+		</isNotEmpty>
+		order by  serno  desc
+	</sql>
+	
+	<select id="getAllBasicLawsInfo" parameterClass="basicLawsVOModel" resultClass="basicLawsVOModel">
+		<include refid="query_head"/>
+		<include refid="getAllRanks"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="getAllBasicLaws_count" parameterClass="basicLawsVOModel" resultClass="int">
+		select count(*) from(
+			<include refid="getAllBasicLaws"/>
+			) where 1=1
+	</select>
+	
+	<!-- 基本法新增 -->
+	<insert id="addBasicLaws" parameterClass="basicLawsVOModel">
+		insert into t_basiclaws
+		  (serno,
+		   basiclaw_no,
+		   impmeansver_name,
+		   basiclaw_ver,
+		   dept_type,
+		   iss_unit,
+		   iss_date,
+		   start_date,
+		   end_date,
+		   memo,
+		   crt_date,
+		   mdf_date,
+		   crt_user,
+		   mdf_user,
+		   data_flag)
+		values
+		  (seq_id.nextval,
+		   #basiclaw_no#,
+		   #impmeansver_name#,
+		   #basiclaw_ver#,
+		   #dept_type#,
+		   #iss_unit#,
+		   #iss_date#,
+		   #start_date#,
+		   #end_date#,
+		   #memo#,
+		   sysdate,
+		   sysdate,
+		   #crt_user#,
+		   #mdf_user#,
+		   #data_flag#)
+	</insert>
+	
+	<!-- 基本法信息明细 -->
+	<select id="getBasiclawView" parameterClass="basicLawsVOModel" resultClass="basicLawsVOModel">
+		select * from t_basiclaws where serno=#serno#
+	</select>
+	
+	<!-- 修改基本法的信息 -->
+	<update id="modBasicLaws" parameterClass="basicLawsVOModel">
+		update t_basiclaws set
+			impmeansver_name=#impmeansver_name#,
+			dept_type=#dept_type#,
+			iss_date=#iss_date#,
+			start_date=#start_date#,
+			end_date=#end_date#,
+			data_flag=#data_flag#
+		where serno=#serno#
+	</update>
+	
+	<delete id="delBasicLaws" parameterClass="String">
+		delete from t_basiclaws where serno=#serno#
+	</delete>
+</sqlMap>

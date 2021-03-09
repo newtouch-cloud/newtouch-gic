@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- zhao_mq -->                 
+<sqlMap namespace="conservationItem">
+	<typeAlias alias="conservationItemModel"	type="com.ca.cacore.ibs.model.bo.ConservationItemModel" />
+	<select id="queryConservationItem" resultClass="ConservationItemModel">
+		select * from CBS_CONSERVATION_ITEM
+	</select>
+</sqlMap>

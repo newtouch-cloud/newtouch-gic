@@ -1,0 +1,123 @@
+
+.treecontent{display:none;position:absolute;background-color:#FFFFFF;height:300px;width:200px;border:1px solid black;overflow:scroll;}
+.treeclass1{margin:0;padding:0;float:left;width:20px;height:35px; background-color:#000; background-image:url(../css/treebg1.png)}
+.treeclass2{margin:0;padding:0;float:left;width:20px;height:35px; background-color:#000; background-image:url(../css/treebg2.png)}
+.treeclass3{margin:0;padding:0;float:left;width:80px;height:35px; background-color:#F00; background-image:url(../css/bgtree3.png)}
+label {
+	color: #999999;
+}
+td {
+	font-size: 12px;
+	color: #999999;
+}
+th {
+	font-size: 12px;
+	color: #999999;
+}
+caption {
+	font-size: 12px;
+	color: #999999;
+}
+select {
+	height: 28px;
+	line-height: 28px;
+}
+.myselectwidth {
+	width: 157px;
+}
+.icon-my-fist{
+	width:10px;
+	height:10px;
+	display:inline-block;
+	background-image:url(first.png);
+	background-position:center;
+	background-repeat:no-repeat;
+}
+.icon-my-pre{
+	width:10px;
+	height:10px;
+	display:inline-block;
+	background-image:url(prv.png);
+	background-position:center;
+	background-repeat:no-repeat;
+	margin-left:3px;
+}
+.icon-my-next{
+	width:10px;
+	height:10px;
+	display:inline-block;
+	background-image:url(next.png);
+	background-position:center;
+	background-repeat:no-repeat;
+	margin-right:3px;
+}
+.icon-my-last{
+	width:10px;
+	height:10px;
+	display:inline-block;
+	background-image:url(last.png);
+	background-position:center;
+	background-repeat:no-repeat;
+}
+.my-main-contain{
+	width:1240px;
+	margin:0 auto;
+}
+.my-left-title{
+float:left;
+height:96px;
+
+display: inline-block;
+padding: 4px 12px;
+margin-bottom: 0;
+font-size: 14px;
+line-height: 20px;
+text-align: center;
+vertical-align: middle;
+background-color:#2fa4e7;
+color:#FFF;
+border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+border-right: 1px solid #999999;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 1px 2px rgba(0,0,0,.05);
+}
+.my-second-title{
+	color:#666666;
+	font-size:10.5pt;
+	font-weight:bold;
+	font-family:"微软雅黑";
+}
+.my-third-title{
+	color:#000;
+	font-size:10.5pt;
+	font-family:"宋体";
+}
+.selectth{
+
+}
+.selecttd{
+
+}
+.my-bitian{
+	color:#F00;
+	font-size:14px;
+	margin-left:2px;
+	height:20px;
+	line-height:20px
+}
+.link-tel{
+	background-image:url(../img/huatai_kefu.gif);
+	width:198px;
+	height:40px;
+	background-repeat:no-repeat;
+	display:inline-block;
+	float:left;
+}
+.link-wenzi{
+	float:left;
+	display:inline-block;
+	margin-left:20px;
+	height:40px;
+	line-height:40px;
+}

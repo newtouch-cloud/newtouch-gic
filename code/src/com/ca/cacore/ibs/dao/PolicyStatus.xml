@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="policyStatus">
+	<typeAlias alias="policyStatusModel" type="com.ca.cacore.ibs.model.bo.PolicyStatusModel" />
+	<select id="queryPolicyStatus" resultClass="policyStatusModel">
+		select * from CBS_Policy_Status 
+	</select>
+	
+	<select id="queryContractLifeStatus" resultClass="policyStatusModel">
+		select * from CBS_CONTRACTLIFE_STATUS 
+	</select>
+</sqlMap>

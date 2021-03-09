@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+              
+<sqlMap namespace="policyLifeAck">
+   <typeAlias alias="contractLifeModel" type="com.ca.cacore.ibs.model.bo.ContractLifeModel"/>
+   <typeAlias alias="policyLifeAckVOModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeAckVOModel"/>
+  
+ 	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+
+	<!-- 查询所有的保单回访信息 -->
+	<sql id="query_all_policyLifeAck">
+	select distinct p.policy_id,
+	                p.policy_code,
+	                p.branch_id,
+	                p.insbranch_id,
+	                ack.ack_branch_date,
+	                ack.ack_customer_date,
+	                p.hold_date,
+	                p.status,
+	                p.send_code,
+	                ack.seq_id,
+	                branch.branch_name,
+	                ib.insbranch_name        insBranch_name,
+	                sales_agent.sales_name   agent_name,
+	                sales_service.sales_name service_name,
+	                holder.app_name,
+	                insured.insurant_name,
+	                status.status_name
+	  from cbs_policylife_ack ack
+	  left join cbs_contractlife  p
+	    on ack.policy_id = p.policy_id
+	  left join sys_branch branch
+	    on branch.branch_id = p.branch_id
+	  left join sys_insbranch ib
+	    on ib.insbranch_id = p.insbranch_id
+	  left join smis_sales sales_agent
+	    on sales_agent.sales_id = p.agent_id
+	  left join smis_sales sales_service
+	    on sales_service.sales_id = p.service_id
+	  left join cbs_policylife_holder holder
+	    on holder.customer_id = p.holder_id
+	  left join cbs_policylife_insured insured
+	    on insured.customer_id = p.insurant_id
+	  left join cbs_contractlife_status status
+	    on status.status_code = p.status
+	 where 1 = 1
+	   and holder.policy_id = p.policy_id
+	   and insured.policy_id = p.policy_id
+		<isNotEmpty property="branch_id">
+			AND p.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND p.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			AND p.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			AND sales_agent.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			AND holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+	</sql>
+
+	<!-- 查询回访的保单信息列表 -->
+	<select id="queryPolicyLifeAck" parameterClass="policyLifeAckVOModel"
+		resultClass="policyLifeAckVOModel">
+		<include refid="query_head" />
+		<include refid="query_all_policyLifeAck" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 添加保单回执信息 -->
+	<insert id="addPolicyLifeAck" parameterClass="policyLifeAckVOModel">
+		insert into cbs_policylife_ack ack
+		(seq_id,
+		policy_id,
+		branch_id,
+		insBranch_id,
+		ack_branch_date,
+		ack_customer_date,
+		ack_notes,
+		remark,
+		createuser,
+		createdate,
+		modifyuser,
+		modifydate)
+		values
+		(seq_id.nextval,
+		#policy_id#,
+		#branch_id#,
+		#insBranch_id#,
+		#ack_branch_date#,
+		#ack_customer_date#,
+		#ack_notes#,
+		#remark#,
+		#createUser#,
+		sysdate,
+		#modifyUser#,
+		sysdate)
+	</insert>
+
+	<!-- 修改回执信息 -->
+	<update id="updatePolicyLifeAck" parameterClass="policyLifeAckVOModel">
+		update cbs_policylife_ack ack
+		set ack_branch_date = #ack_branch_date#,
+		ack_customer_Date = #ack_customer_date#,
+		ack_notes = #ack_notes#,
+		remark =#remark#,
+		modifyuser = #modifyUser#,
+		modifydate = sysdate
+		where seq_id= #seq_id#
+	</update>
+	
+	<!-- 查询保单信息：校驗使用 -->
+	<select id="getContractLife" parameterClass="contractLifeModel" resultClass="contractLifeModel">
+	   select clf.insbranch_id,
+	       clf.policy_id,
+	       clf.rtn_date,
+	       clf.hold_date,
+	       clf.send_code,
+	       clf.branch_id,
+	       b.branch_name,
+	       h.app_name,
+	       clf.status
+	  from cbs_contractlife clf
+	  left join sys_branch b
+	    on clf.branch_id = b.branch_id
+	  left join cbs_contractlife_holder h
+	    on h.customer_id = clf.holder_id
+	  where clf.policy_id = h.policy_id
+	       and clf.policy_code = #policy_code#
+	       and clf.insbranch_id =#insBranch_id#
+	</select>
+
+	<!-- 根据seq_id查询回执信息 -->
+	<select id="getPolicyLifeAck" parameterClass="int" resultClass="policyLifeAckVOModel">
+	   select distinct ack.*, c.policy_code,c.send_code, b.branch_name, h.app_name, c.hold_date
+	   from cbs_policylife_ack ack
+	   left join sys_branch b
+	    on ack.branch_id = b.branch_id
+	   inner join cbs_contractlife c
+	    on c.policy_id = ack.policy_id
+	   inner join cbs_contractlife_holder h
+	    on h.customer_id = c.holder_id
+		where ack.seq_id = #seq_id#
+		and h.policy_id = ack.policy_id
+	</select>
+	 
+	<!-- 回执录入时修改保单表：更新保单的回执核销时间 -->
+	<update id="updateConstractLife" parameterClass="contractLifeModel">
+		update cbs_contractlife
+		set
+		sign_date=#sign_date#,
+		rtn_date = #rtn_date#,
+		status = #status#,
+		modifyuser = #modifyUser#,
+		modifydate = sysdate
+		where policy_id = #policy_id#
+	</update>
+	
+	<!-- 查询保单总数 -->
+	<select id="queryPolicyLifeAck_count" parameterClass="policyLifeAckVOModel"
+		resultClass="int">
+		select count(*) from (
+		<include refid="query_all_policyLifeAck" />
+		)
+	</select>
+</sqlMap>

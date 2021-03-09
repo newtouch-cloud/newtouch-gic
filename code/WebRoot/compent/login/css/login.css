@@ -1,0 +1,139 @@
+/* 新页面修改--by 张晨  2014-6-13
+*/
+
+*{
+	margin:0px;
+	padding:0px;
+	list-style:none;
+	text-decoration:none;
+}
+body{
+	width:100%;
+	height:100%;
+	background:url(../images/login1.png) no-repeat;
+	font:"Ubuntu", Helvetica, Arial, sans-serif;
+	background-size: 100%;
+	background-position: 0 -35px ;
+}
+.login{
+	width:406px;
+	height:450px;;
+	position:absolute;
+	left:50%;
+	top:50%;
+	margin-left:-200px;
+	margin-top:-200px;
+	background:#fff;
+	border-radius:10px;
+	text-align:center;
+	background-color: transparent;
+}
+.logo{
+	padding-top:5px;
+}
+.div_input{
+	position:relative;
+}
+.div_input img{
+	position:absolute;
+	left:70px;
+	top:10px;
+}
+.div_input input{
+	border-radius: 50px;
+	margin-top: 30px;
+	height:40px;
+	outline: none;
+}
+.user{
+	width:280px; height:40px; line-height:35px; background:url(../images/user1.png) no-repeat 10px center;
+	background-size: 20px 20px;
+	border:1px solid #ccc;
+	padding-left:50px;
+}
+.pass{
+	width:280px; height:40px; line-height:35px; background:url(../images/password.png) no-repeat 10px center;
+	background-size: 20px 20px;
+	border:1px solid #ccc;
+	padding-left:50px;
+}
+.code{
+	width: 170px;
+	height:40px;
+	line-height:35px;
+	border-radius: 50px 0 0 50px!important;
+	background:url(../images/code.png) no-repeat 10px center;
+	background-size: 20px 20px;
+	border:1px solid #ccc;
+	padding-left:50px;
+	margin-left:-111px;
+
+}
+.yanzhengma{
+	width:100px; height:40px; line-height:35px; background:url(../images/pass.jpg) no-repeat 10px center;
+	border:1px solid #ccc;
+	padding-right:0px;
+	margin-left:200px;
+	margin-top:20px;
+	border-radius: 0px 50px 50px 0!important;
+}
+.div_inputPass{
+	margin-top:0px;
+}
+.div_inputUser{
+	margin-top:0px;
+}
+.div_inputValidateCode{
+	margin-top:0px;
+}
+.div_input_text{
+	margin-top:15px;
+	font-size:14px;
+	height:25px;
+	font-family: PingFangSC-Semibold;
+	text-align:left;
+	padding-left:10px;
+}
+.logo_name{
+	font-family: PingFangSC-Regular;
+	font-size:22px;
+	height:30px;
+}
+
+.btns{
+	margin-top:20px;
+	width:322px; height:45px; background:#322a90; border:0;color:#fff;cursor: pointer;
+	border-radius: 50px!important;
+}
+.over_i{
+	width: 30%;
+   text-align: center;
+	position: absolute;
+	bottom: 30px;
+	left: 33%;
+	color: #322a90;
+	font-size: 12px;
+}
+.over_i i{
+	width: 18px;
+	height: 16px;
+	 background:url(../images/icon1.png) no-repeat 10px center;
+	background-size: 18px 16px;
+	padding: 0px 18px;
+}
+/* .btns:hover{background:url(../images/button_bg.png) no-repeat center;
+border:0;
+} */
+.message{
+	font-size:16px;
+	color:red;
+	margin-top:0px;
+}
+.div_input_text{
+	font-size:15px;
+	margin-left:30px;
+	color:#333333;
+	font-family:PingFangSC-Semibold;
+
+}
+     

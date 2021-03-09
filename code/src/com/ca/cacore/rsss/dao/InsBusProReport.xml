@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="InsBusProReport">
+		<typeAlias alias="InsBusProReportModel" type="com.ca.cacore.rsss.model.vo.InsBusProReportModel"/>
+	<!--查询保险代理机构业务协议电子档案报表-->
+	<select id="queryInsBusProReport" parameterClass="InsBusProReportModel" resultClass="InsBusProReportModel">
+		select t.agreement_no agency_agr,
+	       t.branch_name,
+	       t.persion_name insurer_name,
+	       t.startdate labour_validate,
+	       t.enddate labour_enddate,
+	       decode(t.persion_id, null, '否', '是') is_sales_name
+	  from cd_agreement t
+	  where t.branch_id like '$branch_id$%'
+	</select>
+	<!-- 导出保险代理机构业务协议电子档案报表-->
+	<select id="exprotInsBusProReport" parameterClass="InsBusProReportModel" resultClass="InsBusProReportModel">
+		select t.agreement_no agency_agr,
+		       t.branch_name,
+		       t.persion_name insurer_name,
+		       t.startdate labour_validate,
+		       t.enddate labour_enddate,
+		       decode(t.persion_id, null, '否', '是') is_sales_name
+		  from cd_agreement t
+		  where t.branch_id like '$branch_id$%'
+	</select>
+</sqlMap>

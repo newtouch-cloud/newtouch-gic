@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="contractAllotHis">
+   <typeAlias alias="ContractAllotHisVOModel" type="com.ca.cacore.ibs.model.vo.ContractAllotHisVOModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  	<sql id="query_all">
+	 select
+	     cbsCSChange.seq_id,
+	     cbsCSChange.Branch_Id,
+	     sysB.Branch_Name,
+	     cbsCSChange.InsBranch_Id,
+	     sysIB.Insbranch_Name insBranch_name,
+	     cbsCP.Product_Id,
+	     pdtPL.Product_Name,
+	     cbsCL.Policy_Code,
+	     smisS1.Sales_Name agent_name,
+	     smisS2.Sales_Name  bef_service_name,
+	     smisS3.Sales_Name  aft_service_name, 
+	     cbsCSChange.Modifydate modifyDate,
+	     crmC1.Name   holder_name,
+	     crmC2.Name   insurant_name,
+	     cbsCL.Hold_Date,
+	     cbsCL.Validate_Date,
+	     cbsCL.Status  policy_status, 
+	     cbsPS.Status_Name  policy_status_name
+    from  CBS_Contract_Service_Change cbsCSChange
+	      left join Sys_Branch  sysB  on    cbsCSChange.Branch_Id=sysB.Branch_Id
+	      left join SYS_InsBranch sysIB on  cbsCSChange.Insbranch_Id=sysIB.Insbranch_Id
+	      left join CBS_ContractLife cbsCL on cbsCSChange.Policy_Id=cbsCL.Policy_Id
+	      left join CBS_ContractLife_Product  cbsCP on cbsCL.Policy_Id=cbsCP.Policy_Id
+	      left join PDT_Product_Llife pdtPL on  cbsCP.Product_Id=pdtPL.Product_Id
+	      left join Smis_Sales  smisS1 on  cbsCL.Agent_Id=smisS1.Sales_Id
+	      left join Smis_Sales  smisS2  on cbsCSChange.Bef_Service_Id=smisS2.Sales_Id
+	      left join Smis_Sales  smisS3 on cbsCSChange.Aft_Service_Id=smisS3.Sales_Id
+	      left join CRM_Customer crmC1 on   cbsCL.Holder_Id=crmC1.Customer_Id
+	      left join CRM_Customer crmC2 on   cbsCL.Insurant_Id=crmC2.Customer_Id
+	      left join CBS_Policy_Status  cbsPS on cbsCL.Status=cbsPS.Status_Code
+  	WHERE 1=1
+  	<isNotEmpty property="branch_id">
+		AND cbsCL.Branch_Id=#branch_id#
+	</isNotEmpty>
+  	<isNotEmpty property="insBranch_id">
+		AND sysIB.insBranch_id=#insBranch_id#
+	</isNotEmpty>
+  	<isNotEmpty property="policy_code">
+		AND cbsCL.Policy_Code=#policy_code#
+	</isNotEmpty>
+	<isNotEmpty property="holder_name">
+		AND crmC1.Name  like '%$holder_name$%'
+	</isNotEmpty>
+	<isNotEmpty property="bef_service_name">
+		AND smisS2.Sales_Name  like '%$bef_service_name$%'
+	</isNotEmpty>
+	<isNotEmpty property="aft_service_name">
+		AND smisS3.Sales_Name   like '%$aft_service_name$%'
+	</isNotEmpty>
+	<isNotEmpty  property="seq_id">
+		AND cbsCSChange.seq_id = #seq_id#
+	</isNotEmpty>
+		ORDER BY seq_id  DESC
+  	</sql> 
+  	<!-- 分页查询所有的寿险保单信息 -->
+	<select id="queryContList" parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	<select id="queryCont_count" parameterClass="ContractAllotHisVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="query_all"/>
+		) WHERE 1=1
+	</select>
+</sqlMap>

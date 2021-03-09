@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- ss 子基本法xml -->                 
+<sqlMap namespace="subBasicLawsManager">
+  	<typeAlias alias="basicLawsVOModel" type="com.ca.cacore.lms.model.vo.BasicLawsVOModel"/>
+  	<typeAlias alias="basicLawsModel" type="com.ca.cacore.lms.model.bo.BasicLawsModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 基本法主查询 sql-->
+	<sql id="getAllSubBasicLaws">
+		SELECT	i.serno,			b.dept_type ,		b.basiclaw_no,		b.impmeansver_name,		i.impmeans_no,			
+				i.impmeans_name,	i.start_date,		i.end_date,b.iss_date							
+		FROM    t_impmeans i	
+		LEFT JOIN t_basiclaws b	ON i.basiclaw_no = b.basiclaw_no 			
+		WHERE  1 = 1 
+		<isNotEmpty property="data_flag">
+			and i.data_flag = #data_flag#
+		</isNotEmpty> 
+        <isNotEmpty property="basiclaw_no">
+			and b.basiclaw_no = #basiclaw_no#
+		</isNotEmpty> 
+	    <isNotEmpty property="impmeans_no">
+			and i.impmeans_no = #impmeans_no# 
+		</isNotEmpty>
+		<isNotEmpty property="impmeans_name">
+			and i.impmeans_name like '%$impmeans_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="impmeansver_name">
+			and b.impmeansver_name like '%$impmeansver_name$%'
+		</isNotEmpty>
+		order by  serno  desc
+	</sql>
+	
+	<select id="getAllBasicLawsInfo" parameterClass="basicLawsVOModel" resultClass="basicLawsVOModel">
+		<include refid="query_head"/>
+		<include refid="getAllSubBasicLaws"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="getAllSubBasicLaws_count" parameterClass="basicLawsVOModel" resultClass="int">
+		select count(*) from(
+			<include refid="getAllSubBasicLaws"/>
+			) where 1=1
+	</select>
+	
+	<!-- 子基本法新增 -->
+	<insert id="addSubBasicLaws" parameterClass="basicLawsVOModel">
+		insert into t_impmeans
+		  (serno,
+		   basiclaw_no,
+		   impmeans_no,
+		   impmeans_name,
+		   start_date,
+		   end_date,
+		   memo,
+		   crt_date,
+		   mdf_date,
+		   crt_user,
+		   mdf_user,
+		   data_flag)
+		values
+		  (seq_id.nextval,
+		   #basiclaw_no#,
+		   #impmeans_no#,
+		   #impmeans_name#,
+		   #start_date#,
+		   #end_date#,
+		   #memo#,
+		   sysdate,
+		   sysdate,
+		   #crt_user#,
+		   #mdf_user#,
+		   #data_flag#)
+	</insert>
+	
+	<!-- 子基本法信息明细 -->
+	<select id="getSubBasicLawView" parameterClass="basicLawsVOModel" resultClass="basicLawsVOModel">
+		select  * from	 t_impmeans i
+		where   1 = 1 	and     i.serno = #serno#
+	</select>
+	
+	<!-- 修改子基本法的信息 -->
+	<update id="modSubBasicLaws" parameterClass="basicLawsVOModel">
+		update t_impmeans set
+			impmeans_name=#impmeans_name#,
+			start_date=#start_date#,
+			end_date=#end_date#,
+			memo=#memo#,
+			data_flag=#data_flag#
+		where serno=#serno#
+	</update>
+	
+	<delete id="delSubBasicLaws" parameterClass="String">
+		delete from t_impmeans where serno=#serno#
+	</delete>
+	<!--根据基本法代码查询基本法信息 -->
+	<select id="getLawsInfo" parameterClass="String" resultClass="BasicLawsModel">
+		SELECT * FROM   t_basiclaws tb
+		where   tb.basiclaw_no = #basiclaw_no#
+	</select>
+</sqlMap>

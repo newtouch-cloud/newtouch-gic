@@ -1,0 +1,689 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="ProductLlife">
+   <typeAlias alias="ProductLlifeModel" type="com.ca.cacore.msss.model.bo.ProductLlifeModel"/>
+   <typeAlias alias="ProductChargeTypeModel" type="com.ca.cacore.msss.model.bo.ProductChargeTypeModel"/>
+   <typeAlias alias="ProductCoveragePeriodModel" type="com.ca.cacore.msss.model.bo.ProductCoveragePeriodModel"/>
+   <typeAlias alias="ProductChargePeriodModel" type="com.ca.cacore.msss.model.bo.ProductChargePeriodModel"/>
+   <typeAlias alias="ProductLlifeVOModel" type="com.ca.cacore.msss.model.vo.ProductLlifeVOModel"/>
+   <typeAlias alias="ProductAssessmentModel" type="com.ca.cacore.msss.model.bo.ProductAssessmentModel"/>
+   <typeAlias alias="ProductRelationModel" type="com.ca.cacore.msss.model.bo.ProductRelationModel"/>
+   <typeAlias alias="ProductAssessmentVOModel" type="com.ca.cacore.msss.model.vo.ProductAssessmentVOModel"/>
+   <typeAlias alias="ProductRelationModel" type="com.ca.cacore.msss.model.bo.ProductRelationModel"/>
+
+   <sql id="queryProductLlife_head">
+	SELECT *
+	  	  FROM (SELECT row_.*, rownum rownum_ 
+	  	          FROM (
+	</sql>
+	
+	<sql id="queryProductLlife_foot">
+    	<![CDATA[
+				) row_ 
+		WHERE rownum < #limit#)
+		WHERE rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  <sql id="queryProductLlife_all">
+		SELECT 
+            pllive.seq_id,
+            evaluation.seq_id evaluation_seq_id,
+            pllive.insBranch_id,
+            insBranch.insBranch_name,
+            pllive.product_id,
+            pllive.product_name,
+            pllive.product_abbr,
+            pllive.product_type,
+            pllive.product_enname,
+            pllive.product_enabbr,
+            pllive.product_ver,
+            pllive.surr_permit,
+            pllive.renew,
+            pllive.insuredFlag,
+            pllive.benefit_type,
+            pllive.duty,
+            pllive.policy_holder,
+            pllive.exception,
+            pllive.remark,
+            type1.product_type_name product_type1_name,
+            pllive.product_type2,
+            type2.product_type_name product_type2_name,
+            pllive.product_type3,
+            type3.product_type_name product_type3_name,
+            pllive.ins_type,
+            insType.ins_type_name,
+            pllive.period_type,
+            periodType.periodtype_name,
+            pllive.start_date,
+            pllive.end_date,
+            pllive.is_auth_partreceived,
+            pllive.is_can_borrow,
+            pllive.status,
+            teamStatus.status_name,
+            evaluation.description,
+            (case
+              when (pllive.product_id,pllive.insbranch_id) in (select product_id,insbranch_id from CBS_PolicyLife_Product)
+              then '1'
+                else '0'
+            end) as item_id
+    FROM PDT_PRODUCT_LLIFE pllive
+        LEFT JOIN PDT_Product_Type1  type1 ON pllive.product_type = type1.product_type_code
+        LEFT JOIN PDT_Product_Type2  type2 ON pllive.product_type2 = type2.product_type_code
+        LEFT JOIN PDT_Product_Type3  type3 ON pllive.product_type3 = type3.product_type_code
+        LEFT JOIN Sys_Library_Commonstatus teamStatus on teamStatus.status_code = pllive.status
+        LEFT JOIN PDT_Product_InsType insType ON pllive.ins_type = insType.Ins_Type_Code
+        LEFT JOIN PDT_Product_PeriodType periodType ON  pllive.period_type = periodType.Periodtype_Code
+        LEFT JOIN SYS_InsBranch  insBranch ON pllive.insBranch_id = insBranch.insBranch_id 
+        LEFT JOIN PDT_Product_Evaluation  evaluation ON pllive.product_id = evaluation.product_id AND pllive.insBranch_id = evaluation.insBranch_id
+       
+     WHERE 1= 1
+		<isNotEmpty  property="insBranch_id">
+			AND pllive.insBranch_id = #insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_type">
+			AND pllive.product_type = #product_type#
+		</isNotEmpty>
+		<isNotEmpty  property="product_type2">
+			AND pllive.product_type2 = #product_type2#
+		</isNotEmpty>
+		<isNotEmpty  property="product_type3">
+			AND pllive.product_type3 = #product_type3#
+		</isNotEmpty>
+		<isNotEmpty  property="ins_type">
+			AND pllive.ins_type = #ins_type#
+		</isNotEmpty>
+		<isNotEmpty  property="period_type">
+			AND pllive.period_type = #period_type#
+		</isNotEmpty>
+		<isNotEmpty  property="status">
+			AND pllive.status = #status#
+		</isNotEmpty>
+		<isNotEmpty  property="seq_id">
+			AND pllive.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_id">
+			AND pllive.product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			AND pllive.product_name like '%$product_name$%'
+		</isNotEmpty>
+	
+	</sql>
+	<!-- <sql id="queryProductLlife_allVO">
+     SELECT 
+        pllive.seq_id,
+        evaluation.seq_id evaluation_seq_id,
+        pllive.insBranch_id,
+        insBranch.insBranch_name,
+        pllive.product_id,
+        pllive.product_name,
+        pllive.product_abbr,
+        pllive.product_type,
+        pllive.product_enname,
+        pllive.product_enabbr,
+        pllive.product_ver,
+        pllive.surr_permit,
+        pllive.renew,
+        pllive.insuredFlag,
+        pllive.benefit_type,
+        pllive.duty,
+        pllive.policy_holder,
+        pllive.exception,
+        pllive.remark,
+        type1.product_type_name product_type1_name,
+        pllive.product_type2,
+        type2.product_type_name product_type2_name,
+        pllive.product_type3,
+        type3.product_type_name product_type3_name,
+        pllive.ins_type,
+        insType.ins_type_name,
+        pllive.period_type,
+        periodType.periodtype_name,
+        pllive.start_date,
+        pllive.end_date,
+        pllive.is_auth_partreceived,
+		pllive.is_can_borrow,
+        pllive.status,
+       	teamStatus.status_name,
+	    relation.pkg_id,
+	    pkgLife.pkg_name,
+        evaluation.description
+        
+    FROM PDT_PRODUCT_LLIFE pllive
+        LEFT JOIN PDT_Product_Type1  type1 ON pllive.product_type = type1.product_type_code
+        LEFT JOIN PDT_Product_Type2  type2 ON pllive.product_type2 = type2.product_type_code
+        LEFT JOIN PDT_Product_Type3  type3 ON pllive.product_type3 = type3.product_type_code
+        LEFT JOIN Sys_Library_Commonstatus teamStatus on teamStatus.status_code = pllive.status
+        LEFT JOIN PDT_Product_InsType insType ON pllive.ins_type = insType.Ins_Type_Code
+        LEFT JOIN PDT_Product_PeriodType periodType ON  pllive.period_type = periodType.Periodtype_Code
+        LEFT JOIN SYS_InsBranch  insBranch ON pllive.insBranch_id = insBranch.insBranch_id
+        LEFT JOIN PDT_Pkg_Life_Relation relation ON pllive.seq_id = relation.product_id 
+		LEFT JOIN PDT_Pkg_Life pkgLife ON relation.pkg_id = pkgLife.seq_id 
+        LEFT JOIN PDT_Product_Evaluation  evaluation ON pllive.product_id = evaluation.product_id AND pllive.insBranch_id = evaluation.insBranch_id
+    WHERE 1=1
+		<isNotEmpty  property="insBranch_id">
+			AND pllive.insBranch_id = #insBranch_id#
+		</isNotEmpty>
+ 		 <isNotEmpty  property="pkg_id">
+			AND pkgLife.pkg_id = #pkg_id#
+		</isNotEmpty>
+		<isNotEmpty  property="pkg_name">
+			AND pkgLife.pkg_name like '%$pkg_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="product_type">
+			AND pllive.product_type = #product_type#
+		</isNotEmpty>
+		<isNotEmpty  property="product_type2">
+			AND pllive.product_type2 = #product_type2#
+		</isNotEmpty>
+		<isNotEmpty  property="product_type3">
+			AND pllive.product_type3 = #product_type3#
+		</isNotEmpty>
+		<isNotEmpty  property="ins_type">
+			AND pllive.ins_type = #ins_type#
+		</isNotEmpty>
+		<isNotEmpty  property="period_type">
+			AND pllive.period_type = #period_type#
+		</isNotEmpty>
+		<isNotEmpty  property="status">
+			AND pllive.status = #status#
+		</isNotEmpty>
+		<isNotEmpty  property="seq_id">
+			AND pllive.seq_id = #seq_id#
+		</isNotEmpty>
+		
+		<isNotEmpty  property="product_id">
+			AND pllive.product_id = #product_id#
+		</isNotEmpty>
+			
+		ORDER BY seq_id  DESC
+    </sql> -->
+	
+	<!-- 查询ProductLlife信息 -->
+	<select id="queryProductLlife" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeVOModel">
+		<include refid="queryProductLlife_head"/>
+		<include refid="queryProductLlife_all"/>
+		<include refid="queryProductLlife_foot"/>
+	</select>
+	
+		<!-- 查询ProductLlife信息 -->
+		<!-- 
+	<select id="queryProductLlifeVO" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeVOModel">
+		<include refid="queryProductLlife_head"/>
+		<include refid="queryProductLlife_allVO"/>
+		<include refid="queryProductLlife_foot"/>
+	</select>
+	
+	<select id="queryProductLlife_countVO" parameterClass="ProductLlifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryProductLlife_allVO"/>
+		) WHERE 1=1
+	</select> -->
+	
+	<select id="queryProductLlife_count" parameterClass="ProductLlifeVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryProductLlife_all"/>
+		) WHERE 1=1
+	</select>
+	
+	<select id="getProductLlifeBO" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeModel">
+         SELECT *
+           FROM PDT_PRODUCT_LLIFE
+		 WHERE 1=1   
+		<isNotEmpty  property="seq_id">
+			AND seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty  property="insBranch_id">
+			AND insBranch_id = #insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_id">
+			AND product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="product_name">
+			AND product_name = #product_name#
+		</isNotEmpty>
+	</select>
+	
+	
+	
+	<select id="getProductLlifeVO4Pkg" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeVOModel">
+           <include refid="queryProductLlife_all"/>
+	</select>
+	
+	<select id="queryProductLlifeVOList4Pkg" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeVOModel">
+           SELECT 
+            pllive.seq_id,
+            pllive.insBranch_id,
+            insBranch.insBranch_name,
+            pllive.product_id,
+            pllive.product_name,
+            pllive.product_abbr,
+            pllive.product_type,
+            pllive.product_enname,
+            pllive.product_enabbr,
+            pllive.product_ver,
+            pllive.surr_permit,
+            pllive.renew,
+            pllive.insuredFlag,
+            pllive.benefit_type,
+            pllive.duty,
+            pllive.policy_holder,
+            pllive.exception,
+            pllive.remark,
+            type1.product_type_name product_type1_name,
+            pllive.product_type2,
+            type2.product_type_name product_type2_name,
+            pllive.product_type3,
+            type3.product_type_name product_type3_name,
+            pllive.ins_type,
+            insType.ins_type_name,
+            pllive.period_type,
+            periodType.periodtype_name,
+            pllive.start_date,
+            pllive.end_date,
+            pllive.is_auth_partreceived,
+            pllive.is_can_borrow,
+            relation.pkg_id,
+            pkgLife.pkg_name,
+            evaluation.description
+        
+    FROM PDT_PRODUCT_LLIFE pllive
+            LEFT JOIN PDT_Product_Type1  type1 ON pllive.product_type = type1.product_type_code
+            LEFT JOIN PDT_Product_Type2  type2 ON pllive.product_type2 = type2.product_type_code
+            LEFT JOIN PDT_Product_Type3  type3 ON pllive.product_type3 = type3.product_type_code
+            LEFT JOIN PDT_Product_InsType insType ON pllive.ins_type = insType.Ins_Type_Code
+            LEFT JOIN PDT_Product_PeriodType periodType ON  pllive.period_type = periodType.Periodtype_Code
+            LEFT JOIN SYS_InsBranch  insBranch ON pllive.insBranch_id = insBranch.insBranch_id
+            LEFT JOIN PDT_Pkg_Life_Relation relation ON pllive.seq_id = relation.product_id 
+        	LEFT JOIN PDT_Pkg_Life pkgLife ON relation.pkg_id = pkgLife.seq_id 
+            LEFT JOIN PDT_Product_Evaluation  evaluation ON pllive.product_id = evaluation.product_id AND pllive.insBranch_id = evaluation.insBranch_id
+    WHERE 1=1 
+ 		<isNotEmpty  property="pkg_id">
+			AND relation.pkg_id = #pkg_id#
+		</isNotEmpty>
+		<isNotEmpty  property="pkg_name">
+			AND pkgLife.pkg_name =  #pkg_name#
+		</isNotEmpty>
+		<isNotEmpty  property="seq_id">
+			AND pllive.seq_id = #seq_id#
+		</isNotEmpty>
+		ORDER BY seq_id  DESC
+	</select>
+		
+	<select id="getProductLlifeVO" parameterClass="ProductLlifeVOModel" resultClass="ProductLlifeVOModel">
+	  <include refid="queryProductLlife_all"/>
+	</select>
+	
+	<update id="updateProductLlife" parameterClass="ProductLlifeModel" >
+	UPDATE PDT_PRODUCT_LLIFE pllive
+    SET  
+        pllive.insBranch_id  = #insBranch_id#,
+        pllive.product_id  = #product_id#,
+        pllive.product_name  = #product_name#,
+        pllive.product_abbr  = #product_abbr#,
+        pllive.product_type  = #product_type#,
+        pllive.product_enName  = #product_enName#,
+        pllive.product_enAbbr  = #product_enAbbr#,
+        pllive.product_ver  = #product_ver#,
+        pllive.surr_permit  = #surr_permit#,
+        pllive.renew  = #renew#,
+        pllive.insuredFlag  = #insuredFlag#,
+        pllive.is_auth_partreceived  = #is_auth_partreceived#,
+        pllive.is_can_borrow  = #is_can_borrow#,
+        pllive.benefit_type  = #benefit_type#,
+        pllive.duty  = #duty#,
+        pllive.policy_holder  = #policy_holder#,
+        pllive.exception  = #exception#,
+        pllive.remark  = #remark#,
+        pllive.product_type2  = #product_type2#,
+        pllive.product_type3  = #product_type3#,
+        pllive.ins_type  = #ins_type#,
+        pllive.period_type  = #period_type#,
+        pllive.start_date  = #start_date#,
+        pllive.end_date  = #end_date#,
+        pllive.status = #status#,
+        pllive.createUser  = #createUser#,
+        pllive.createDate  = #createDate#,
+        pllive.modifyUser = #modifyUser#,
+        pllive.modifyDate = SYSDATE
+  WHERE seq_id = #seq_id#
+	
+	</update> 
+	
+	<!-- 删除产品基本信息 -->
+	<delete id="deleteProductLlife" parameterClass="Integer" >
+		delete from PDT_PRODUCT_LLIFE where 
+		1=1
+		and seq_id=#seq_id#
+	</delete>
+	
+	<!-- 新增产品信息 -->
+	 <insert id="insertProductLlife" parameterClass="ProductLlifeModel" >
+ INSERT INTO PDT_PRODUCT_LLIFE pllive
+	    (pllive.seq_id,
+	     pllive.insBranch_id,
+	     pllive.product_id,
+	     pllive.product_name,
+	     pllive.product_abbr,
+	     pllive.product_type,
+	     pllive.product_enName,
+	     pllive.product_enAbbr,
+	     pllive.product_ver,
+	     pllive.surr_permit,
+	     pllive.renew,
+	     pllive.insuredFlag,
+	     pllive.is_auth_partreceived,
+	     pllive.is_can_borrow,
+	     pllive.benefit_type,
+	     pllive.duty ,
+	     pllive.policy_holder,
+	     pllive.exception,
+	     pllive.remark,
+	     pllive.product_type2,
+	     pllive.product_type3,
+	     pllive.ins_type,  
+	     pllive.period_type, 
+	     pllive.start_date,
+	     pllive.end_date,
+	     pllive.status,
+	     pllive.createUser,
+	     pllive.createDate,
+	     pllive.modifyUser,
+	     pllive.modifyDate,
+	     pllive.inner_product_id)
+ VALUES
+		   (seq_id.nextval,
+		    #insBranch_id#,
+		    #product_id#,
+		    #product_name#,
+		    #product_abbr#,
+		    #product_type#,
+		    #product_enName#,
+		    #product_enAbbr#,
+		    #product_ver#,
+		    #surr_permit#,
+		    #renew#,
+		    #insuredFlag#,
+		    #is_auth_partreceived#,
+		    #is_can_borrow#,
+		    #benefit_type#,
+		    #duty#,
+		    #policy_holder#,
+		    #exception#,
+		    #remark#,
+		    #product_type2#,
+		    #product_type3#,
+		    #ins_type#,
+		    #period_type#,
+		    #start_date#,
+		    #end_date#,
+		    #status#,
+		    #createUser#,
+		    SYSDATE,
+		    #modifyUser#,
+		    SYSDATE,
+		    #inner_product_id#)
+	</insert>
+	<!-- 判断产品是否存在组合产品中 -->
+	 <select id="checkIsInPkg" parameterClass="String" resultClass="Integer">
+        select count(*) from PDT_Pkg_Life_Relation where 1 = 1 and product_id = #seq_id#
+    </select>
+	<!-- 添加缴费方式信息 -->
+	 <insert id="insertProductChargeType" parameterClass="ProductChargeTypeModel" >
+		  INSERT INTO PDT_Product_Charge_Type chargeType
+			   (chargeType.seq_id,
+			    chargeType.insBranch_id,
+			    chargeType.product_id,
+			    chargeType.product_ver,
+			    chargeType.charge_type_code,
+			    chargeType.orderNum,
+			    chargeType.remark,
+			    chargeType.createUser,
+			    chargeType.createDate,
+			    chargeType.modifyUser,
+			    chargeType.modifyDate)
+		 VALUES
+			   (seq_id.nextval,
+			    #insBranch_id#,
+			    #product_id#,
+			    #product_ver#,
+			    #charge_type_code#,
+			    #orderNum#,
+			    #remark#,
+			    #createUser#,
+			    SYSDATE,
+			    #modifyUser#,
+		   	    SYSDATE) 
+	</insert>
+	
+	<!-- 删除缴费方式信息 -->
+	<delete id="deleteProductChargeType" parameterClass="ProductChargeTypeModel" >
+		delete from PDT_Product_Charge_Type  where 
+		1=1  and product_id=#product_id#
+		and insBranch_id=#insBranch_id#
+	</delete>
+	
+	<!-- 添加保障期限类型信息 -->
+	 <insert id="insertProductCoveragePeriod" parameterClass="ProductCoveragePeriodModel" >
+	 INSERT INTO PDT_Product_Coverage_Period coveragePeriod
+		   (coveragePeriod.seq_id,
+		    coveragePeriod.insBranch_id,
+		    coveragePeriod.product_id,
+		    coveragePeriod.product_ver,
+		    coveragePeriod.coverage_period_code,
+		    coveragePeriod.orderNum,
+		    coveragePeriod.remark,
+		    coveragePeriod.createUser,
+		    coveragePeriod.createDate,
+		    coveragePeriod.modifyUser,
+           coveragePeriod.modifyDate)
+     VALUES
+         (seq_id.nextval,
+          #insBranch_id#,
+          #product_id#,
+          #product_ver#,
+          #coverage_period_code#,
+          #orderNum#,
+          #remark#,
+          #createUser#,
+          SYSDATE,
+          #modifyUser#,
+          SYSDATE) 
+	</insert>
+	
+	<!-- 删除保障期限类型信息-->
+	<delete id="deleteProductCoveragePeriod" parameterClass="ProductCoveragePeriodModel" >
+		delete from PDT_Product_Coverage_Period  where 
+		1=1  and product_id=#product_id#
+		and insBranch_id=#insBranch_id#
+	</delete>
+	
+	<!-- 添加缴费期限类型 -->
+	 <insert id="insertProductChargePeriod" parameterClass="ProductChargePeriodModel" >
+		INSERT INTO PDT_Product_Charge_Period chargePeriod
+			   (chargePeriod.seq_id,
+			    chargePeriod.insBranch_id,
+			    chargePeriod.product_id,
+			    chargePeriod.product_ver,
+			    chargePeriod.charge_period_code,
+			    chargePeriod.orderNum,
+			    chargePeriod.remark,
+			    chargePeriod.createUser,
+			    chargePeriod.createDate,
+			    chargePeriod.modifyUser,
+			    chargePeriod.modifyDate)
+		 VALUES
+			   (seq_id.nextval,
+			    #insBranch_id#,
+			    #product_id#,
+			    #product_ver#,
+			    #charge_period_code#,
+			    #orderNum#,
+			    #remark#,
+			    #createUser#,
+			    SYSDATE,
+			    #modifyUser#,
+		   	    SYSDATE) 
+	</insert>
+	<!-- 删除缴费期限类型-->
+	<delete id="deleteProductChargePeriod" parameterClass="ProductChargePeriodModel" >
+		delete from PDT_Product_Charge_Period  where 
+		1=1  and product_id=#product_id#
+		and insBranch_id=#insBranch_id#
+	</delete>
+	
+	<!-- 添加寿险主险可选附加产品信息 -->
+	 <insert id="insertProductRelation" parameterClass="ProductRelationModel" >
+		INSERT INTO PDT_Product_Relation productRelation
+         (productRelation.seq_id,
+          productRelation.insBranch_id,
+          productRelation.master_id,
+          productRelation.product_id,
+          productRelation.status,
+          productRelation.remark,
+          productRelation.createUser,
+          productRelation.createDate,
+          productRelation.modifyUser,
+          productRelation.modifyDate)
+     VALUES
+         (seq_id.nextval,
+          #insBranch_id#,
+          #master_id#,
+          #product_id#,
+          #status#,
+          #remark#,
+          #createUser#,
+          SYSDATE,
+          #modifyUser#,
+             SYSDATE) 
+	</insert>
+	<!-- 添加评估说明 -->
+	 <insert id="insertProductEvaluation" parameterClass="ProductLlifeVOModel">
+		INSERT INTO PDT_Product_Evaluation evaluation
+			   (evaluation.seq_id,
+			    evaluation.product_id,
+			    evaluation.insBranch_id,
+			    evaluation.description,
+			    evaluation.remark,
+			    evaluation.createUser,
+			    evaluation.createDate,
+			    evaluation.modifyUser,
+			    evaluation.modifyDate)
+		 VALUES
+			   (seq_id.nextval,
+			    #product_id#,
+			    #insBranch_id#,
+			    #description#,
+			    #remark#,
+			    #createUser#,
+			    SYSDATE,
+			    #modifyUser#,
+		   	    SYSDATE) 
+	</insert>
+	
+	
+	<!-- 删除评估说明 -->
+	<delete id="deleteProductEvaluation" parameterClass="ProductLlifeVOModel" >
+		delete from PDT_Product_Evaluation where 
+		1=1  and product_id=#product_id#
+		and insBranch_id=#insBranch_id#
+	</delete>
+	
+	<!-- 添加星级评估 -->
+	 <insert id="insertProductAssessment" parameterClass="ProductAssessmentModel">
+		INSERT INTO PDT_Product_Assessment assessment
+			   (assessment.seq_id,
+			   	assessment.product_id,
+			   	assessment.insBranch_id,
+			    assessment.assessment_type,
+			    assessment.assess_stars,
+			    assessment.remark,
+			    assessment.createUser,
+			    assessment.createDate,
+			    assessment.modifyUser,
+			    assessment.modifyDate)
+		 VALUES
+			   (seq_id.nextval,
+			    #product_id#,
+			    #insBranch_id#,
+			    #assessment_type#,
+			    #assess_stars#,
+			    #remark#,
+			    #createUser#,
+			    SYSDATE,
+			    #modifyUser#,
+		   	    SYSDATE) 
+	</insert>
+	
+	<!-- 删除星级评估 -->
+	<delete id="deletesProductAssessment" parameterClass="ProductAssessmentModel" >
+		delete from PDT_Product_Assessment where 
+		1=1
+		and product_id=#product_id#
+		and insBranch_id=#insBranch_id#
+	</delete>
+
+
+	<!-- 查询缴费方式信息 -->
+	<select id="queryProductChargeType" parameterClass="ProductChargeTypeModel" resultClass="ProductChargeTypeModel">
+	   SELECT * FROM PDT_Product_Charge_Type chargeType WHERE chargeType.product_id =  #product_id# AND chargeType.insBranch_id =  #insBranch_id#
+	</select>
+		<!-- 查询保障期限类型信息 -->
+	<select id="queryProductCoveragePeriod" parameterClass="ProductCoveragePeriodModel" resultClass="ProductCoveragePeriodModel">
+	   SELECT * FROM PDT_Product_Coverage_Period coveragePeriod WHERE coveragePeriod.product_id =  #product_id# AND coveragePeriod.insBranch_id =  #insBranch_id#
+	</select>
+		<!-- 查询缴费期限类型 -->
+	<select id="queryProductChargePeriod" parameterClass="ProductChargePeriodModel" resultClass="ProductChargePeriodModel">
+	    SELECT * FROM PDT_Product_Charge_Period chargePeriod WHERE chargePeriod.product_id =  #product_id# AND chargePeriod.insBranch_id =  #insBranch_id#
+	</select>
+	
+	<!-- 查询主附险关系 -->
+	<select id="queryProductRelation" parameterClass="ProductRelationModel" resultClass="ProductRelationModel">
+	    SELECT * FROM PDT_Product_Relation  pr WHERE 1 = 1
+	    <isNotEmpty  property="insBranch_id">
+			AND pr.insBranch_id = #insBranch_id#
+		</isNotEmpty>
+	    <isNotEmpty  property="product_id">
+			AND pr.product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="master_id">
+			AND pr.master_id = #master_id#
+		</isNotEmpty>
+	</select>
+	<!-- 删除主附险关系 -->
+	<delete id="deleteProductRelation" parameterClass="ProductRelationModel">
+	    DELETE FROM PDT_Product_Relation  pr WHERE 1 = 1
+	    <isNotEmpty  property="product_id">
+			AND pr.product_id = #product_id#
+		</isNotEmpty>
+		<isNotEmpty  property="master_id">
+			AND pr.master_id = #master_id#
+		</isNotEmpty>
+		<isNotEmpty  property="insBranch_id">
+			AND pr.insBranch_id = #insBranch_id#
+		</isNotEmpty>
+	</delete>
+	
+    <select id="getProductAssessments" parameterClass="ProductAssessmentVOModel" resultClass="ProductAssessmentVOModel">
+        select pl.seq_id,
+        pl.assess_type_code,
+        pl.assess_type_name,
+        pp.product_id,
+        pp.assess_stars,
+        pp.remark,
+        pp.createuser,
+        pp.createdate,
+        pp.modifyuser,
+        pp.modifydate
+        from pdt_lib_assessment_type pl
+        left join (select *
+        from pdt_product_assessment pp
+        where pp.product_id = #product_id#
+        	  and pp.insBranch_id = #insBranch_id#) pp
+        on pl.assess_type_code = pp.assessment_type
+        order by pl.ordernum asc
+    </select>
+</sqlMap>

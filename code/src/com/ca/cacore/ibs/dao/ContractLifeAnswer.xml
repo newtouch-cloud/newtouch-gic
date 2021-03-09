@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+              
+<sqlMap namespace="policyAnswer">
+   <typeAlias alias="contractLifeVOModel" type="com.ca.cacore.ibs.model.vo.ContractLifeVOModel"/>
+   <typeAlias alias="contractLifeModel" type="com.ca.cacore.ibs.model.bo.ContractLifeModel"/>
+   <typeAlias alias="contractLifeAnswerModel" type="com.ca.cacore.ibs.model.bo.ContractLifeAnswerModel"/>
+   <typeAlias alias="contractLifeAnswerVOModel" type="com.ca.cacore.ibs.model.vo.ContractLifeAnswerVOModel"/>
+   <typeAlias alias="policyLifeModel" type="com.ca.cacore.ibs.model.bo.PolicyLifeModel"/>
+   
+ 	  <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+
+	<!-- 查询所有的保单回访信息 -->
+	<sql id="query_all_master">
+		select cont_mast.branch_id,
+	    answer.seq_id,
+	    branch.branch_name,
+	    cont_mast.insbranch_id,
+	    cont_mast.policy_id,
+	    cont_mast.policy_code,
+	    cont_mast.agent_id,
+	    sales_agent.sales_name
+	    agent_name,
+	    cont_mast.service_id,
+	    sales_service.sales_name service_name,
+	    holder.app_name,
+	    insured.insurant_name,
+	    cont_mast.hold_date,
+	    cont_mast.validate_date,
+	    status.status_name,
+	    anstype.answer_type_name answer_type,
+	    case
+	    when answer.is_success = 'Y' then
+	    '成功'
+	    else
+	    '失败'
+	    end is_answered,
+	    ib.insBranch_name,
+	    answer.is_success
+	    from cbs_contractlife_answer answer
+	    inner join cbs_contractlife cont_mast
+	    on answer.policy_id = cont_mast.policy_id
+	    left join sys_branch branch
+	    on branch.branch_id = cont_mast.branch_id
+	    left join smis_sales sales_agent
+	    on sales_agent.sales_id = cont_mast.agent_id
+	    left join smis_sales sales_service
+	    on sales_service.sales_id = cont_mast.service_id
+	    left join cbs_contractlife_holder holder
+	    on holder.customer_id = cont_mast.holder_id
+	    left join cbs_contractlife_insured insured
+	    on insured.customer_id = cont_mast.insurant_id
+	    left join CBS_CONTRACTLIFE_STATUS status
+	    on status.status_code = cont_mast.status
+	    left join cbs_answer_type anstype
+	    on anstype.answer_type_code = answer.answer_type
+	    left join sys_insbranch ib on ib.insbranch_id = answer.insbranch_id
+	    where 1 = 1
+	    and holder.policy_id = cont_mast.policy_id
+	    and insured.policy_id = cont_mast.policy_id
+		<isNotEmpty property="branch_id">
+			AND cont_mast.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND
+			cont_mast.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			AND cont_mast.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			AND sales_agent.sales_name like
+			'%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			AND holder.app_name like
+			'%$app_name$%'
+		</isNotEmpty>
+	</sql>
+  	
+    <!-- 查询回访的保单信息列表 -->
+	<select id="queryContractMaster" parameterClass="contractLifeVOModel" resultClass="contractLifeVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all_master"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!--录入回访信息  -->
+	<insert id="addPolicyAnswer" parameterClass="contractLifeAnswerModel">
+		insert into cbs_contractlife_answer
+		(seq_id,
+		branch_id,
+		insbranch_id,
+		policy_id,
+		answer_type,
+		is_success,
+		answer_notes,
+		visit_date,
+		remark,
+		createuser,
+		createdate,
+		modifyuser,
+		modifydate)
+		values
+		(seq_id.nextval,
+		#branch_id#,
+		#insBranch_id#,
+		#policy_id#,
+		#answer_type#,
+		#is_success#,
+		#answer_notes#,
+		sysdate,
+		#remark#,
+		#createUser#,
+		sysdate,
+		#modifyUser#,
+		sysdate)
+	</insert>
+	
+	<!-- 修改保单的回访信息 -->
+	<update id="updatePolicyAnswer" parameterClass="contractLifeAnswerVOModel">
+	update cbs_contractlife_answer
+	set insbranch_id = #insBranch_id#,
+	policy_id = #policy_id#,
+	answer_type = #answer_type#,
+	is_success = #is_success#,
+	answer_notes = #answer_notes#,
+	visit_date = sysdate,
+	modifyuser = #modifyUser#,
+	modifydate = sysdate
+	where seq_id = #seq_id#
+    </update>
+	
+	<!-- 回访录入时自动带出数据：异步请求根据保单号和保险公司机构查询保单信息 -->
+	<select id="getContractMaster" parameterClass="contractLifeModel" resultClass="contractLifeModel">
+    select m.*, b.branch_name, h.app_name
+	from cbs_contractlife m
+	left join sys_branch b
+	on m.branch_id = b.branch_id
+	left join cbs_contractlife_holder h
+	on h.customer_id = m.holder_id
+	where m.policy_code = #policy_code#
+	and m.policy_id = h.policy_id
+	and m.insbranch_id =#insBranch_id#
+	</select>
+
+	<!-- 根据seq_id查询回访信息 -->
+	<select id="getPolicyAnswer" parameterClass="contractLifeAnswerVOModel"
+		resultClass="contractLifeAnswerVOModel">
+		select answer.*, c.policy_code, b.branch_name, h.app_name
+		from cbs_contractlife_answer answer
+		left join sys_branch b
+		on answer.branch_id = b.branch_id
+		left join cbs_contractlife m
+		on m.policy_id = answer.policy_id
+		left join cbs_contractlife_holder h
+		on h.customer_id = m.holder_id
+		left join cbs_contractlife c
+		on c.policy_id = answer.policy_id
+		where answer.seq_id = #seq_id#
+		and h.policy_id = answer.policy_id
+	</select>
+
+	<!-- 更新保单 -->
+	<update id="updateConstractMaster" parameterClass="contractLifeModel">
+		update cbs_contractlife
+		set is_answered = #is_answered#,
+		modifyuser = #modifyUser#,
+		modifydate = sysdate
+		where policy_code = #policy_code#
+		and insbranch_id = #insBranch_id#
+	</update>
+	
+	<!-- 回执录入时修改投保单状态 -->
+	<update id="updatePolicyLife" parameterClass="policyLifeModel">
+		update Cbs_Policylife
+		set is_answered = #is_answered#,
+		modifyuser = #modifyUser#,
+		modifydate = sysdate
+		where policy_code = #policy_code#
+		and insbranch_id = #insBranch_id#
+	</update>
+
+	<!-- 查询投保单信息 -->
+	<select id="getPolicyLife" parameterClass="policyLifeModel"
+		resultClass="policyLifeModel">
+		select * from cbs_policylife where policy_code = #policy_code#
+		and insbranch_id = #insBranch_id#
+	</select>
+	
+	<!-- 查询保单总数 -->
+	<select id="queryContractMaster_count" parameterClass="contractLifeVOModel"
+		resultClass="int">
+		select count(*) from (
+		<include refid="query_all_master" />
+		)
+	</select>
+</sqlMap>

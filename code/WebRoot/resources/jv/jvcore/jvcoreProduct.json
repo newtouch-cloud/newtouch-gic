@@ -1,0 +1,14 @@
+[
+		{ id:1001, pId:0, name:"产品管理系统"},
+			{ id:2001, pId:1001, name:"产品维护"},
+			    { id:20011, pId:2001, name:"产品定义",open_url:"/redirect/redirect.do?linkUrl=ca/cacore/pms/productLlife/productLlife_Add"},
+				{ id:20012, pId:2001, name:"产品维护",open_url:"/PMS/ProductLlife/queryProductLlifeList.do"},
+			{ id:3001, pId:1001, name:"产品组合维护"},
+			    { id:30011, pId:3001, name:"产品组合定义",open_url:"/redirect/redirect.do?linkUrl=ca/cacore/pms/pkgLife/pkgLife_Add"},
+				{ id:30022, pId:3001, name:"产品组合维护",open_url:"/PMS/PkgLife/queryPkgLifeList.do"},
+			{ id:4001, pId:1001, name:"产品手续费率管理",open_url:"/PMS/ProFeeRate/ProFeeRateMana.do"},
+			{ id:5001, pId:1001, name:"产品评估支持"},
+			    { id:50011, pId:5001, name:"寿险产品评估与支持",open_url:"/PMS/ProductEvaluation/queryLifeProductEvaluationList.do"},
+				{ id:50012, pId:5001, name:"意外险产品评估与支持",open_url:"/PMS/ProductEvaluation/queryAccidentProductEvaluationList.do"},
+				{ id:50013, pId:5001, name:"健康险产品评估与支持",open_url:"/PMS/ProductEvaluation/queryHealthProductEvaluationList.do"}
+]

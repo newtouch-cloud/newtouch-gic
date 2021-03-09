@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="customerContact">
+   <typeAlias alias="customerContactModel" type="com.ca.cacore.csm.model.bo.CustomerContactModel"/>
+	
+	<!-- 查看CutomerContactModel信息 -->
+	<select id="queryCustomerContactModel" parameterClass="customerContactModel" resultClass="customerContactModel">
+		select
+			t.seq_id 
+		    ,t.branch_id
+		    ,t.address
+		    ,t.zip
+		    ,t.mobile
+		    ,t.fax
+		    ,t.telphone
+		    ,t.job_tel
+		    ,t.email
+		    ,t.job_com
+		    ,t.modifydate
+		    from  
+		    CRM_Customer_Contact t 
+		    where 1 = 1  
+		<isNotEmpty prepend="and" property="customer_id">
+			t.customer_id = #customer_id#
+		</isNotEmpty>
+	</select>
+	
+	
+	
+ 	<!--新增客户联系信息-->
+	<insert id="insertCustomerContact" parameterClass="customerContactModel" >
+	  insert into CRM_Customer_Contact t(
+		       	t.seq_id
+				,t.branch_id
+				,t.customer_id
+				,t.address
+				,t.zip
+				,t.mobile
+				,t.fax
+				,t.telphone
+				,t.email
+				,t.job_com
+				,t.job_tel
+				,t.status
+				,t.remark
+				,t.log_seq_id
+				,t.log_bustype
+				,t.log_busdate
+				,t.log_date
+				,t.log_remark
+				,t.createuser
+				,t.createdate
+				,t.modifyuser
+				,t.modifydate
+	            ) 
+	            values 
+	            (
+	           	seq_id.nextval
+				,#branch_id#
+				,#customer_id#
+				,#address#
+				,#zip#
+				,#mobile#
+				,#fax#
+				,#telphone#
+				,#email#
+				,#job_com#
+				,#job_tel#
+				,#status#
+				,#remark#
+				,#log_seq_id#
+				,#log_bustype#
+				,sysdate
+				,sysdate
+				,#log_remark#
+				,#createuser#
+				,sysdate
+				,#modifyuser#
+				,sysdate
+	       )
+	</insert>
+     
+	
+	
+	<!--更新联系人信息-->
+    <update id="updateCustomerContact" parameterClass="customerContactModel" >
+		update CRM_Customer_Contact set 
+		                     branch_id=#branch_id#
+		                     ,customer_id=#customer_id#
+		                     ,address=#address#
+		                     ,zip=#zip#
+		                     ,mobile=#mobile#
+		                     ,telphone=#telphone#
+		                     ,email=#email#
+		                     ,job_com=#job_com#
+		                     ,job_tel=#job_tel#
+		                     ,status=#status#
+		                     ,remark=#remark#
+		                     ,log_seq_id=#log_seq_id#
+		                     ,log_bustype=#log_bustype#
+		                     ,log_busdate=#log_busdate#
+		                     ,log_date=#log_date#
+		                     ,log_remark=#log_remark#
+		                     ,createuser=#createuser#
+		                     ,createdate=#createdate#
+		                     ,modifyuser=#modifyuser#
+		                     ,modifydate=#modifydate#
+		                      where seq_id=#seq_id#
+	</update>
+
+</sqlMap>

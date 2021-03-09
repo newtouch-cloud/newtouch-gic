@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+    
+<sqlMapConfig>
+    <settings enhancementEnabled="true" maxTransactions="5" maxRequests="32" maxSessions="10"  useStatementNamespaces="true"/>
+	<!--标签配置信息  -->
+		
+	<sqlMap resource="com/ca/cacore/manage/dao/branch/AuthType.xml"/>
+	<sqlMap resource="com/ca/cacore/manage/dao/funcmenu/FuncMenuOpenType.xml"/>
+	<sqlMap resource="com/ca/cacore/manage/dao/funcmenu/FuncMenuURIType.xml"/>
+	<sqlMap resource="com/ca/cacore/manage/dao/branch/BranchLevel.xml"/>
+	<sqlMap resource="com/ca/cacore/mass/dao/Province.xml"/>
+	<sqlMap resource="com/ca/cacore/mass/dao/City.xml"/>
+	<sqlMap resource="com/ca/cacore/csm/dao/customerAction/CustomerActionType.xml"/>
+	<!-- 数据字典 -->
+	<sqlMap resource="com/ca/cacore/mass/dao/Library.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/ProblemOriginType.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/ProblemStatus.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/ProblemType.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/InsBranch.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/ConservationItem.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/BranchItemSelect.xml"/>
+	<sqlMap resource="com/ca/cacore/ibs/dao/FeeStatus.xml"/>
+	
+    <!--项目管理信息 -->
+	 <sqlMap resource="com/ca/cacore/manage/dao/branch/Branch.xml" />
+	<sqlMap resource="com/ca/cacore/manage/dao/user/User.xml" />
+	<sqlMap resource="com/ca/cacore/manage/dao/user/UserAuths.xml" />
+	 <sqlMap resource="com/ca/cacore/manage/dao/role/Role.xml" />
+	<sqlMap resource="com/ca/cacore/manage/dao/funcmenu/FuncMenu.xml" />
+	
+	
+	<sqlMap resource="com/ca/cacore/manage/dao/funcButton/FuncButton.xml" />
+	<sqlMap resource="com/ca/cacore/manage/dao/funcPanel/FuncPanel.xml"/>
+
+	
+
+
+    
+
+	<sqlMap resource="com/ca/cacore/mass/dao/commonSeq/CommonSeq.xml" />
+
+	<sqlMap resource="com/ca/cacore/mass/dao/InsBranchManage.xml" /> 
+	<sqlMap resource="com/ca/cacore/mass/dao/cpyBranchId/CpyBranch.xml" /> 
+<!-- 基本法管理 -->
+
+<!-- 客户管理 -->
+	<sqlMap resource="com/ca/cacore/csm/dao/customer/Customer.xml" />
+	<sqlMap resource="com/ca/cacore/csm/dao/customerAction/CustomerAction.xml" />
+	<sqlMap resource="com/ca/cacore/csm/dao/customerContact/CustomerContact.xml"/>
+	<sqlMap resource="com/ca/cacore/csm/dao/customerLog/CustomerLog.xml" />
+	<sqlMap resource="com/ca/cacore/csm/dao/customerType/CustomerType.xml" />
+		
+	
+<!-- 产品管理系统 -->
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductLlife.xml" />
+		<sqlMap resource="com/ca/cacore/msss/dao/productFeeRate.xml" />
+		<sqlMap resource="com/ca/cacore/msss/dao/PkgLife.xml" />  
+		<sqlMap resource="com/ca/cacore/msss/dao/InsRncDfn.xml" /> 
+<!-- 产品管理数据字典 -->
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductType1.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductType2.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductType3.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductInsuredFlag.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductPeriodType.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/ProductInsType.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/LibChargeType.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/LibCoveragePeriod.xml" />
+		<sqlMap resource="com/ca/cacore/msss/dao/LibChargePeriod.xml" /> 
+		<sqlMap resource="com/ca/cacore/msss/dao/LibAssessmentType.xml" /> 
+		
+<!-- 保单业务处理系统 -->
+    <sqlMap resource="com/ca/cacore/ibs/dao/PolicyLifeProblem.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractLifeManage.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractLifeAnswer.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractAllot.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractAllotHis.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyLifeManage.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyLifeAck.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/CommonAsynRequest.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyLife.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractLife.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/Claims.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/Conservation.xml" />
+	
+	
+<!-- 保单业务处理系统数据字典 -->
+	<sqlMap resource="com/ca/cacore/ibs/dao/AnswerType.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyLifeOverdue.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyLifeInsured.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ApplicantRelation2.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/BankAccountType.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyStatus.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/PolicyImage.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/BeneficiaryType.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/CustomerIncomType.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/DividendAndAuthType.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ContractCost.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/ClaimsStatus.xml" />
+	<sqlMap resource="com/ca/cacore/ibs/dao/CmainPolicy.xml" />
+		
+<!-- 报表管理系统 -->
+	<sqlMap resource="com/ca/cacore/rsss/dao/ExportReport.xml" />
+	<sqlMap resource="com/ca/cacore/rsss/dao/BusinessReport.xml" />
+	<sqlMap resource="com/ca/cacore/rsss/dao/YYPersonReport.xml" />
+	<sqlMap resource="com/ca/cacore/rsss/dao/ReportSelect.xml" />
+	<sqlMap resource="com/ca/cacore/rsss/dao/CustomeGD.xml" />	
+	<sqlMap resource="com/ca/cacore/rsss/dao/InsCompanyBus.xml" />
+	<sqlMap resource="com/ca/cacore/rsss/dao/PersonalBusReport.xml" />	
+	<sqlMap resource="com/ca/cacore/rsss/dao/InsAgenPersonReport.xml" />	
+	<sqlMap resource="com/ca/cacore/rsss/dao/InsBusProReport.xml" />	
+	<sqlMap resource="com/ca/cacore/rsss/dao/BasicSituation.xml" />	
+	
+
+<!-- 规章制度管理 -->
+     <sqlMap resource="com/ca/cacore/ams/dao/RegulationManager.xml" />
+     <sqlMap resource="com/ca/cacore/ams/dao/RegStatusType.xml" />
+     <!-- 数据字典管理 -->
+     <sqlMap resource="com/ca/cacore/ams/dao/baseData.xml" />
+<!-- 消息 推送 管理 -->
+     <sqlMap resource="com/ca/cacore/ams/dao/MessagePushManager.xml" />
+
+
+<!--  协议管理 -->
+    <sqlMap resource="com/ca/cacore/maas/dao/protocol/Protocol.xml" />
+   <!-- <sqlMap resource="com/newtouch/protocol/dao/ProtocolManage.xml" />
+    <sqlMap resource="com/newtouch/enumpak/dao/EnumManage.xml" />-->
+	<sqlMap resource="com/newtouch/protocol/dao/ProtocolManage.xml" />
+	<sqlMap resource="com/newtouch/enumpak/dao/EnumManage.xml" />
+<!-- axis2-->
+    <sqlMap resource="com/newtouch/component/axis2/dao/QuerySaleInfo.xml" />
+    <sqlMap resource="com/newtouch/component/axis2/dao/Axis2Log.xml" />
+    <sqlMap resource="com/newtouch/component/axis2/dao/FeeInfo.xml" /> 
+<!-- 佣金管理 -->
+	
+	
+	
+	<sqlMap resource="com/ca/cacore/ams/dao/UserMgmt.xml" />
+	
+	
+	<!-- 人员管理 -->
+	<sqlMap resource="com/newtouch/peoplemanage/dao/PersonManage.xml" />
+	
+	<!--团队管理  -->
+  	<sqlMap resource="com/newtouch/team/dao/TeamVo.xml" />
+
+	<!-- 报表管理 -->
+	<sqlMap resource="com/newtouch/report/dao/Personal.xml" />
+	<sqlMap resource="com/newtouch/report/dao/PersonalPerson.xml" />
+	
+	<!-- 人员情况分析表-合同类型  -->
+	<sqlMap resource="com/newtouch/report/dao/WorkNature.xml"/>
+	<!--选择上级-->
+	<sqlMap resource="com/newtouch/core/rightsmgmt/dao/Superior.xml"/>
+	<!--业务类型报表-->
+	<sqlMap resource="com/newtouch/report/dao/BussinessType.xml"/>
+	<sqlMap resource="com/newtouch/customerManager/dao/PolicyManager.xml"/>
+	<sqlMap resource="com/newtouch/customerManager/dao/PolicyManagerPerson.xml"/>
+</sqlMapConfig>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="reportSelect">
+	<typeAlias alias="reportSelectModel"	type="com.ca.cacore.rsss.model.bo.ReportSelectModel" />
+	<select id="getReports" resultClass="reportSelectModel">
+		select * from  sys_report where status='1'
+	</select>
+</sqlMap>

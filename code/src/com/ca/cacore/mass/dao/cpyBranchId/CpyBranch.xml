@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="Cpy"> 
+	<typeAlias alias="companyBranchModel" type="com.ca.cacore.mass.model.bo.CompanyBranchModel"/>
+	<select id="queryCpyBranch"  parameterClass="java.lang.String" resultClass="java.lang.String">
+		select max(cb.branch_id) from cpy_branch cb where cb.branch_parentid = #branch_parentid# 
+	</select>
+    <select id="getPCQ" parameterClass="java.lang.String" resultClass="java.lang.String">
+			     SELECT CASE
+			          WHEN SE.ENUM_ORDER = 1 THEN
+			           'P'||TO_CHAR(BRANCHSORT_ID.NEXTVAL)
+			          ELSE
+			           <!-- (SELECT MAX(CB.BRANCH_ID)
+			              FROM CPY_BRANCH CB
+			             WHERE CB.BRANCH_SORT IN (SE.ENUM_CODE)) -->
+			             'L'||TO_CHAR(BRANCHSORT_ID.NEXTVAL)
+			        END branch_id
+			   FROM SYS_ENUM SE
+			  WHERE SE.UP_ENUM = 'branchsort'
+			  AND se.enum_code=#branch_sort#
+    </select>
+    
+    <select id="queryCpySerno" resultClass="java.lang.Integer">
+    	select max(to_number(cb.cpy_serno)) from cpy_branch cb where branch_level = '1'
+    </select>
+    
+    <select id="queryCpySerno1" parameterClass="companyBranchModel" resultClass="java.lang.Integer">
+    	select max(to_number(cb.cpy_serno)) from cpy_branch cb where branch_level = #cpy_branch_level# and branch_id like '$branch_id$%'
+    </select>
+    <select id="queryCpySerno2" parameterClass="companyBranchModel" resultClass="java.lang.Integer">
+    	select max(to_number(cb.cpy_serno)) from cpy_branch cb where branch_id like '$branch_id$%'
+    </select>
+</sqlMap>

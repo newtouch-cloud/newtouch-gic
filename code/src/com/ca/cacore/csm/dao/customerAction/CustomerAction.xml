@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+    
+<sqlMap namespace="customerAction">
+   	<typeAlias alias="customerActionModel" type="com.ca.cacore.csm.model.bo.CustomerActionModel"/>
+  	<typeAlias alias="customerActinVOModel" type="com.ca.cacore.csm.model.vo.CustomerActionVOModel"/>
+   	   <typeAlias alias="viewModel" type="com.ca.cacore.csm.model.vo.CustomerViewVOModel"/>
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+	
+	<sql id="query_all">
+		select 
+			cca.seq_id
+			,cca.branch_id
+			,branch.branch_name
+			,cca.customer_id
+			,cct.type_name customer_type
+			,cc.name
+			,slg.gender_name gender
+			,ccat.actiontype_name action_type
+			,cca.action_time
+			,cca.action_notes
+		from crm_customer_action cca 
+			left join crm_customer cc on cc.customer_id   = cca.customer_id
+			left join sys_branch branch on branch.branch_id = cca.branch_id
+			left join crm_customer_type cct on cct.type_code = cc.customer_type
+			left join sys_library_gender slg on slg.gender_code = cc.gender
+			left join crm_customer_actiontype ccat on ccat.actiontype_code = cca.action_type
+		where 1 = 1 
+		<isNotEmpty prepend="and" property="customer_id">
+			cca.customer_id = #customer_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="customer_type">
+			cc.customer_type = #customer_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="gender">
+			cc.gender = #gender#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="name">
+			cc.name = #name#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			cca.branch_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="action_type">
+			cca.action_type = #action_type#
+		</isNotEmpty>
+	</sql>
+	
+	<!-- 查询页数 -->
+	<select id="queryCount" parameterClass="customerActinVOModel" resultClass="int">
+		select count(*) from ( 
+		<include refid="query_all"/> 
+		)
+	</select>
+	
+	<!--查询所有信息-->
+	<select id="queryAll" parameterClass="customerActinVOModel" resultClass="customerActinVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!--导出查询所有客户行为信息-->
+	<select id="queryForExportAction" parameterClass="customerActinVOModel" resultClass="customerActinVOModel">
+		<include refid="query_all"/>
+	</select>
+	
+	<insert id="insertCustomerAction" parameterClass="customerActionModel" >
+		insert into 
+		crm_customer_action(
+			seq_id,
+			branch_id,
+			customer_id,
+			action_type,
+			action_time,
+			action_notes,
+			remark,
+			createuser,
+			createdate,
+			modifyuser,
+			modifydate
+		) values(
+			seq_id.nextval,
+			#branch_id#,
+			#customer_id#,
+			#action_type#,
+			#action_time#,
+			#action_notes#,
+			#remark#,
+			#createuser#,
+			sysdate,
+			#modifyuser#,
+			sysdate
+		) 
+	</insert>
+	
+	<!-- 查询客户用于行为录入-->
+	<select id="queryForAction" parameterClass="customerModel" resultClass="viewModel">
+		select t.name,
+         t.customer_id,
+         t.customer_type,
+         t.gender,
+         cc.branch_id,
+         branch.branch_name
+    from crm_customer t 
+      left join( select ccc.*,rownum from (
+					 select * from crm_customer_Contact con 
+   					 where con.customer_id=#customer_id# order by con.modifydate desc) ccc 
+   				 where rownum = 1 ) cc  on t.customer_id = cc.customer_id
+      left join sys_branch branch on cc.branch_id = branch.branch_id 
+    where  t.customer_id = #customer_id#
+		
+	</select>
+	<select id="queryForJieChu" parameterClass="customerModel" resultClass="viewModel">
+		select t.name,
+         cc.customer_id,
+         cc.action_time,
+         cc.action_notes 
+    from crm_customer t 
+      left join( select ccc.*,rownum from (
+					 select * from crm_customer_Action con 
+   					 where con.customer_id=#customer_id# order by con.modifydate desc) ccc 
+   				 where rownum = 1 ) cc  on t.customer_id = cc.customer_id
+      
+    where  t.customer_id = #customer_id#
+		
+	</select>
+	<!-- 查询客户用于行为明细预览-->
+	<select id="queryForDetail" parameterClass="customerModel" resultClass="viewModel">
+		select t.name,
+         t.customer_id,
+         t.customer_type,
+         t.gender,
+         cc.branch_id,
+         branch.branch_name,
+         cca.action_type,
+         cca.action_time,
+         cca.action_notes
+    from crm_customer t 
+      left join( select ccc.*,rownum from (
+					 select * from crm_customer_Contact con 
+   					 where con.customer_id=#customer_id# order by con.modifydate desc) ccc 
+   				 where rownum = 1 ) cc  on t.customer_id = cc.customer_id
+      left join sys_branch branch on cc.branch_id = branch.branch_id 
+      left join crm_customer_action cca on cca.customer_id = t.customer_id
+    where  t.customer_id = #customer_id#  and cca.seq_id=#seq_id#
+		
+	</select>
+
+</sqlMap>

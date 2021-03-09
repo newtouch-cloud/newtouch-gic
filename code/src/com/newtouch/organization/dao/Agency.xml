@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="agency">
+   <typeAlias alias="agencyModel"  type="com.newtouch.organization.model.vo.impl.AgencyModel"/>
+	
+	<sql id="query_head">
+		select * 
+	  	  from (select row_.*, rownum rownum_  
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_  
+		where rownum   < #limit#)
+		where rownum_  >= #start#
+		]]>	
+	</sql>
+	
+	<!-- 根据输入条件-查询中介管理信息 -->
+	<sql id="selectAgencys"   >
+        
+         
+          
+          select distinct 
+                        sb.branch_id as org_id,
+                        sb.branch_name as org_name,
+                        sa.agency_no ,
+                        sa.agency_name,
+                        sa.social_code,
+                        sa.repair_coding,
+                        sa.permission_license,
+                        sa.found_date,
+                        sa.agency_address,
+                        sa.agency_phone
+                   from sys_agency sa
+                   left join sys_agency_relation sar 
+                     on sar.agency_no = sa.agency_no and sar.data_flag='1'
+                   left join cpy_branch sb
+                   	 on sa.org_id=sb.branch_id and sb.status = '1'
+                   left join cd_agreement ca
+                     on sar.agreement_no=ca.agreement_no and ca.status = '1'
+                  where 1 = 1 
+                  and sa.data_flag ='1'
+
+         <isNotEmpty property="branch_id">
+         and sb.branch_id in (select branch_id from cpy_branch cpy 
+         where cpy.status = '1' start with cpy.branch_id=#branch_id# 
+         connect by nocycle prior cpy.branch_id=cpy.branch_parentid)
+         </isNotEmpty>
+         <isNotEmpty property="agency_no">
+          and sa.agency_no=#agency_no#
+         </isNotEmpty>
+         <isNotEmpty property="agency_name">
+         AND sa.agency_name like '%$agency_name$%'
+         </isNotEmpty>
+         <isNotEmpty property="agreement_no">
+         and ca.agreement_no=#agreement_no#
+         </isNotEmpty>
+         <isNotEmpty property="startdate">
+          <![CDATA[
+				and ca.startdate >= #startdate# 
+				]]>
+         </isNotEmpty>
+         <isNotEmpty property="enddate">
+		 <![CDATA[
+				and ca.enddate <= #enddate# 
+				]]>        
+         </isNotEmpty>
+         <isNotEmpty property="social_code">
+         and sa.social_code=#social_code#
+         </isNotEmpty >
+         <isNotEmpty property="repair_coding">
+         and sa.repair_coding=#repair_coding#
+         </isNotEmpty>
+         order by length(sb.branch_id ),sb.branch_id
+	</sql>
+	
+	<!-- 查询中介管理信息-分页 -->
+	<select id="queryAgency_count" parameterClass="agencyModel" resultClass="int">
+		select count(*) from (
+		<include refid="selectAgencys" />
+		)
+	</select>
+	
+	<!-- 中介管理查询  -->
+	<select id="selectAgency" parameterClass="agencyModel" resultClass="agencyModel">
+		<include refid="query_head" />
+		<include refid="selectAgencys" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 中介管理查询维护 -->
+	<select id="queryUpdateAgency" parameterClass="agencyModel" resultClass="agencyModel">
+		  select  
+     	  sb.branch_name as org_name,sb.status,
+         sb.branch_id as org_id,
+           sa.agency_no,
+           sa.agency_name,
+           sa.business_license,
+           sa.permission_license,
+           sa.found_date,
+           sa.agency_address,
+           sa.agency_phone,
+           sa.social_code,
+           sa.repair_coding
+        from sys_agency  sa
+        left join cpy_branch sb on sa.org_id = sb.branch_id and sb.status ='1'
+        where sa.repair_coding=#repair_coding#
+         and sa.data_flag ='1' 
+       
+        
+       
+	</select>
+	
+	<!-- 中介管理明细 -->
+	<select id="selectUpdateAgency" parameterClass="agencyModel" resultClass="agencyModel">
+		  select distinct sb.branch_name,
+         ca.agreement_no,
+         ca.startdate,
+         ca.enddate,
+         ch.branch_name as org_name,
+           ch.branch_id as org_id,
+               sa.agency_no ,
+               sa.agency_name,
+               sa.business_license,
+               sa.permission_license,
+               sa.found_date,
+               sa.agency_address,
+               sa.agency_phone,
+               sa.social_code,
+               sa.repair_coding
+               from sys_agency  sa
+        left join cpy_branch ch on sa.org_id  =ch.branch_id
+        left join sys_agency_relation sar on sar.agency_no = sa.agency_no
+        left join cpy_branch sb on sar.branch_id = sb.branch_id
+        left join ins_cmain ic on sa.repair_coding = ic.repair_coding
+        left join cd_agreement ca on sar.agreement_no = ca.agreement_no
+        where sa.repair_coding = #repair_coding#
+        	and sar.data_flag = '1'
+   		 	and sb.branch_level='5'
+			   
+</select>
+	
+	<insert id="insertAgency" parameterClass="agencyModel">
+		
+		insert into sys_agency_relation (
+				agreement_no,
+				branch_id,
+				agency_no,
+				org_id,
+				data_flag,
+				create_date,
+				create_user,
+				mdf_date,
+				mdf_user)
+				select cd.agreement_no,cd.branch_id,#repair_coding#,#org_id#,'1',sysdate,#create_user#,sysdate,#create_user#
+				from  cd_agreement cd where  cd.agreement_no in
+				 <iterate open="(" close=")"  property="list"  conjunction ="," >
+				 #list[]#
+				</iterate>
+				 and cd.status='1'
+				
+	</insert>
+	
+	<!-- 机构树查询协议号 -->
+	<select	id="queryAgreement" parameterClass="agencyModel" resultClass="agencyModel">
+		select ca.agreement_no
+        from cd_agreement ca
+     	  where 
+       not exists( select * from sys_agency_relation sar where ca.agreement_no  =sar.agreement_no ) 
+       and  ca.agreement_type='2' and   ca.status='1' 
+       and ca.branch_id in (
+      		 select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+      		 start with sh.branch_id=#branch_id#
+      		 connect by prior sh.branch_id=sh.branch_parentid
+      )
+      
+	</select>
+	
+	<!-- 协议号查询时间 -->
+	<select id="queryAgreementNo" parameterClass="agencyModel" resultClass="int">
+		select count(*) 
+		from cd_agreement ca
+		where ca.agreement_no=#agreement_no#
+		and ca.ins_branch != #org_id#
+		  and ca.status='1'
+		  
+		  
+	</select>
+	
+	<!-- 协议号查询  -->
+	<select id="queryRelationAn"  parameterClass="agencyModel"  resultClass="java.util.HashMap"  >
+		select sar.agreement_no,
+		       sar.branch_id,
+		       to_char(ca.startdate, 'yyyy-mm-dd') startdate,
+		       to_char(ca.enddate, 'yyyy-mm-dd') enddate,
+		       to_char(CA.DATEOFSIGN, 'yyyy-mm-dd') DATEOFSIGN,
+		       sb.branch_name,CA.AGREEMENT_AGENCY_TYPE,
+		       case
+		       when sar.branch_id in (select branch_id from sys_branch where branch_id in $dept_list$) then
+		       'true'
+		       else
+		       'false'
+		       end status
+		  from sys_agency sa
+       		left join sys_agency_relation sar on sar.agency_no=sa.repair_coding  and sar.data_flag='1'
+      		left join cd_agreement ca  on sar.agreement_no = ca.agreement_no and ca.status = '1'
+      		left join sys_branch sb on sar.branch_id = sb.branch_id and sb.status = '1'
+     		where 1 = 1
+       		and sa.repair_coding=#repair_coding#
+       		and ca.AGREEMENT_TYPE !='1'
+       		and  sar.branch_id  in $dept_list$
+	</select>
+	
+	<!-- 删除 -->
+	<update id="deleteAgency" parameterClass="java.util.Map">
+			update  sys_agency_relation  set data_flag='0' where agency_no = #agency_no#  and agreement_no in 
+			 <iterate property="list" open="(" close=")"    conjunction ="," >
+				 #list[]#
+				</iterate>
+	</update>
+	
+	
+	<!-- 删除此中介机构下所以的协议信息 -->
+	<update id="deleteAgencyAll" parameterClass="String">
+			update  sys_agency_relation  set data_flag='0' 
+			where agency_no = #agency_no# and data_flag = '1'
+			
+	</update>
+	<!--删除协议表数据  -->
+	<update id="deleteAreement" parameterClass="String">
+		update  cd_agreement  set status='0' 
+		where status='1' and  agreement_no in 
+       (select agreement_no from sys_agency_relation where agency_no = #agency_no#) 
+	</update>
+	<!-- 失效 -->
+	<update id="updateState" parameterClass="agencyModel"  >
+		update sys_agency_relation set data_flag='0' where agency_no=#repair_coding#
+	</update>
+	
+	<!-- 导入 -->
+	<insert id="importInfo" parameterClass="java.util.HashMap">
+	
+	
+	 	insert into sys_agency(agency_no,repair_coding,org_id,agency_name,<!-- business_license, -->social_code,permission_license,found_date,agency_address,agency_phone,create_date,create_user,data_flag)
+		values(#agency_no#,#repair_coding#,#org_id#,#agency_name#,<!-- #business_license#, -->#social_code#,#permission_license#,#found_date#,#agency_address#,#agency_phone#,sysdate,'admin','1')
+	
+	 
+	</insert>
+	<insert id="importInfoNull" parameterClass="java.util.HashMap">
+	
+	
+	 	insert into sys_agency(agency_no,repair_coding,org_id,agency_name,<!-- business_license, -->social_code,permission_license,found_date,agency_address,agency_phone,create_date,create_user,data_flag)
+		values(#agency_no#,#agency_no#,#org_id#,#agency_name#,<!-- #business_license#, -->#social_code#,#permission_license#,#found_date#,#agency_address#,#agency_phone#,sysdate,'admin','1')
+	 
+	 
+	</insert>
+	
+	<!-- 导入查询 -->
+	<select id="queryExcel" parameterClass="java.lang.String"  resultClass="java.lang.String">
+		select repair_coding from sys_agency
+	</select>	
+	
+	<!-- 查重删除 -->
+	<delete id="deleteExcel" parameterClass="java.util.List">
+		
+		delete from sys_agency where repair_coding in
+			 <iterate    open="(" close=")"  conjunction ="," >
+					 #remove_list[]#
+			</iterate> 
+		
+	</delete>
+	
+	<!-- 维护社会统一信用代码 -->
+	<update id="updateSocialCode" parameterClass="agencyModel">
+		update sys_agency set 
+		<isNotEmpty property="business_license">
+		 business_license =#business_license#,
+		 </isNotEmpty>
+		 <isNotEmpty property="permission_license">
+		 permission_license =#permission_license#,
+		 </isNotEmpty>
+		 <isNotEmpty property="found_date">
+		 found_date =#found_date#,
+		 </isNotEmpty>
+		 <isNotEmpty property="agency_address">
+		 agency_address =#agency_address#,
+		 </isNotEmpty>
+		 <isNotEmpty property="agency_phone">
+		 agency_phone =#agency_phone#,
+		 </isNotEmpty>
+		 <isNotEmpty property="repair_coding">
+		 agency_no =#repair_coding#,
+		 </isNotEmpty>
+		 <isNotEmpty property="social_code">
+		 social_code =#social_code#,
+		 </isNotEmpty>
+		 <isNotEmpty property="repair_coding">
+		 repair_coding =#repair_coding#
+		 </isNotEmpty>
+		 where repair_coding=#repair_coding# and data_flag = '1'
+	</update> 
+	<update id="updateAgencyNO" parameterClass="java.util.Map">
+		 update sys_agency set 
+		
+		 agency_no=#repair_coding_mdf#
+		 
+		 where repair_coding =#repair_coding_mdf# 
+	</update>
+	<select id= "queryrepair_coding" parameterClass="agencyModel" resultClass="int">
+		select count(*) from sys_agency where data_flag = '1' and repair_coding = #repair_coding# and business_license != #business_license# 
+	</select>
+</sqlMap>

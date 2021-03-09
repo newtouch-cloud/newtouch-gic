@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="enumEntity">
+   <typeAlias alias="EnumEntity"  type="com.newtouch.enumpak.vo.EnumEntity"/>
+	
+	<select id="findEnum" parameterClass="string" resultClass="EnumEntity">
+		SELECT T.ENUM_CODE code, T.ENUM_NAME name, T.UP_ENUM upEnum
+ 		 	FROM SYS_ENUM T
+	   WHERE T.UP_ENUM =#upEnum#
+	</select>
+	
+	<select id="findEnumPro" parameterClass="EnumEntity" resultClass="EnumEntity">
+		SELECT T.ENUM_CODE CODE, T.ENUM_NAME NAME, T.ENUM_PARENTID TYPE
+ 			 FROM T_ENUM T
+ 		WHERE T.ENUM_PARENTID = #upEnum#
+	   <isNotEmpty property="remark">
+        and  t.enum_remark = #remark#
+        </isNotEmpty>
+	</select>
+</sqlMap>

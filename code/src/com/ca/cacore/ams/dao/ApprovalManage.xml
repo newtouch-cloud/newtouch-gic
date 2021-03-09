@@ -1,0 +1,881 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="approvalManage">
+	<typeAlias alias="salesApprovalVOModelInfo" type="com.ca.cacore.mass.model.vo.SalesApprovalVOModel" />
+	<typeAlias alias="salesApprModel" type="com.ca.cacore.mass.model.bo.SalesApprModel"/>
+	<typeAlias alias="trainCourseVOModel" type="com.ca.cacore.ams.model.vo.TrainCourseVOModel"/>
+	<typeAlias alias="courseManageVOModel" type="com.ca.cacore.tms.model.vo.CourseManageVOModel"/>
+	<typeAlias alias="courseApprovalModel" type="com.ca.cacore.tms.model.bo.CourseApprovalModel"/>
+	<typeAlias alias="recruitBatchApprVOModel" type="com.ca.cacore.ams.model.vo.RecruitBatchApprVOModel"/>
+	<typeAlias alias="trainProjectApprVOModel" type="com.ca.cacore.ams.model.vo.TrainProjectApprVOModel"/>
+	<typeAlias alias="apprConf" type="com.ca.cacore.mass.model.bo.ApprovalConf"/>
+	<typeAlias alias="salesRelationHisModelInfo" type="com.ca.cacore.mass.model.bo.SalesRelationHisModel"/>
+	<typeAlias alias="lawContractVOModel" type="com.ca.cacore.lcm.model.vo.LawContractVOModel"/>
+	<typeAlias alias="announcementVOModel" type="com.ca.cacore.ams.model.vo.AnnouncementVOModel"/>
+	<typeAlias alias="salesContractApprModel" type="com.ca.cacore.mass.model.bo.SalesContractApprModel"/>
+	<typeAlias alias="salesRankChangeVOModel" type="com.ca.cacore.mass.model.vo.ISalesRankChangeVOModel"/>
+	<typeAlias alias="TeamLeaderHisVOModel" type="com.ca.cacore.mass.model.vo.TeamLeaderHisVOModel"/>
+   <typeAlias alias="CredentialsApprModel" type="com.ca.cacore.mass.model.bo.CredentialsApprModel"/>
+	
+	
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	<!-- 查询所有的待审批的申请 -->
+	<sql id="queryAllToApprInfo">
+		select 
+			sa.seq_id,
+			sa.channel_id,
+			sa.business_type,
+			sa.approval_item,
+			sa.approval_id,
+			sa.remark,
+			sa.applicant,
+			sa.application_time,
+			sa.approval_status,
+			sa.approval,
+			sa.approval_time,
+			sa.approval_views,
+			sai.approval_item_name,
+			slas.approval_status_name,
+			sa1.branch_id,
+			sb.branch_name
+		from smis_approval sa
+		left join smis_approval_item sai
+		  	on sa.approval_item = sai.approval_item_code
+		left join sys_library_approval_status slas
+		  	on sa.approval_status = slas.approval_status_code
+		left join (select *from (select row_number() over(partition by approval_id order by createdate asc) rn,a.*from smis_approval a) where rn = 1) sa1
+    		on sa.approval_id = sa1.approval_id
+  		left join sys_branch sb
+    		on sa1.branch_id = sb.branch_id
+		where 1=1
+		<isNotEmpty prepend="and" property="emp_id">
+			sa.branch_id in (select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="branch_id">
+			sb.branch_allpath like '%$branch_id$%' 
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="approval_status">
+			sa.approval_status =#approval_status#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="approval_item">
+			sa.approval_item = #approval_item#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="startDate">
+			<![CDATA[
+				trunc(sa.application_time,'dd') >= #startDate#
+			]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="endDate">
+			<![CDATA[
+				trunc(sa.application_time,'dd') <= #endDate#
+			]]>
+		</isNotEmpty>
+		order by sa.application_time desc
+	</sql>
+	
+	<!-- 分页查询 所有的人员信息 -->
+	<select id="getAllToApprInfo" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		<include refid="query_head" />
+		<include refid="queryAllToApprInfo" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询所有的记录条数 -->
+	<select id="getAllToApprInfo_count" parameterClass="salesApprovalVOModelInfo" resultClass="Integer">
+		select count(*) from (
+		<include refid="queryAllToApprInfo" />
+		)
+	</select>
+	
+	<!-- 获取审批单号 -->
+	<select id="getApprId" resultClass="int">
+		select approval_id.nextval from dual
+	</select>
+	
+	<!-- 根据审批单号查询审批总表对应的审批信息（一条），用于获取信息，往审批总表在此插入一条数据 -->
+	<select id="getApprInfoByApprId" parameterClass="int" resultClass="salesApprModel">
+		select * from(
+			select 
+				sa.*,
+				rownum rn 
+			from smis_approval sa 
+			where sa.approval_id=#approval_id# order by sa.application_time desc) t 
+		where t.rn=1
+	</select>
+	
+	<!-- 查询审批配置信息 -->
+	<select id="getApprConf" parameterClass="String" resultClass="apprConf">
+		select * from smis_approval_conf where approval_item=#approval_item#
+	</select>
+	
+	<!-- 添加审批总表信息 -->
+	<insert id="addApproval" parameterClass="salesApprModel">
+	    insert into smis_approval
+		   (seq_id,               channel_id,          branch_id,             business_type,          business_id,
+			approval_item,        approval_id,         remark,                applicant,              application_time,
+			approval_status,      approval,            approval_time,         createUser,             createDate,
+			modifyUser,modifyDate)
+		values
+			(seq_id.nextval,      #channel_id#,        #branch_id#,           #business_type#,        #business_id#,
+			#approval_item#,      #approval_id#,       #remark#,              #applicant#,            sysdate,
+			#approval_status#,    #approval#,          #approval_time#,       #createUser#,           sysdate,
+			#modifyUser#,         sysdate)
+	</insert>
+	
+	<!-- 更新审批总表信息：审批操作时用 -->
+	<update id="updateApproval" parameterClass="salesApprovalVOModelInfo">
+	    update smis_approval
+	       set 
+			   approval_status=#approval_status#,  
+			   approval = #approval#, 
+			   approval_time = sysdate,            
+			   modifyUser = #modifyUser# ,
+			   modifyDate = sysdate,               
+			   approval_views = #approval_views#
+	     where seq_id = #seq_id#
+	</update>
+	
+	<!-- 更新审批总表信息 ：小珍、万博、得胜公用-->
+	<update id="modifyApproval" parameterClass="salesApprovalVOModelInfo">
+	    update smis_approval
+	       set 
+	           applicant = #applicant#,            application_time = sysdate, 
+			   approval_status=#approval_status#,  approval = #approval#, 
+			   approval_time = #approval_time#,    modifyUser = #modifyUser# ,
+			   modifyDate = sysdate,               branch_id = #branch_id# ,  
+			   approval_views = #approval_views#,  remark=#remark#    
+	     where approval_status = #bef_approval_status# and approval_id =#approval_id#
+	</update>
+	
+	<!-- 查看入司审批详细 -->
+	<select id="querySalesVOById" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select
+			sa.channel_id,
+			sa.branch_id,
+			sa.team_id,
+			sa.leader_id,
+			sa.sales_id,
+			sa.sales_name,
+			sa.contract_type,
+			sa.sex,
+			sa.birthday,
+			sa.certi_type,
+			sa.certi_no,
+			sa.nation,
+			sa.political,
+			sa.education,
+			sa.marital_stat,
+			sa.health,
+			sa.graduate_school,
+			sa.degree,
+			sa.major,
+			sa.province,
+			sa.city,
+			sa.domicile,
+			sa.home_address,
+			sa.home_zipcode,
+			sa.mobile,
+			sa.fixed_line,
+			sa.email,
+			sa.old_job,
+			sa.old_company,
+			sa.work_experience,
+			sa.work_date,
+			sa.biz_years,
+			sa.is_resigned,
+			sa.is_samevocation,
+			sa.is_fulltime,
+			sa.enter_rank_id,
+			sa.rank_id,
+			sa.probation_date,
+			sa.assess_start_date,
+			sa.full_memeber_date,
+			sa.duty_date,
+			sa.predismissal_date,
+			sa.dismiss_date,
+			sa.recommend_id,
+			sa.sales_status,
+			sa.bank_code,
+			sa.bank_account_no,
+			sa.bank_account_name,
+			br.branch_name,
+			te.team_name,
+			te.basic_version_id,
+			sa1.sales_name recommend_name,
+			lsc.contract_type_name,
+			ss.status_name,
+			sr.rank_name,
+			sj.application_time,
+	<!-- 		sappr.approval_time,
+			sappr.approval_status, -->
+			sj.approval_id,
+			<!-- las.approval_status_name, -->
+			sr.post_code,
+			sr.rankSeries_code,
+			ssc.credentials_id certificate_id,
+         	ssc.give_date cer_give_date,
+         	ssc.valid_date cer_valid_date,
+        	ssc1.credentials_id exhibitionCard_id,
+         	ssc1.give_date exh_give_date,
+         	ssc1.valid_date exh_valid_date
+			<!-- sappr.approval_views,
+			sappr.seq_id -->
+		from smis_sales_joinappr sj
+		left join Smis_Sales sa
+			on sj.sales_id=sa.sales_id
+		left join smis_sales_credentials ssc
+      		on sa.sales_id=ssc.sales_id and ssc.credentials_type='1'
+    	left join smis_sales_credentials ssc1
+      		on sa.sales_id=ssc1.sales_id and ssc1.credentials_type='2'
+		left join smis_team te
+			on sa.team_id=te.team_id
+		left join smis_sales sa1
+			on sa.recommend_id=sa1.sales_id
+		left join sys_branch br
+			on sa.branch_id=br.branch_id
+		left join sys_library_contract_type lsc
+			on sa.contract_type=lsc.contract_type_code
+		left join smis_sales_status ss
+			on sa.sales_status=ss.status_code
+		left join smis_rank sr
+			on sa.rank_id=sr.rank_id and sr.basic_version_id=te.basic_version_id
+		<!-- left join smis_approval sappr
+      		on sappr.approval_id=sj.approval_id and sappr.branch_id in (select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#) -->
+   		<!-- left join SYS_Library_Approval_Status las
+      		on sappr.approval_status=las.approval_status_code -->
+		where sa.sales_id=#sales_id# 
+		<!-- and sappr.seq_id=#seq_id# -->
+	</select> 
+	
+	<!-- 判断人员职级 -->
+	<select id="salesRank" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select * from smis_rank where rank_id = #rank_id# and basic_version_id=#basic_version_id#
+	</select>
+	<!-- 判断人员职级 和团队信息-->
+	<select id="sRank" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+	select sales.team_id,rank.rankseries_code 
+	from smis_sales sales
+	left join smis_rank rank on sales.rank_id=rank.rank_id 
+	where sales_id = #sales_id# 
+	</select>
+	
+	<!-- 审批入司人员为组主管时，如果审批通过除了更新他所在的组，还要更新他所主管的组人员的主管为他 -->
+	<update id="updateSalesLeader" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales
+			set leader_id = #leader_id#, 
+			modifyuser = #modifyUser#, 
+			modifydate = sysdate
+		where team_id = #team_id#  
+			and sales_id != #sales_id#
+	</update>
+	
+	<!-- 审批入司人员为区经理时，如果审批通过除了更新他所在的区和直辖组，还要更新他所主管的区下非直辖组的主管为他 -->
+	<!-- 操作1：更新区下非直辖组的主管的leader_id -->
+	<update id="updateTeamManagerInfo" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales set 
+			leader_id = #leader_id#,
+			modifyUser = #modifyUser#,
+			modifyDate=sysdate
+		where sales_id in (select leader_id from SMIS_Team where parent_team_id =#team_id# and directly = 'N')
+	</update>
+	<!-- 操作2：更新中介人员的leader_id -->
+	<update id="updateTeamManagerLeader" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales set 
+			leader_id = #leader_id#,
+			modifyUser = #modifyUser#,
+			modifyDate=sysdate
+		where sales_id = #sales_id#
+	</update>
+	
+	<!-- 根据人员代码查询 -->
+	<select id="selectSalesById" parameterClass="String" resultClass="salesApprovalVOModelInfo">
+		select s.* from smis_sales s where sales_id = #sales_id#
+	</select>
+	
+	<!-- 更新人员表 -->
+	<update id="updateSales" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales
+		set 
+			sales_status=#sales_status#,
+			dismiss_date = #dismiss_date#,
+			modifyuser = #modifyUser#,
+			modifydate = sysdate
+		where sales_id = #sales_id#
+	</update>
+	
+	<!-- 根据审批单编号查询 -->
+	<select id="selectSalesJoinapprBySeqId" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select s.* from smis_sales_joinappr s where sales_id = #sales_id# and approval_id = #approval_id#
+	</select>
+	
+	<!-- 根据人员代码和审批单编号更新入司审批表 -->
+	<update id="updateSalesJoinAppr" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales_joinappr
+		set 
+			approval = #approval#,
+			approval_time = sysdate,
+			approval_status = #approval_status#,
+			modifyuser = #modifyUser#,
+			modifydate = sysdate
+		where approval_id = #approval_id#
+		 	and sales_id = #sales_id#
+	</update>
+	
+	<!-- 人员入司审批通过时同事增加团队轨迹信息 -->
+	<insert id="insertSalesRelationHis" parameterClass="salesRelationHisModelInfo">
+		insert into smis_sales_relationhis
+			(seq_id,
+			channel_id,
+			branch_id,
+			sales_id,
+			r_sales_id,
+			r_type_code,
+			r_level,
+			remark,
+			start_date,
+			end_date,
+			createUser,
+			createDate,
+			modifyUser,
+			modifyDate)
+		values
+			(seq_id.nextval,
+			#channel_id#,
+			#branch_id#,
+			#sales_id#,
+			#r_sales_id#,
+			#r_type_code#,
+			#r_level#,
+			#remark#,
+			sysdate,
+			to_date('9999/09/09','yyyy/MM/dd'),
+			#createUser#,
+			sysdate,
+			#modifyUser#,
+			sysdate)
+	</insert>
+	
+	<!-- 查询离职恢复的详细信息 -->
+	<select id="selectDismissBackAppr" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select 
+			sales.channel_id,
+			sales.branch_id,
+			branch.branch_name,
+			sales.team_id,
+			team.team_name,
+			team.team_lvl,
+			team.basic_version_id,
+			sales.sales_id,
+			sales.sales_name,
+			sales.rank_id,
+			ranks.rank_name,
+			back.resume_status status,
+			back.resume_description,
+			disback.application_time,
+			disback.approval_id,
+			sa.approval_time,
+			sa.approval_status,
+			sa.seq_id,
+			sa.approval_views
+		from smis_sales_dismissbackappr disback
+		left join smis_sales sales
+			on disback.sales_id = sales.sales_id
+		left join smis_team team
+			on sales.team_id = team.team_id
+		left join sys_branch branch
+			on branch.branch_id = sales.branch_id
+		left join smis_rank ranks
+			on ranks.rank_id = sales.rank_id and ranks.basic_version_id=team.basic_version_id
+		left join smis_sales_dismissback back
+			on back.approval_id = disback.approval_id 
+		left join smis_approval sa
+        	on sa.approval_id=disback.approval_id and sa.branch_id in (select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		where disback.approval_id = #approval_id# and sa.seq_id=#seq_id#
+	</select>
+	
+	<!-- 查询解约的详细信息 -->
+	<select id="getDismissAppr" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select 
+			sales.channel_id,
+			sales.branch_id,
+			branch.branch_name,
+			sales.team_id,
+			team.team_name,
+			team.team_lvl,
+			sales.sales_id,
+			sales.sales_name,
+			sales.rank_id,
+			ranks.rank_name,
+			disapp.dismiss_date,
+			disapp.dismiss_reason_code dismissreason_code,
+			disapp.dismiss_direction,
+			dis.dismiss_description,
+			disapp.application_time,
+			disapp.approval_id,
+			sa.seq_id,
+			sa.approval_time,
+			sa.approval_status,
+			sa.approval_views
+		from smis_sales_dismissappr disapp
+		left join smis_sales sales
+			on disapp.sales_id = sales.sales_id
+		left join smis_team team
+			on sales.team_id = team.team_id
+		left join sys_branch branch
+			on branch.branch_id = sales.branch_id
+		left join smis_rank ranks
+			on ranks.rank_id = sales.rank_id and ranks.basic_version_id=team.basic_version_id
+		left join smis_sales_dismiss dis
+			on dis.approval_id = disapp.approval_id
+		left join smis_approval sa
+        	on sa.approval_id=disapp.approval_id and sa.branch_id in (select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#)
+		where disapp.approval_id = #approval_id# and sa.seq_id=#seq_id#
+	</select>
+	
+	<!-- 验证 -->
+	<select id="validate" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select distinct team.status,
+		sales.rank_id,
+		team.leader_id,
+		ranks.rankseries_code
+		from smis_sales_dismissback back
+		left join Smis_Sales sales
+		on sales.sales_id = back.sales_id
+		left join smis_team team
+		on team.team_id = sales.team_id
+		left join smis_rank ranks 
+		on ranks.rank_id = sales.rank_id and team.basic_version_id=ranks.basic_version_id
+		where back.sales_id = #sales_id#
+	</select>
+	
+	<!-- 根据审批单编号查询 -->
+	<select id="selectDismissBackBySeqId" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select s.* from smis_sales_dismissbackappr s where sales_id = #sales_id# and approval_id =#approval_id#
+	</select>
+	
+	<!-- 根据人员代码查询恢复申请表 -->
+	<select id="selectDismissBack" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select * from smis_sales_dismissback back where sales_id = #sales_id# and approval_id = #approval_id#
+	</select>
+	
+	<!-- 更新离职恢复审批表 -->
+	<update id="updateDismissBackAppr" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales_dismissbackappr
+		set 
+			approval = #approval#,
+			approval_time = sysdate,
+			approval_status = #approval_status#,
+			modifyuser = #modifyUser#,
+			modifydate = sysdate
+		where sales_id = #sales_id# 
+			and approval_id = #approval_id#
+	</update>
+	
+	<!-- 根据人员代码和审批单编号更新离职恢复申请表 -->
+	<update id="updateDismissBack" parameterClass="salesApprovalVOModelInfo">
+		update smis_sales_dismissback back
+		set 
+			process_completed = #process_completed#,
+			modifyuser = #modifyUser#,
+			modifydate = sysdate
+		where sales_id = #sales_id#
+		 	and approval_id = #approval_id#
+	</update>
+	
+	<update id="updateSalesRelations" parameterClass="salesRelationHisModelInfo">
+		update smis_sales_relationhis set
+			end_date=to_date('9999/09/09','yyyy/MM/dd'),
+			modifyUser=#modifyUser#,
+			modifyDate=sysdate
+		where sales_id=#sales_id# or r_sales_id=#r_sales_id#
+	</update>
+	
+	<!-- 根据审批单编号查询-->
+	<select id="selectDismissApprBySeqId" parameterClass="salesApprovalVOModelInfo" resultClass="salesApprovalVOModelInfo">
+		select s.* from smis_sales_dismissappr s where sales_id = #sales_id# and approval_id =#approval_id#
+	</select>
+	
+	<!-- 更新解约审批表 -->
+	<update id="updateDismissAppr" parameterClass="salesApprovalVOModelInfo">
+	    update smis_sales_dismissappr
+		set 
+			approval = #approval#,
+			approval_time = sysdate,
+			approval_status = #approval_status#,
+			modifyuser = #modifyUser#,
+			modifydate = sysdate
+		where sales_id = #sales_id# 
+			and approval_id = #approval_id#
+    </update>
+	
+	<!-- 查询课程审批明细 -->
+	<select id="getTrainCourseInfo" parameterClass="trainCourseVOModel" resultClass="trainCourseVOModel">
+		 select 
+	     appr.seq_id,
+	     appr.approval_id,
+	     appr.approval_views,
+	     appr.applicant,
+	     appr.application_time,
+	     appr.approval_time,
+	     appr.approval_status,
+	     appr.branch_id apprBranchId,
+	     courseApp.Branch_Id,
+	     branch.branch_name,
+	     cosInfo.Course_Id,
+	     cosInfo.Course_Name,
+	     cosInfo.Course_Type_Code,
+	     cosInfo.Course_Level_Code,
+	     cosInfo.Course_Period,
+	     cosInfo.Training_Item_Code,
+	     cosInfo.Teacher_Id,
+	     teacher.teacher_name,
+	     cosInfo.Course_Status_Code,
+	     cosInfo.Is_Preseted,
+	     cosInfo.Upload_Time,
+	     cosInfo.Course_Introduction,
+	     cosInfo.Remark,
+	     cosInfo.Upload_Time,
+	     att.file_id,
+		 att.file_name
+	     
+	     from smis_approval appr
+	     left join TMS_Course_Approval courseApp on appr.approval_id=courseApp.Approval_Id
+	     left join TMS_Training_Course cosInfo on courseApp.Course_Id=cosInfo.Course_Id 
+	     left join sys_branch branch on cosInfo.Branch_Id=branch.branch_id
+	     left join TMS_Training_Teacher teacher on cosInfo.Teacher_Id=teacher.teacher_id
+	     left join sys_attachment att on att.bus_id = cosInfo.course_id and att.attachment_type = '9'
+	     where appr.seq_id=#seq_id#
+	</select>
+	
+	<!-- 更新课程信息表 -->
+	<update id="updateCourseInfo" parameterClass="courseManageVOModel">
+	   update TMS_Training_Course course 
+	   set 
+	   course.process_completed=#process_completed#,
+	   course.course_status_code=#course_status_code#,
+	   course.modifyuser=#modifyUser#,
+	   course.modifydate=sysdate
+	   where 
+	   course.approval_id=#approval_id#
+	</update>
+	
+	<!-- 更新培训班课程审批信息表 -->
+	<update id="updateCourseAppr" parameterClass="courseApprovalModel">
+	   update TMS_Course_Approval appr
+	   set
+	   appr.approval=#approval#,
+	   appr.approval_time=sysdate,
+	   appr.approval_status=#approval_status#,
+	   appr.modifyuser=#modifyUser#,
+	   appr.modifydate=sysdate
+	   where 
+	   appr.approval_id=#approval_id#
+	</update>
+	
+	<!-- 查询招募批次审批信息 -->
+	<select id="getRecruitInfo" parameterClass="recruitBatchApprVOModel" resultClass="recruitBatchApprVOModel">
+		select 
+	    recruit.branch_id,
+	    branch.branch_name,
+	    recruit.batch_id,
+	    recruit.batch_name,
+	    recruit.start_time,
+	    recruit.end_time,
+	    recruit.plan_recruitnum,
+	    recruit.batch_status,
+	    recruit.remark,
+	    appr.approval_views,
+	    appr.applicant,
+	    appr.application_time,
+	    appr.approval_time,
+	    appr.approval_status,
+	    appr.seq_id,
+	    appr.approval_id,
+        appr.branch_id apprBranchId
+	    
+	    from SMIS_Approval appr
+	    left join HRM_Recruit_BatchAppr recruitAppr on appr.approval_id=recruitAppr.Approval_Id
+	    left join HRM_Recruit_Batch recruit on recruitAppr.Batch_Id=recruit.batch_id
+	    left join sys_branch branch on recruitAppr.Branch_Id=branch.branch_id
+	    
+    	where appr.seq_id=#seq_id#
+	</select>
+	
+	<!-- 更新招募批次信息表：HRM_Recruit_Batch-->
+	<update id="updateRecruitBatch" parameterClass="recruitBatchApprVOModel">
+		update HRM_Recruit_Batch recBat 
+		set 
+		recBat.batch_status=#batch_status#,
+		recBat.process_completed=#process_completed#,
+		recBat.modifyUser=#modifyUser#,
+		recBat.modifyDate=sysdate 
+		where recBat.approval_id=#approval_id#
+	</update>
+	
+	<!-- 更新招募批次审批信息表：HRM_Recruit_BatchAppr -->
+	<update id="updateRecruitBatchAppr" parameterClass="recruitBatchApprVOModel">
+		update HRM_Recruit_BatchAppr recBatAppr
+		set
+		recBatAppr.approval=#approval#,
+		recBatAppr.approval_time=sysdate,
+		recBatAppr.approval_status=#approval_status#,
+		recBatAppr.modifyUser=#modifyUser#,
+		recBatAppr.modifyDate=sysdate
+		where recBatAppr.approval_id=#approval_id#
+	</update>
+	
+	<!-- 查询培训立项审批信息 -->
+	<select id="getTrainProAppr" parameterClass="trainProjectApprVOModel" resultClass="trainProjectApprVOModel">
+		select 
+	    appr.seq_id,
+	    appr.approval_id,
+	    appr.application_time,
+	    appr.applicant,
+	    appr.approval_time,
+	    appr.approval_status,
+	    appr.approval_views,
+	    appr.branch_id apprBranchId,
+	    proAppr.Branch_Id,
+	    branch.branch_name,
+	    trainPro.Project_Id,
+	    trainPro.Project_Name,
+	    trainPro.Training_Format_Code,
+	    trainPro.Training_Type_Code,
+	    trainPro.Plan_Periods,
+	    trainPro.Training_Day,
+	    trainPro.Plan_Person_Num,
+	    trainPro.Training_Object,
+	    trainPro.Training_Budget,
+	    trainPro.Status_Code,
+	    trainPro.Remark,
+	    trainPro.Training_Item,
+	    trainPro.Upload_Time,
+		att.file_id,
+		att.file_name
+	    
+	    from smis_approval appr
+	    left join TMS_Project_Approval proAppr on appr.approval_id=proAppr.Approval_Id
+	    left join TMS_Training_Project trainPro on proAppr.Project_Id=trainPro.Project_Id
+	    left join sys_branch branch on proAppr.Branch_Id=branch.branch_id
+	    left join sys_attachment att on att.bus_id = trainpro.project_id and att.attachment_type = '7'
+	    
+	    where appr.seq_id=#seq_id#
+	</select>
+	
+	<!-- 更新培训计划/立项信息 表 -->
+	<update id="updateTrainPro" parameterClass="trainProjectApprVOModel">
+		update TMS_Training_Project trainPro
+		set
+		trainPro.Process_Completed=#process_completed#,
+		trainPro.Status_Code=#status_code#,
+		trainPro.Modifyuser=#modifyUser#,
+		trainPro.Modifydate=sysdate
+		where trainPro.Approval_Id=#approval_id#
+	</update>
+	
+	<!-- 更新培训立项审批信息表 -->
+	<update id="updateProAppr" parameterClass="trainProjectApprVOModel">
+		update TMS_Project_Approval proAppr
+		set
+		proAppr.Approval=#approval#,
+		proAppr.Approval_Time=sysdate,
+		proAppr.Approval_Status=#approval_status#,
+		proAppr.Modifyuser=#modifyUser#,
+		proAppr.Modifydate=sysdate
+		where proAppr.Approval_Id=#approval_id#
+	</update>
+	
+	<select id="getRoleInfo" parameterClass="String" resultClass="String">
+		select tda.data_auth_no from t_data_auth tda where tda.is_half_check is null and tda.object_no = #emp_id#
+	</select>
+	
+	<!-- 查询法律合同信息 -->
+	<select id="queryContractInfo"  parameterClass="lawContractVOModel"  resultClass="lawContractVOModel">
+	      select 
+		  appr.seq_id,
+	      contract.branch_id, 
+          branch.branch_name,
+	      contract.legal_contracts_id,
+	      contract.legal_contracts_name,
+          contract.remark,
+          contract.formulate_person,
+	      contract.formulate_date, 
+	      contract.upload_time,
+          appr.approval_id,
+          appr.approval_time,
+	      appr.Approval_Status,
+	      appr.application_time,
+	      appr.approval_views,
+          apprStatus.Approval_Status_Name,
+          att.file_id,
+	      att.file_name 
+          from SMIS_Approval appr   
+          left join LCS_Legal_ContractsAppr contractsAppr on appr.approval_id=contractsAppr.approval_id 
+          left join LCS_Legal_Contracts contract on contractsAppr.legal_contracts_id=contract.legal_contracts_id 
+          left join sys_branch branch on contractsAppr.Branch_Id=branch.branch_id
+          left join SYS_Library_Approval_Status apprStatus on contractsAppr.approval_status = apprStatus.approval_status_code 
+          left join sys_attachment att on  contract.legal_contracts_id=att.bus_id and att.attachment_type = '15' 
+          WHERE appr.seq_id = #seq_id#
+	</select>
+	
+	<!-- 更新法律合同信息表 -->
+	<update id="updateContract"   parameterClass="lawContractVOModel">
+	   update LCS_Legal_Contracts contracts 
+		set 
+        contracts.process_completed=#process_completed#,
+		contracts.modifyUser=#modifyUser#,
+		contracts.modifyDate=sysdate 
+		where contracts.approval_id=#approval_id#
+	</update>
+	<!-- 更新法律合同审批信息表 -->
+	<update id="updateContractAppr"  parameterClass="lawContractVOModel">
+	   update LCS_Legal_ContractsAppr contractsAppr
+		set
+		contractsAppr.approval=#approval#,
+		contractsAppr.approval_time=sysdate,
+		contractsAppr.approval_status=#approval_status#,
+		contractsAppr.modifyUser=#modifyUser#,
+		contractsAppr.modifyDate=sysdate
+		where contractsAppr.approval_id=#approval_id#
+  </update>
+  
+  <!-- 更新人员合同审批信息表 -->
+	<update id="updateSalesContract"  parameterClass="salesContractApprModel">
+	   update smis_sales_contractappr contractsAppr
+		set
+		contractsAppr.approval=#approval#,
+		contractsAppr.approval_time=sysdate,
+		contractsAppr.approval_status=#approval_status#,
+		contractsAppr.modifyUser=#modifyUser#,
+		contractsAppr.modifyDate=sysdate
+		where contractsAppr.approval_id=#approval_id#
+  </update>
+  
+  <!-- 更新人员合同信息表:状态变更为有效 -->
+	<update id="updateContStatus"  parameterClass="salesContractApprModel">
+	   update SMIS_SALES_CONTRACT contract
+		set
+		contract.status='1',
+		contract.modifyUser=#modifyUser#,
+		contract.modifyDate=sysdate
+		where contract.contract_id=#contract_id#
+  </update>
+  
+  <!-- 更新人员职级变更审批信息表 -->
+	<update id="updateRankChgAppr"  parameterClass="salesRankChangeVOModel">
+	   update smis_sales_rankchgappr 
+		set
+		approval=#approval#,
+		approval_time=sysdate,
+		approval_status=#approval_status#,
+		modifyUser=#modifyUser#,
+		modifyDate=sysdate
+		where approval_id=#approval_id#
+  </update>
+  
+  <!-- 更新人员职级变更后组织变更审批信息表 -->
+	<update id="updateRankTeamChgAppr"  parameterClass="salesRankChangeVOModel">
+	   update smis_sales_teamchgappr 
+		set
+		approval=#approval#,
+		approval_time=sysdate,
+		approval_status=#approval_status#,
+		modifyUser=#modifyUser#,
+		modifyDate=sysdate
+		where approval_id=#approval_id#
+  </update>
+  
+  <!-- 更新主管任命审批信息表 -->
+	<update id="updateTeamLeaderAppr"  parameterClass="TeamLeaderHisVOModel">
+	   update smis_team_leaderappr 
+		set
+		approval=#approval#,
+		approval_time=sysdate,
+		approval_status=#approval_status#,
+		modifyUser=#modifyUser#,
+		modifyDate=sysdate
+		where approval_id=#approval_id#
+  </update>
+  
+  <!-- 查询公告信息 -->
+   <select id="queryAnncInfo"  parameterClass="announcementVOModel"  resultClass="announcementVOModel">
+      SELECT
+             appr.seq_id,
+             appr.approval_views,
+             announcement.branch_id,
+             branch.branch_name,
+             announcement.announcement_id,
+             announcement.announcement_theme,
+             announcement.announcement_type_code,
+             announcementType.Announcement_Type_Name,
+             announcement.start_time,
+             announcement.end_time,
+             announcement.announcement_mark_code,
+             mark.announcement_mark_name,
+             annAppr.approval_time,
+             annAppr.approval_status,
+             apprstatus.approval_status_name,
+             announcement.announcement_content,
+             annAppr.approval_id,
+             annAppr.application_time, 
+             att.file_id,
+             att.file_name,
+            announcement.upload_time
+             FROM SMIS_Approval appr 
+             left join AMS_Announcement_Approval annAppr on appr.approval_id=annAppr.approval_id  
+             left join AMS_Announcement announcement on annAppr.Announcement_Id=announcement.announcement_id  
+             left join SYS_Branch branch on  annAppr.branch_id=branch.branch_id
+             left join SYS_Library_Approval_Status apprStatus on annAppr.approval_status = apprStatus.approval_status_code
+             left join AMS_Announcement_Type announcementType on  announcement.announcement_type_code=announcementType.Announcement_Type_Code
+             left join  AMS_Announcement_Mark mark on  announcement.announcement_mark_code=mark.announcement_mark_code
+             left join sys_attachment att on announcement.announcement_id  = att.bus_id and att.attachment_type = '20' 
+             WHERE appr.seq_id =#seq_id#
+   </select> 
+   
+  <!-- 更新公告信息表 -->
+  <update id="updateAnnc"   parameterClass="announcementVOModel">
+     update AMS_Announcement announcement 
+	 set 
+     announcement.process_completed=#process_completed#,
+	 announcement.modifyUser=#modifyUser#,
+	 announcement.modifyDate=sysdate 
+	 where announcement.approval_id=#approval_id#
+  </update>
+       
+  <!-- 更新公告审批信息表 -->
+   <update  id="updateAnncAppr"  parameterClass="announcementVOModel">
+      update AMS_Announcement_Approval annAppr
+		set
+		annAppr.approval=#approval#,
+		annAppr.approval_time=sysdate,
+		annAppr.approval_status=#approval_status#,
+		annAppr.modifyUser=#modifyUser#,
+		annAppr.modifyDate=sysdate
+		where annAppr.approval_id=#approval_id#
+   </update>
+  <!-- 更新证件审批信息表 -->
+	<update id="updateCertificateAppr"  parameterClass="CredentialsApprModel">
+	   update credentials_appr certificateAppr
+		set
+		certificateAppr.approval=#approval#,
+		certificateAppr.approval_time=sysdate,
+		certificateAppr.approval_status=#approval_status#,
+		certificateAppr.modifyUser=#modifyUser#,
+		certificateAppr.modifyDate=sysdate
+		where certificateAppr.approval_id=#approval_id#
+  </update>
+</sqlMap>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="messagePushManager">
+    <!-- 注入实体类messagePushManager -->
+	<typeAlias alias="messagePushVOModel" type="com.ca.cacore.ams.model.vo.MessagePushVOModel" />
+	
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>	
+	<!-- 查询 -->
+	<sql id="queryAllMessagePush">
+       select 
+			tt.task_type,
+			tt.task_name,
+			t.taskid,
+			t.proce_status,
+			t.task_title,
+			t.task_content,
+			t.task_object_id,
+			t.task_proce_date,
+			t.task_failure,
+			t.task_sales_id
+		    from CA_TASK_TYPE tt
+		    left join CA_TASK t
+		    on tt.task_type=t.tasktype
+		    where 1=1
+		<isNotEmpty prepend="and" property="task_type">
+			tt.task_type=#task_type#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="task_name">
+			tt.task_name='#task_name#'
+		</isNotEmpty>
+		order by tt.ordernum desc
+	</sql>
+	
+	<!-- 分页查询信息(查询出所有的记录) -->
+	<select id="getAllMessagePush" parameterClass="messagePushVOModel" resultClass="messagePushVOModel">
+		<include refid="query_head" />
+		<include refid="queryAllMessagePush" />
+		<include refid="query_foot" />
+	</select>
+	
+	<!-- 查询所有的记录条数 -->
+	<select id="getMessagePush_count" parameterClass="messagePushVOModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryAllMessagePush" />
+		) where 1=1
+	</select>
+	
+	<select id="getMessagePushtaskid" parameterClass="messagePushVOModel" resultClass="messagePushVOModel">
+       select 
+			tt.task_type,
+			tt.task_name,
+			t.taskid,
+			t.proce_status,
+			t.task_title,
+			t.task_content,
+			t.task_object_id,
+			t.task_proce_date,
+			t.task_failure,
+			t.task_sales_id
+		    from CA_TASK_TYPE tt
+		    left join CA_TASK t
+		    on tt.task_type=t.tasktype
+		    where t.taskid=#taskid#
+	</select>
+	
+	<update id="saveMessagePushModify" parameterClass="messagePushVOModel" >
+	UPDATE CA_TASK t
+    SET  
+        t.task_title=#task_title#,
+        t.task_content=#task_content#,
+	    t.task_object_id=#task_object_id#,
+		t.task_proce_date=#task_proce_date#,
+		t.task_failure=#task_failure#,
+		t.task_sales_id=#task_sales_id#
+    WHERE taskid = #taskid#
+	
+	</update>
+	
+	<update id="dealMessagePush" parameterClass="messagePushVOModel" >
+	UPDATE CA_TASK t
+    SET  t.proce_status='1'
+    WHERE taskid = #taskid#
+	
+	</update>
+	
+	
+	
+	<select id="queryMessagePushStatus" parameterClass="messagePushVOModel" resultClass="messagePushVOModel">
+       select 
+			tt.task_type,
+			tt.task_name,
+			t.taskid,
+			t.proce_status,
+			t.task_title,
+			t.task_content,
+			t.task_object_id,
+			t.task_proce_date,
+			t.task_failure,
+			t.task_sales_id
+		    from CA_TASK_TYPE tt
+		    left join CA_TASK t
+		    on tt.task_type=t.tasktype
+		    where t.proce_status=#proce_status#
+		    <isNotEmpty prepend="and" property="createuser">
+			  t.task_sales_id=#createuser#
+		     </isNotEmpty>
+	</select>
+	
+	<insert id="insertCaTask" parameterClass="messagePushVOModel">
+		insert into CA_TASK 
+		(taskid,
+		 tasktype,
+		 proce_status,
+		 task_title,
+		 task_proce_date,
+		 task_content,
+		 task_object_id,
+		 task_sales_id,
+		 task_failure,
+		 operator,
+		 operator_time
+		)
+		values
+		(seq_id.nextval,
+		 '1',
+		 '0',
+		 #task_title#,
+		 trunc(sysdate,'dd'),
+		 #task_content#,
+		 #task_object_id#,
+		 #task_sales_id#,
+		 null,
+		 #modifyuser#,
+		 sysdate
+		)
+	</insert>
+		
+</sqlMap>

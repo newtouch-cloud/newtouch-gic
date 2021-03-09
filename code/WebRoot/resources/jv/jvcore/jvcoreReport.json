@@ -1,0 +1,6 @@
+[
+		{ id:1001, pId:0, name:"报表管理系统"},
+			{ id:2001, pId:1001, name:"专业保险中介机构业务人员持证情况报表",open_url:"/redirect/redirect.do?linkUrl=ca/cacore/rfm/insuranceReport/holdReport"},
+			{ id:2002, pId:1001, name:"保险代理机构业务汇总表(一)",open_url:"/redirect/redirect.do?linkUrl=ca/cacore/rfm/insuranceReport/businessReport1"},
+			{ id:2003, pId:1001, name:"保险代理机构业务汇总表(二)",open_url:"/redirect/redirect.do?linkUrl=ca/cacore/rfm/insuranceReport/businessReport2"}
+]

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- zhao_mq -->                 
+<sqlMap namespace="conservation">
+   <typeAlias alias="conservationVOModel" type="com.ca.cacore.ibs.model.vo.ConservationVOModel"/>
+   <typeAlias alias="conservationModel" type="com.ca.cacore.ibs.model.bo.ConservationModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+   	<sql id="query_all">
+		 SELECT 
+          cc.seq_id,
+          cc.policy_id,
+          cc.branch_id,
+          cc.insBranch_id,
+          cc.policy_code,
+          cc.holder_id,
+          cc.insurant_id,
+          cc.conservationitem_code,
+          cci.conservationitem_name,
+          cc.applicant_id,
+          dd.applicant_name,
+          cc.replace_applicant,
+          cc.application_time,
+          branch.branch_name,
+          insb.insBranch_name, 
+          holder.app_name holder_name,
+          ins.insurant_name
+    
+       FROM cbs_conservation cc
+            left join CBS_ContractLife_Insured ins on ins.customer_id = cc.insurant_id and ins.policy_id = cc.policy_id 
+            left join (select customer_id applicant_id , insurant_name as applicant_name  from CBS_ContractLife_Insured union 
+                       select  customer_id applicant_id ,app_name applicant_name  from CBS_ContractLife_Holder)  dd on dd.applicant_id =cc.applicant_id
+           left join sys_branch branch on cc.branch_id=branch.branch_id
+           left join sys_insbranch insb on cc.insBranch_id=insb.insBranch_id
+           left join CBS_ContractLife_Holder holder on cc.policy_id=holder.policy_id and holder.customer_id=cc.holder_id 
+           left join cbs_conservation_item cci on cc.conservationitem_code = cci.conservationitem_code
+    WHERE 1=1
+		<isNotEmpty property="insBranch_id">
+			AND cc.insBranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			AND cc.policy_code=#policy_code#
+		</isNotEmpty>
+		ORDER BY seq_id  DESC
+  	</sql>
+  	
+    <!-- 查询所有保全信息 -->
+	<select id="queryConservations" parameterClass="conservationVOModel" resultClass="conservationVOModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	 <!-- 查询所有保全信息总数 -->
+	<select id="queryConservations_count" parameterClass="conservationVOModel" resultClass="int">
+		SELECT COUNT(*) FROM (
+		<include refid="query_all"/>
+		) WHERE 1=1
+	</select>
+  	
+	<!-- 查询保单信息-->
+	<select id="getPoliInfo" parameterClass="conservationModel" resultClass="conservationVOModel">
+		SELECT distinct
+			    cpl.insBranch_id,
+			    cpl.policy_code,
+			    branch.branch_id,
+			    branch.branch_name,
+			    cpl.policy_id,
+			    cpl.holder_id,
+			    cpl.insurant_id,
+			    holder.app_name holder_name,
+			    ins.insurant_name,
+			    validate_date
+			    
+			    FROM CBS_ContractLife cpl
+			    left join sys_branch branch on cpl.branch_id=branch.branch_id
+			    left join CBS_ContractLife_Holder holder on cpl.policy_id=holder.policy_id and holder.customer_id=cpl.holder_id 
+			    left join CBS_ContractLife_Insured ins on ins.customer_id = cpl.insurant_id and ins.policy_id = cpl.policy_id
+	    WHERE  1=1 AND cpl.status ='1' AND
+	    cpl.insBranch_id=#insBranch_id# AND cpl.policy_code=#policy_code#
+	</select>
+	
+	
+	<!-- 增加保全信息 -->
+	<insert id="addConservation" parameterClass="conservationModel">
+		 insert into CBS_Conservation
+		   (seq_id,
+		    policy_id,
+		    branch_id,
+		    insBranch_id,
+		    policy_code,
+		    holder_id,
+		    insurant_id,
+		    conservationItem_code,
+		    application_time,
+		    applicant_id,
+		    replace_applicant,
+		    remark,
+		    createUser,
+		    createDate,
+		    modifyUser,
+		    modifyDate)
+		 values
+		   (seq_id.nextval,
+		    #policy_id#,
+		    #branch_id#,
+		    #insBranch_id#,
+		    #policy_code#,
+		    #holder_id#,
+		    #insurant_id#,
+		    #conservationItem_code#,
+		    #application_time#,
+		    #applicant_id#,
+		    #replace_applicant#,
+		    #remark#,
+		    #createUser#,
+		    sysdate,
+		    #modifyUser#,
+		    sysdate)
+	</insert>
+	
+	<!-- 查询申请人 -->
+	<select id="getApplyInfo" parameterClass="Long" resultClass="conservationVOModel">
+    	SELECT 
+    		customer_id applicant_id,app_name applicant_name 
+    	FROM  
+      		(SELECT 
+      			cph.customer_id,cph.app_name
+     		FROM CBS_ContractLife cp
+      			left join CBS_ContractLife_Holder cph on  cph.policy_id = cp.policy_id
+		 	WHERE 1= 1 AND cp.policy_id= #policy_id#) 
+     	UNION  SELECT 
+     				customer_id,insurant_name 
+     			FROM 
+      			(SELECT 
+             		cpi.customer_id ,cpi.insurant_name
+     			FROM CBS_ContractLife cp
+					left join CBS_ContractLife_Insured cpi on  cpi.policy_id = cp.policy_id
+		 		WHERE 1= 1  AND cp.policy_id= #policy_id# )
+	</select>
+	
+	<!-- 依据seq_id查询保全信息 -->
+	<select id="getConservationsInfo" parameterClass="conservationModel" resultClass="conservationVOModel">
+		  SELECT 
+		    cc.seq_id,
+	        cc.policy_id,
+	        cc.branch_id,
+	        cc.insBranch_id,
+	        cc.policy_code,
+	        cc.holder_id,
+	        cc.insurant_id,
+	        cc.conservationitem_code,
+          	cci.conservationitem_name,
+          	cc.applicant_id,
+	        dd.applicant_name,
+          	cc.replace_applicant,
+          	cc.application_time,
+          	branch.branch_name,
+          	insb.insBranch_name, 
+          	cc.remark,
+          	holder.app_name holder_name,
+          	ins.insurant_name
+    
+     	FROM cbs_conservation cc
+          	left join CBS_ContractLife_Insured ins on ins.customer_id = cc.insurant_id and ins.policy_id = cc.policy_id 
+          	left join (select customer_id applicant_id , insurant_name as applicant_name  from CBS_ContractLife_Insured union 
+                       select  customer_id applicant_id ,app_name applicant_name  from CBS_ContractLife_Holder)  dd on dd.applicant_id =cc.applicant_id
+         	left join sys_branch branch on cc.branch_id=branch.branch_id
+         	left join sys_insbranch insb on cc.insBranch_id=insb.insBranch_id
+         	left join CBS_ContractLife_Holder holder on cc.policy_id=holder.policy_id and holder.customer_id=cc.holder_id 
+         	left join cbs_conservation_item cci on cc.conservationitem_code = cci.conservationitem_code
+		WHERE 1=1 and cc.seq_id = #seq_id# 
+	</select>
+	
+	<!-- 修改保全信息 -->
+	<update id="modifyConservation" parameterClass="conservationModel" >
+		UPDATE cbs_conservation 
+	    SET    applicant_id = #applicant_id#,
+		       application_time = #application_time#,
+		       conservationItem_code = #conservationItem_code#,
+		       replace_applicant = #replace_applicant#,
+		       remark = #remark#,
+		       modifyUser = #modifyUser#,
+		       modifyDate = sysdate
+	 	WHERE seq_id = #seq_id#
+	</update>
+	
+	
+	
+</sqlMap>
+

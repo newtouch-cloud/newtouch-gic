@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="insBranch">
+	<typeAlias alias="insBranchModel"	type="com.ca.cacore.mass.model.bo.CompanyBranchModel" />
+	<select id="queryInsBranch" resultClass="insBranchModel">
+		select * from  cpy_branch where status='1'
+	</select>
+</sqlMap>

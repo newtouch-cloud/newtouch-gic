@@ -1,0 +1,616 @@
+@charset "utf-8";
+
+/* 初始化 */
+
+body,
+div,
+a,
+ul,
+li,
+dl,
+dt,
+dd {
+    margin: 0;
+    padding: 0;
+    font-family: "PingFang-SC-Medium";
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+i {
+    font-style: normal;
+}
+
+body {
+    background-color: transparent;
+}
+
+.main {
+    width: 100%;
+}
+
+.header_t {
+    width: 85.1%;
+    height: 58px;
+}
+
+.header_t .logo {
+    width: 271px;
+    height: 56px;
+    float: left;
+    margin: 5px 0 0 5px;
+}
+
+.header_t .line {
+    float: right;
+    margin: 40px 50px 0 0;
+}
+
+.header_t .line,
+.header_t .line a {
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.header_b {
+    width: 100%;
+    height: 10px;
+    background: #364290;
+    line-height: 44px;
+    font-family: "微软雅黑";
+    font-size: 16px;
+    color: #fff;
+    text-indent: 10px;
+}
+
+.nav-list>li>a {
+    padding: 0;
+}
+
+.sidebar {
+    display: block !important;
+}
+
+.sidebar i.icon {
+    display: block;
+    width: 20px;
+    float: left;
+    margin: 0 10px;
+}
+
+.sidebar i.icon.no1 {
+    height: 16px;
+    background: url(../img/icon_xitong@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no2 {
+    height: 16px;
+    background: url(../img/shouzhi.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no3 {
+    height: 16px;
+    background: url(../img/cheshang.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no4 {
+    height: 16px;
+    background: url(../img/icon_baodan@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no5 {
+    height: 16px;
+    background: url(../img/icon_baobiao@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no6 {
+    height: 16px;
+    background: url(../img/vmeng.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no7 {
+    height: 16px;
+    background: url(../img/fendan.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no8 {
+    height: 16px;
+    background: url(../img/jiesuan.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no9 {
+    height: 16px;
+    background: url(../img/icon_renyuan@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no10 {
+    height: 16px;
+    background: url(../img/icon_baoxiangongsi@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no11 {
+    height: 16px;
+    background: url(../img/xieyi.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+
+.sidebar i.icon.no12 {
+    height: 16px;
+    background: url(../img/icon_jigou@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.sidebar i.icon.no13 {
+    height: 16px;
+    background: url(../img/danzheng.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.sidebar i.icon.no14 {
+    height: 16px;
+    background: url(../img/shouru.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.sidebar i.icon.no15 {
+    height: 16px;
+    background: url(../img/zhichu.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.sidebar i.icon.no16 {
+    height: 16px;
+    background: url(../img/icon_kehu@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.sidebar i.icon.no17 {
+    height: 16px;
+    background: url(../img/icon_tuandui@2x.png) no-repeat;
+    background-position: center 0;
+    margin-top: 10px;
+}
+.page_tab {
+    width: 83%;
+    float: left;
+    margin: 0 0 0 8px;
+    background: #ffffff;
+}
+
+.page_tab_titles {
+    width: 100%;
+    border-bottom: 8px solid #E7E4F3;
+    float:left;
+    margin-left: 0px;
+    margin-top: -36px;
+}
+
+.page_tab_titles ul {
+    width: 100%;
+    position: relative;
+    top: 1px;
+    z-index: 2;
+}
+
+.page_tab_title {
+    padding: 0 25px 0 10px;
+    height: 26px;
+    line-height: 26px;
+    border: 1px solid #fdfdfd;
+    border-bottom-color: #dce8f1;
+    font-size: 14px;
+    color: #585858;
+    text-align: center;
+    float: left;
+    position: relative;
+    cursor: pointer;
+    top:8px;
+}
+
+.page_tab_title .close {
+    display: block;
+    width: 15px;
+    height: 15px;
+    line-height: 0px;
+    text-align: center;
+    font-size: 14px;
+    color: #000;
+    position: absolute;
+    right: 4px;
+    top: 11px;
+}
+
+.page_tab_title.visited {
+    color: #FFFFFF;
+    border-color: #322A90;
+    border-top-color: #322A90;
+    border-bottom-color: #322A90;
+    cursor: default;
+    border-radius: 7px 7px 0px 0px;
+    background-color: #322A90;
+}
+
+.page_tab_content {
+    width: 100%;
+}
+
+.page_right {
+    width: 100%;
+}
+
+
+/* 选项卡 */
+
+.tab_control {
+    width: 100%;
+}
+
+.tab_titles {
+    width: 100%;
+    height: 33px;
+    border-bottom: 1px solid #dce8f1;
+    position: relative;
+}
+
+.tab_titles ul {
+    width: 100%;
+    height: 33px;
+    position: absolute;
+    top: 0;
+    z-index: 1;
+}
+
+.tab_title {
+    width: 90px;
+    height: 32px;
+    line-height: 32px;
+    border: 1px solid #fdfdfd;
+    border-bottom-color: #dce8f1;
+    font-size: 14px;
+    color: #585858;
+    text-align: center;
+    float: left;
+    cursor: pointer;
+}
+
+.tab_title.visited {
+    color: #003399;
+    border-color: #c5d0dc;
+    border-top-color: #4c8fbd;
+    border-bottom-color: #fdfdfd;
+    cursor: default;
+}
+
+.tab_content {
+    width: 100%;
+}
+
+
+/* 统计 */
+
+.tongji .toji_info {
+    width: 98%;
+    height: 378px;
+    margin: auto;
+}
+
+.tongji .toji_info .tl,
+.tongji .toji_info .tr {
+    width: 50%;
+    height: 378px;
+    float: left;
+}
+
+.tongji .toji_info .t_data,
+.tongji .toji_info .t_info {
+    width: 94%;
+    height: 293px;
+    margin: 40px auto 0;
+    border: 1px solid #dddddd;
+    background: url(../img/toji_info_line.png) center center no-repeat;
+}
+
+.tongji .toji_info .t_data .data,
+.tongji .toji_info .checkin {
+    width: 50%;
+    height: 293px;
+    float: left;
+}
+
+.tongji .toji_info .t_title {
+    height: 20px;
+    line-height: 20px;
+    font-size: 14px;
+    color: #5c5655;
+    margin-top: 20px;
+}
+
+.tongji .toji_info .t_t_ico {
+    display: block;
+    width: 19px;
+    height: 20px;
+    background: url(../img/sidebar_icon.png) no-repeat;
+    float: left;
+}
+
+.tongji .toji_info .data .t_t_ico {
+    height: 17px;
+    background-position: center -153px;
+    margin-top: 0px;
+    margin: 0 10px 0 18px;
+}
+
+.tongji .toji_info .checkin .t_t_ico {
+    height: 17px;
+    background-position: center -16px;
+    margin-top: 0px;
+    margin: 0 10px 0 25px;
+}
+
+.tongji .toji_info .toji_bill {
+    width: 232px;
+    height: 30px;
+    float: left;
+    margin: 35px 0 0 25px;
+    display: inline;
+}
+
+.tongji .toji_info .toji_bill dl {
+    float: left;
+    margin: 0 5px;
+    display: inline;
+}
+
+.tongji .toji_info .toji_bill dl.type {
+    width: 46px;
+}
+
+.tongji .toji_info .toji_bill dl.num {
+    width: 78px;
+}
+
+.tongji .toji_info .toji_bill dl.money {
+    width: 78px;
+}
+
+.tongji .toji_info .toji_bill dt,
+.tongji .toji_info .toji_bill dd {
+    width: 100%;
+    height: 24px;
+    background-color: #a7a7a7;
+    line-height: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.tongji .toji_info .toji_bill dt.visited,
+.tongji .toji_info .toji_bill dd.visited {
+    background-color: #7b84c0;
+}
+
+.tongji .toji_info .t_info {
+    background: none;
+    border: none;
+}
+
+.tongji .tab_content .information {
+    width: 100%;
+    border-top: 1px solid #dddddd;
+    margin-top: 19px;
+}
+
+.tongji .information li {
+    height: 40px;
+    border: 1px solid #dddddd;
+    border-top: none;
+    border-left-width: 3px;
+    line-height: 43px;
+    margin-bottom: -1px;
+}
+
+.tongji .information li.no1 {
+    border-left-color: #d53f40;
+}
+
+.tongji .information li.no2 {
+    border-left-color: #abbac3;
+}
+
+.tongji .information li.no3 {
+    border-left-color: #a0a0a0;
+}
+
+.tongji .information li.no4 {
+    border-left-color: #4f99c6;
+}
+
+.tongji .information li.no5 {
+    border-left-color: #9abc32;
+}
+
+.tongji .information li.no6 {
+    border-left-color: #cb6fd7;
+}
+
+.tongji .information a {
+    font-size: 12px;
+    color: #003399;
+    margin-left: 20px;
+}
+
+.tongji .information .date {
+    height: 39px;
+    font-size: 12px;
+    color: #898989;
+    float: right;
+    margin-right: 20px;
+}
+
+.tongji .bottom_menu {
+    width: 99%;
+    height: 78px;
+    margin-left: 8px;
+}
+
+.tongji .bottom_menu a {
+    display: block;
+    width: 100px;
+    height: 78px;
+    float: left;
+    text-decoration: none;
+}
+
+.tongji .bottom_menu .icon {
+    display: block;
+    width: 50px;
+    height: 48px;
+    margin: auto;
+    background: url(../img/botton_menu.png) no-repeat;
+}
+
+.tongji .bottom_menu .no1 .icon {
+    background-position: 0 0;
+}
+
+.tongji .bottom_menu .no1:hover .icon {
+    background-position: 0 -48px;
+}
+
+.tongji .bottom_menu .no2 .icon {
+    background-position: 0 -96px;
+}
+
+.tongji .bottom_menu .no2:hover .icon {
+    background-position: 0 -144px;
+}
+
+.tongji .bottom_menu .no3 .icon {
+    background-position: 0 -192px;
+}
+
+.tongji .bottom_menu .no3:hover .icon {
+    background-position: 0 -240px;
+}
+
+.tongji .bottom_menu .no4 .icon {
+    background-position: 0 -288px;
+}
+
+.tongji .bottom_menu .no4:hover .icon {
+    background-position: 0 -336px;
+}
+
+.tongji .bottom_menu .no5 .icon {
+    background-position: 0 -384px;
+}
+
+.tongji .bottom_menu .no5:hover .icon {
+    background-position: 0 -432px;
+}
+
+.tongji .bottom_menu .no6 .icon {
+    background-position: 0 -480px;
+}
+
+.tongji .bottom_menu .no6:hover .icon {
+    background-position: 0 -528px;
+}
+
+.tongji .bottom_menu .no7 .icon {
+    background-position: 0 -576px;
+}
+
+.tongji .bottom_menu .no7:hover .icon {
+    background-position: 0 -624px;
+}
+
+.tongji .bottom_menu .no8 .icon {
+    background-position: 0 -672px;
+}
+
+.tongji .bottom_menu .no8:hover .icon {
+    background-position: 0 -720px;
+}
+
+.tongji .bottom_menu .no9 {
+    margin-top: -1px;
+}
+
+.tongji .bottom_menu .no9 .icon {
+    height: 50px;
+    background-position: 0 -768px;
+    margin-bottom: -1px;
+}
+
+.tongji .bottom_menu .no9:hover .icon {
+    background-position: -1px -818px;
+}
+
+.tongji .bottom_menu .no10 .icon {
+    background-position: 0 -868px;
+}
+
+.tongji .bottom_menu .no10:hover .icon {
+    background-position: 0 -916px;
+}
+
+.tongji .bottom_menu .no11 .icon {
+    background-position: 0 -964px;
+}
+
+.tongji .bottom_menu .no11:hover .icon {
+    background-position: 0 -1012px;
+}
+
+.tongji .bottom_menu .title {
+    display: block;
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    font-size: 12px;
+    color: #8d8d8d;
+}
+
+.tongji .bottom_menu a:hover .title {
+    color: #7b84c0;
+}
+
+.sy {
+    margin-bottom: 5px;
+}
+
+#linenew {
+    margin-top: 20px;
+}

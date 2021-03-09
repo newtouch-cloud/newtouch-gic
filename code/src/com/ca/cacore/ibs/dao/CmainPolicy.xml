@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="CmainPolicy">
+   <typeAlias alias="cmainPolicyVOMModel" type="com.ca.cacore.ibs.model.vo.CmainPolicyVOMModel"/>
+   <typeAlias alias="cmainPolicyINSVOMModel" type="com.ca.cacore.ibs.model.vo.CmainPolicyINSVOMModel"/>
+   <typeAlias alias="cmainPolicyINSPersonVOMModel" type="com.ca.cacore.ibs.model.vo.CmainPolicyINSPersonVOMModel"/>
+   <typeAlias alias="branchModel" type="com.ca.cacore.manage.model.bo.BranchModel"/>
+   <typeAlias alias="InsRncDfnVO" type="com.ca.cacore.msss.model.vo.InsRncDfnVOModel"/>
+   <typeAlias alias="CodeVOModel" type="com.ca.cacore.ibs.model.vo.CodeVOModel"/>
+<!--新增保单信息-->
+	<insert id="addPolicy" parameterClass="cmainPolicyVOMModel" >
+ 	    insert into cbs_smc_cmain
+ 		           (seq_id,	policyno,	riskcode,	riskname,  product_source , ccurno,                    
+					netpremium,	signdate,	operatedate,	startdate,	enddate,                   
+					dcoldte,	sumamount,	paymode,	stype,	frate,                     
+					fnum,	applicode,	appliname,	insuredcode,	insuredname,              
+					handlercode,	handlername,	team_no,	car_no,	modifydate,                
+					is_pay_date,	renewalflag,	businesscode,	commission_poundage_scale ) 
+	            values 
+	               (seq_id.nextval,	#policyno#,	#riskcode#,	#riskname#,	#product_source#, #ccurno#,
+	               	#netpremium#,	#signdate#,	#operatedate#,	#startdate#,	#enddate#,                   
+					#dcoldte#,	#sumamount#,	#paymode#,	#stype#,	#frate#,                     
+					#fnum#,	#applicode#,	#appliname#,	#insuredcode#,	#insuredname#,              
+					#handlercode#,	#handlername#,	#team_no#,	#car_no#,	sysdate,                
+					#is_pay_date#,	#renewalflag#,	#businesscode#,#commission_poundage_scale#)
+	  </insert>
+	  <!--新增保单信息-->
+	<insert id="addPolicy2" parameterClass="cmainPolicyINSVOMModel" >
+		INSERT INTO INS_CMAIN        
+		  (  
+		   ORD_ID,                    
+		   ORG_NAME,                  
+		   STATISTICS_TYPE,           
+		   CHANNEL_TYPE,              
+		   CHANNEL_NO,                
+		   INSURANCE_TYPE_NAME,       
+		   PRODUCT_NAME,              
+		   SIGN_DATE,                 
+		   ACCOMPLISH_DATE,           
+		   STATISTICS_DATE,           
+		   INSURE_NO,                 
+		   POLICY_NO,                 
+		   SERIAL_NO,                 
+		   APPLICANT_NAME,            
+		   INSURED_NAME,              
+		   LPN,                       
+		   PREMIUM,                   
+		   REPAIR_CODING,             
+		   RACK_NO,                   
+		   CHECK_DATE,                
+		   BEGIN_DATE,                
+		   END_DATE,                  
+		   APPROVAL_DATE,             
+		   FEE_RATIO,                 
+		   FEE,                       
+		   CLEAN_CHARGE,              
+		   WEI_RATE,                  
+		   COMMISSION,                
+		   CASH,                      
+		   STATUS,                    
+		   PERSON_NAME,               
+		   PERSON_NO,                 
+		   INSURANCE_CLASS_NO,        
+		   INSURANCE_TYPE_NO,         
+		   PRODUCT_NO,                
+		   INSURED_CID,               
+		   INSURED_COMPANY_TYPE,      
+		   INSURED_PAPERTYPE,         
+		   INSURED_ADD,               
+		   INSURED_MAILBOX,           
+		   INSURED_PHONE,             
+		   INSURED_TEL,               
+		   INSURANCE_CLASS_NAME,      
+		   ENDOR_NO,                  
+		   CAR_TYPE,                  
+		   VIN,                       
+		   ENGINE_NO,                 
+		   CAR_CLASS,                 
+		   USE_TYPE,                  
+		   FIRST_DATE,                
+		   CLAUSE_TYPE,               
+		   NET_PREMIUM,               
+		   VEHICEL_TAX,               
+		   CAR_BRANCHNAME,            
+		   PRINT_DATE,                
+		   APPROVAL_FLAG,             
+		   AMOUNT,                    
+		   PREMIUM_TAX,               
+		   ENDOR_TYPE,                
+		   PROVINCE_ORGID,            
+		   PROVINCE_ORGNAME,          
+		   CITY_ORGID,                
+		   CITY_ORGNAME,              
+		   AREA_ORGID,                
+		   AREA_ORGNAME,              
+		   RESPONSIBLE_NO,            
+		   RESPONSIBLE_NAME,          
+		   PERSON_CID,                
+		   CREATE_DATE,               
+		   CREATE_USER,               
+		   MDF_DATE,                  
+		   MDF_USER,                  
+		   CAR_NAME,                  
+		   ORG_ID,                    
+		   INS_VALIDATE,              
+		   DATA_TYPE,                 
+		   CHANGE_NU,                 
+		   OWNER_NO,                  
+		   OWNER_NAME,
+		   INTER_FLAG,
+		   BUSINESS_FLAG,
+			SERVICE_FEE,
+			CAR_VALUE,
+			CAR_USE_YEAR,
+			SETTLED_DATE,
+			ENDOR_DATE,
+			ENDOR_VALID,
+			REMARKS	
+		)                
+		values                        
+		  (
+		   #ord_id#,                   
+		   #org_name#,                 
+		   #statistics_type#,          
+		   #channel_type#,             
+		   #channel_no#,               
+		   #insurance_type_name#,      
+		   #product_name#,             
+		   #sign_date#,                
+		   #accomplish_date#,          
+		   #statistics_date#,          
+		   #insure_no#,                
+		   #policy_no#,                
+		   #serial_no#,                
+		   #applicant_name#,           
+		   #insured_name#,             
+		   #lpn#,                      
+		   #premium#,                  
+		   #repair_coding#,            
+		   #rack_no#,                  
+		   #check_date#,               
+		   #begin_date#,               
+		   #end_date#,                 
+		   #approval_date#,            
+		   #fee_ratio#,                
+		   #fee#,                      
+		   #clean_charge#,             
+		   #wei_rate#,                 
+		   #commission#,               
+		   #cash#,                     
+		   #status#,                   
+		   #person_name#,              
+		   #person_no#,                
+		   #insurance_class_no#,       
+		   #insurance_type_no#,        
+		   #product_no#,               
+		   #insured_cid#,              
+		   #insured_company_type#,     
+		   #insured_papertype#,        
+		   #insured_add#,              
+		   #insured_mailbox#,          
+		   #insured_phone#,            
+		   #insured_tel#,              
+		   #insurance_class_name#,     
+		   #endor_no#,                 
+		   #car_type#,                 
+		   #vin#,                      
+		   #engine_no#,                
+		   #car_class#,                
+		   #use_type#,                 
+		   #first_date#,               
+		   #clause_type#,              
+		   #net_premium#,              
+		   #vehicel_tax#,              
+		   #car_branchname#,           
+		   #print_date#,               
+		   #approval_flag#,            
+		   #amount#,                   
+		   #premium_tax#,              
+		   #endor_type#,               
+		   #province_orgid#,           
+		   #province_orgname#,         
+		   #city_orgid#,               
+		   #city_orgname#,             
+		   #area_orgid#,               
+		   #area_orgname#,             
+		   #responsible_no#,           
+		   #responsible_name#,         
+		   #person_cid#,               
+		   #create_date#,              
+		   #create_user#,              
+		   #mdf_date#,                 
+		   #mdf_user#,                 
+		   #car_name#,                 
+		   #org_id#,                   
+		   #ins_validate#,             
+		   #data_type#,                
+		   #change_nu#,                
+		   #owner_no#,                 
+		   #owner_name#,
+		   #inter_flag#,
+		   #business_flag#,
+			#service_fee#,
+			#car_value#,
+			#car_use_year#,
+			#settled_date#,
+			#endor_date#,
+			#endor_valid#,
+			#remarks#
+		   )               
+	  </insert>
+	  
+	  
+	   <!--新增保单信息-->
+	<insert id="addPolicy2Person" parameterClass="cmainPolicyINSPersonVOMModel" >
+	INSERT INTO INS_CMAIN_PERSON        
+		  (
+			PROVINCE_ORGNAME                ,
+			PROVINCE_ORGID                  ,
+			CITY_ORGNAME                    ,
+			CITY_ORGID                      ,
+			AREA_ORGID                      ,
+			AREA_ORGNAME                    ,
+			ORG_ID							,
+			SALE_ORG_NAME                   ,
+			SALE_ORG_ID                     ,
+			SETTLED_DATE                    ,
+			POLICY_NO                       ,
+			INSURE_NO                       ,
+			CENTER_RISK_FLAG                ,
+			CENTER_RISK_NAME                ,
+			CENTER_RISK_ID                  ,
+			APPLICANT_NAME                  ,
+			INSURED_NAME                    ,
+			INSURE_DATE                     ,
+			PAPER_DATE                      ,
+			CANCEL_DATE                     ,
+			CANCEL_REASON                   ,
+			PAY_FEE_TYPE                    ,
+			PAY_DATE                        ,
+			INSURED_DURING                  ,
+			PAY_TYPE                        ,
+			PREMIUM                         ,
+			AMOUNT                          ,
+			FEE_RATIO                       ,
+			NEW_PAPER_FEE                   ,
+			RENEW_PAPER_FEE                 ,
+			TOTAL_FEE                       ,
+			OWNER_NAME                      ,
+			OWNER_NO                        ,
+			AGENT_FEE_RATE                  ,
+			AGENT_FEE                       ,
+			BUSINESS_FLAG                   ,
+			INTER_FLAG                      ,
+			ENDOR_NO                        ,
+			ENDOR_DATE                      ,
+			CHANNEL_NO						,
+			CHANGE_NU						,
+			DATA_TYPE						,
+			CENTER_RISK_TYPE       ,
+			LONG_RISK_FLAG         ,
+			RENEW_FLAG             ,
+			APPLICANT_ID           ,
+			INSURED_ID             ,
+			INSURED_DURING_FLAG    ,
+			PAY_FEE_YEAR           ,
+			RISK_YEAR              ,
+			ENDOR_VALID            ,
+			settled_time       
+		  )
+		  values                        
+		  (
+		  	#province_orgname#                ,
+			#province_orgid#                  ,
+			#city_orgname#                    ,
+			#city_orgid#                      ,
+			#area_orgid#                      ,
+			#area_orgname#                    ,
+			#org_id#						  ,
+			#sale_org_name#                   ,
+			#sale_org_id#                     ,
+			#settled_date#                    ,
+			#policy_no#                       ,
+			#insure_no#                       ,
+			#center_risk_flag#                ,
+			#center_risk_name#                ,
+			#center_risk_id#                  ,
+			#applicant_name#                  ,
+			#insured_name#                    ,
+			#insure_date#                     ,
+			#paper_date#                      ,
+			#cancel_date#                     ,
+			#cancel_reason#                   ,
+			#pay_fee_type#                    ,
+			#pay_date#                        ,
+			#insured_during#                  ,
+			#pay_type#                        ,
+			#premium#                         ,
+			#amount#                          ,
+			#fee_ratio#                       ,
+			#new_paper_fee#                   ,
+			#renew_paper_fee#                 ,
+			#total_fee#                       ,
+			#owner_name#                      ,
+			#owner_no#                        ,
+			#agent_fee_rate#                  ,
+			#agent_fee#                       ,
+			#business_flag#                   ,
+			#inter_flag#                      ,
+			#endor_no#                        ,
+			#endor_date#                      ,
+			#channel_no#                      ,
+			#change_nu#						  ,
+			#data_type#						  ,
+			#center_risk_type#       ,
+			#long_risk_flag#         ,
+			#renew_flag#             ,
+			#applicant_id#           ,
+			#insured_id#             ,
+			#insured_during_flag#    ,
+			#pay_fee_year#           ,
+			#risk_year#              ,
+			#endor_valid#            ,
+			#settled_time#        
+		  )
+	 </insert>
+	  
+	  
+<!-- 根据保单号查询主保单信息 -->
+	  <select id="queryPolicyByPolicyNo" parameterClass="String" resultClass="cmainPolicyVOMModel">
+	   	 select 
+	   	 		seq_id,	policyno,	riskcode,	riskname, product_source, ccurno,
+	   	 		netpremium,	signdate,	operatedate,	startdate,	enddate,
+	   	 		dcoldte,	sumamount,	paymode,	stype,	frate,
+	   	 		fnum,	applicode,	appliname,	insuredcode,	insuredname,              
+				handlercode,	handlername,	team_no,	car_no,	modifydate,                
+				is_pay_date,	renewalflag,	businesscode,	commission_poundage_scale 
+		   from 
+		   		cbs_smc_cmain
+		   where
+		   		policyno=#policyno#
+		   
+	  </select>
+	  <select id="queryPolicyByPolicyNoProp" parameterClass="String" resultClass="cmainPolicyINSVOMModel">
+	   	 select 
+	   	 		policy_no
+		   from 
+		   		ins_cmain
+		   where
+		   		policy_no=#policy_no#
+	  </select>
+	  <select id="queryPolicyByPolicyNoPerson" parameterClass="String" resultClass="cmainPolicyINSVOMModel">
+	   	 select 
+	   	 		policy_no
+		   from 
+		   		ins_cmain_person
+		   where
+		   		policy_no=#policy_no#
+	  </select>
+<!-- 根据保单号更新主保单信息 -->
+	  <update id="updateMainPolicy" parameterClass="cmainPolicyVOMModel">
+		  	update 
+		  		  cbs_smc_cmain
+		  	set   modifydate=sysdate
+	  	<isNotEmpty prepend="," property="riskcode">
+	  	    riskcode=#riskcode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="riskname">
+	  	    riskname=#riskname#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="product_source">
+	  	    product_source=#product_source#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="ccurno">
+	  	    ccurno=#ccurno#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="netpremium">
+	  	    netpremium=#netpremium#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="signdate">
+	  	    signdate=#signdate#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="operatedate">
+	  	    operatedate=#operatedate#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="startdate">
+	  	    startdate=#startdate#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="enddate">
+	  	    enddate=#enddate#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="dcoldte">
+	  	    dcoldte=#dcoldte#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="sumamount">
+	  	    sumamount=#sumamount#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="paymode">
+	  	    paymode=#paymode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="stype">
+	  	    stype=#stype#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="frate">
+	  	    frate=#frate#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="fnum">
+	  	    fnum=#fnum#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="applicode">
+	  	    applicode=#applicode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="appliname">
+	  	    appliname=#appliname#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="insuredcode">
+	  	    insuredcode=#insuredcode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="insuredname">
+	  	    insuredname=#insuredname#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="handlercode">
+	  	    handlercode=#handlercode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="handlername">
+	  	    handlername=#handlername#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="team_no">
+	  	    team_no=#team_no#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="car_no">
+	  	    car_no=#car_no#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="is_pay_date">
+	  	    is_pay_date=#is_pay_date#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="renewalflag">
+	  	    renewalflag=#renewalflag#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="businesscode">
+	  	    businesscode=#businesscode#
+	  	</isNotEmpty>	 
+	  	<isNotEmpty prepend="," property="commission_poundage_scale">
+	  	    commission_poundage_scale=#commission_poundage_scale#
+	  	</isNotEmpty>
+	  	where policyno=#policyno#	 
+	  </update>
+	<!-- 校验险种是否存在 -->
+	<select id="checkRiskCode" parameterClass="InsRncDfnVO" resultClass="InsRncDfnVO">
+		select * from CBS_SMC_RISKCODE 
+		where riskCode=#riskCode# and product_source=#product_source#
+	</select>
+	
+	<!-- 更新顾客表 -->
+	<update id="updateCustomer" parameterClass="cmainPolicyVOMModel">
+		update  crm_customer
+		  set   modifydate=sysdate
+			  	<isNotEmpty prepend="," property="name">
+			  	    name=#name#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="customer_type">
+			  	    customer_type=#customer_type#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="certi_type">
+			  	    certi_type=#certi_type#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="certi_no">
+			  	    certi_no=#certi_no#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="gender">
+			  	    gender=#gender#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="birthday">
+			  	    birthday=#birthday#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="company_telphone">
+			  	    company_telphone=#company_telphone#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="modifyuser">
+			  	    modifyuser=#modifyuser#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="customer_id">
+			  	    customer_id=#customer_id#
+			  	</isNotEmpty>	 
+		where 
+				policyno = #policyno#
+	</update>
+<!-- 增加客户联系人信息 -->
+	<insert id="addCustomerContact" parameterClass="cmainPolicyVOMModel" >
+	       insert into CRM_Customer_Contact t
+	       			  (t.seq_id,	t.branch_id,	t.customer_id,	t.address,t.mobile,
+	       			   t.telphone,	t.status,	t.remark,	t.log_seq_id,	t.log_bustype,
+	       			   t.log_busdate,	t.log_date,	t.log_remark,	t.createuser,	t.createdate,
+	       			   t.modifyuser,t.modifydate) 
+	            values 
+			          (seq_id.nextval,	#branch_id#,	#customer_id#,	#address#,	#mobile#,
+			           #telphone#,	#status#,	#remark#,	#log_seq_id#	,#log_bustype#,
+			           sysdate,	sysdate,	#log_remark#	,#createuser#,	sysdate,
+			           #modifyuser#,sysdate)
+	  </insert>
+	  
+<!-- 增加客户日志表 -->
+	  <insert id="addCustomerLog" parameterClass="cmainPolicyVOMModel" >
+		insert into CRM_Customer_Log
+				   (seq_id,customer_id,customer_type,name,gender,
+				    birthday,certi_type,certi_no,status,remark,
+				    log_seq_id,log_bustype,log_busdate,log_date,log_remark,
+				    createuser,createdate,modifyuser,modifydate)
+		values
+					(seq_id.nextval,#customer_id#,#customer_type#,#name#,#gender#,
+					#birthday#,#certi_type#,#certi_no#,#status#,#remark#,
+					#log_seq_id#,#log_bustype#,sysdate,sysdate,#log_remark#,
+					#createuser#,sysdate,#modifyuser#,sysdate)
+	</insert>
+<!-- 增加客户信息 返回seq_id-->
+	<insert id="addCustomer" parameterClass="cmainPolicyVOMModel">
+		<selectKey resultClass="int" keyProperty="seq_id" > 
+			select seq_id.nextval as seq_id from dual 
+		</selectKey>
+		insert into CRM_Customer
+				   (seq_id,customer_id,customer_type,name,gender,                      
+					birthday,certi_type,certi_no,status,remark,                              
+					createuser,createdate,modifyuser,modifydate,policyno,                            
+					company_telphone,branch_id                          
+				   )
+		values
+					(#seq_id#,#customer_id#,#customer_type#,#name#,#gender#,
+					#birthday#,#certi_type#,#certi_no#,#status#,#remark#,
+					#createuser#,sysdate,#modifyuser#,sysdate,#policyno#,
+					#company_telphone#,#branch_id#
+					)
+	</insert>
+<!-- 根据policyno查询客户seq_id -->
+	<select id="queryCustomerSeq_IdByPolicyno" parameterClass="String" resultClass="Integer">
+		select seq_id from crm_customer
+		where  policyno=#policyno#
+	</select>
+	
+<!-- 更新客户联系人信息 -->	
+	<update id="modifyCustomerContract" parameterClass="cmainPolicyVOMModel">
+		update  CRM_Customer_Contact
+		  set   modifydate=sysdate
+			  	<isNotEmpty prepend="," property="address">
+			  	    address=#address#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="mobile">
+			  	    mobile=#mobile#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="telphone">
+			  	    telphone=#telphone#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="status">
+			  	    status=#status#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="remark">
+			  	    remark=#remark#
+			  	</isNotEmpty>	 
+			  	<isNotEmpty prepend="," property="modifyuser">
+			  	    modifyuser=#modifyuser#
+			  	</isNotEmpty>	 
+		where 
+				customer_id = #customer_id#
+	</update>
+	
+<!-- 根据保单号查询客户信息 -->
+	<select id="queryCustomerByPolicyNo" parameterClass="String" resultClass="cmainPolicyVOMModel">
+		select * from crm_customer
+		where  policyno=#policyno#
+	</select>
+	
+<!-- 导入时去除重复的产品 -->
+	<delete id="deleteRisk" parameterClass="cmainPolicyVOMModel">
+		delete  from CBS_SMC_RISKCODE 
+		where riskcode=#riskcode# and product_source=#product_source#
+	</delete>
+<!-- 导入时删除客保单号对应的客户信息 -->
+	<delete id="deleteCustomer" parameterClass="cmainPolicyVOMModel">
+		delete  from CRM_Customer 
+		where policyno=#policyno#
+	</delete>
+<!-- 导入时删除客保单号对应保单 -->
+	<delete id="deletePolicy" parameterClass="cmainPolicyVOMModel">
+		delete  from cbs_smc_cmain 
+		where policyno=#policyno#
+	</delete>
+	
+	<!-- <update id="addInter" parameterClass="cmainPolicyINSVOMModel" >
+		UPDATE INS_CMAIN SET INTER_FLAG = #inter_flag#
+		WHERE 1 = 1
+		<isNotEmpty  property="org_id">
+		AND	ORG_ID 	= #org_id#
+		</isNotEmpty> 
+	    AND POLICY_NO 	= #policy_no#
+	</update> -->
+	<update id="addInter" parameterClass="cmainPolicyINSVOMModel" >
+		UPDATE INS_CMAIN SET INTER_FLAG = #inter_flag#
+		WHERE 1 = 1
+		<isNotEmpty property="endor_no">
+ 			and endor = #endor_no# 
+ 		</isNotEmpty>
+ 		<isEmpty property="endor_no">
+ 			and endor_no is null
+ 		</isEmpty>
+ 		AND POLICY_NO 	= #policy_no#
+	</update>
+	
+	<!-- <update id="addInterPerson" parameterClass="cmainPolicyINSPersonVOMModel" >
+		UPDATE INS_CMAIN_PERSON SET INTER_FLAG = #inter_flag#  
+		WHERE 1 = 1
+		<isNotEmpty  property="area_orgid">
+		AND	AREA_ORGID 	= #area_orgid#
+		</isNotEmpty> 
+	    AND POLICY_NO 	= #policy_no#
+	</update> -->
+	
+	<update id="addInterPerson" parameterClass="cmainPolicyINSPersonVOMModel" >
+		UPDATE INS_CMAIN_PERSON SET INTER_FLAG = #inter_flag#  , risk_year = #risk_year#
+		WHERE 1 = 1
+		<isNotEmpty property="endor_no">
+ 			and endor = #endor_no# 
+ 		</isNotEmpty>
+ 		<isEmpty property="endor_no">
+ 			and endor_no is null
+ 		</isEmpty>
+	    AND POLICY_NO 	= #policy_no#
+	</update>
+	
+	<!-- <update id="addBusiness" parameterClass="cmainPolicyINSVOMModel" >
+		UPDATE INS_CMAIN SET BUSINESS_FLAG = #business_flag#  
+		WHERE 1 = 1
+		<isNotEmpty  property="org_id">
+			AND ORG_ID 	= #org_id#
+		</isNotEmpty> 
+	    AND POLICY_NO 	= #policy_no#
+	</update> -->
+	<update id="addBusiness" parameterClass="cmainPolicyINSVOMModel" >
+		UPDATE INS_CMAIN SET BUSINESS_FLAG = #business_flag#  
+		WHERE 1 = 1
+		<isNotEmpty property="endor_no">
+ 			and endor = #endor_no# 
+ 		</isNotEmpty>
+ 		<isEmpty property="endor_no">
+ 			and endor_no is null
+ 		</isEmpty>
+	    AND POLICY_NO 	= #policy_no#
+	</update>
+	
+	<!-- <update id="addBusinessPerson" parameterClass="cmainPolicyINSPersonVOMModel" >
+		UPDATE INS_CMAIN_PERSON SET BUSINESS_FLAG = #business_flag#  
+		WHERE 1 = 1
+		<isNotEmpty  property="area_orgid">
+		AND	AREA_ORGID 	= #area_orgid#
+		</isNotEmpty> 
+	    AND POLICY_NO 	= #policy_no#
+	</update> -->
+	<update id="addBusinessPerson" parameterClass="cmainPolicyINSPersonVOMModel" >
+		UPDATE INS_CMAIN_PERSON SET BUSINESS_FLAG = #business_flag#  
+		WHERE 1 = 1
+		<isNotEmpty property="endor_no">
+ 			and endor = #endor_no# 
+ 		</isNotEmpty>
+ 		<isEmpty property="endor_no">
+ 			and endor_no is null
+ 		</isEmpty>
+	    AND POLICY_NO 	= #policy_no#
+	</update>
+	
+	<delete id="deleteMainINSPolicy" parameterClass="cmainPolicyINSVOMModel">
+		DELETE FROM INS_CMAIN B
+		 WHERE B.POLICY_NO 	= #policy_no#
+	   <isNotEmpty property="endor_no">
+	  		 AND B.ENDOR_NO	= #endor_no#
+   	   </isNotEmpty>	
+   	   <isEmpty property="endor_no">
+			AND B.ENDOR_NO is null 
+	   </isEmpty> 
+	</delete>
+	<delete id="deleteMainINSPersonPolicy" parameterClass="cmainPolicyINSPersonVOMModel">
+		DELETE FROM INS_CMAIN_PERSON B
+		 WHERE B.POLICY_NO 	= #policy_no#
+	   <isNotEmpty property="endor_no">
+	  		 AND B.ENDOR_NO	= #endor_no#
+   	   </isNotEmpty>
+   	   <isEmpty property="endor_no">
+			AND B.ENDOR_NO is null 
+	   </isEmpty>
+   	   <isNotEmpty property="risk_year">
+	  		 AND B.RISK_YEAR	= #risk_year#
+   	   </isNotEmpty>
+   	   <isNotEmpty property="center_risk_id">
+	  		 AND B.CENTER_RISK_ID	= #center_risk_id#
+   	   </isNotEmpty>
+   	   	 
+	</delete>
+	
+	<select id="findCodeVOModel"   parameterClass="CodeVOModel"  resultClass="CodeVOModel" >
+		SELECT B.up_enum "codeType" ,B.enum_code "codeCode",B.enum_name "codeName"  FROM  SYS_ENUM B  
+		where DATA_FLAG = '1'
+		<isNotEmpty property="codeType">
+	  		 AND B.up_enum	= #codeType#
+   	   </isNotEmpty>	
+   	   <isNotEmpty property="codeCode">
+	  		 AND B.enum_code	= #codeCode#
+   	   </isNotEmpty>	
+   	   <isNotEmpty property="codeName">
+	  		 AND B.enum_name	= #codeName#
+   	   </isNotEmpty>	
+	</select>
+	
+	<!-- <select id="find_cpy_branch" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select b.branch_name "branch_name" ,b.branch_id "branch_id",b.branch_parentid "branch_parentid" from cpy_branch  b
+		where  b.status = '1'
+		<isNotEmpty property="branch_parentid">
+			and b.branch_parentid = #branch_parentid#
+		</isNotEmpty>	
+		<isNotEmpty property="branch_id">
+			and b.branch_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="branch_name">
+			and b.branch_name = #branch_name#
+		</isNotEmpty>
+	</select> -->
+	<select id="find_cpy_branch" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<!-- SELECT s.enum_code "branch_id",s.enum_name "branch_name",s.enum_order "branch_level" FROM Sys_Enum s WHERE s.up_enum='headoffice' -->
+		select branch_id "branch_id", branch_name "branch_name" from cpy_branch where status = '1'
+		<isNotEmpty property="branch_id">
+			and branch_id = #branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="branch_name">
+			and branch_name = #branch_name#
+		</isNotEmpty>
+	</select>
+	<select id="find_sys_branch" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select b.branch_name "branch_name" ,b.branch_id "branch_id",b.branch_parentid "branch_parentid",b.channelcode "channel_no" from sys_branch  b
+		where  b.status = '1'
+		<isNotEmpty property="branch_parentid">
+			and b.branch_parentid = #branch_parentid#
+		</isNotEmpty>	
+		<isNotEmpty property="channel_no">
+			<!-- and b.branch_id = #branch_id# -->
+			and b.channelcode = #channel_no#
+		</isNotEmpty>
+		<isNotEmpty property="branch_name">
+			and b.branch_name = #branch_name#
+		</isNotEmpty>
+	</select>
+	
+	<select id="query_branch_by_id" parameterClass="String" resultClass="branchModel">
+	 	select channelcode , seq_id from  sys_branch  where branch_id = #branch_id#
+	</select>
+	
+	<select id="findByChannel_no" parameterClass="String" resultClass="String">
+		select branch_id from  sys_branch  where channelcode = #channel_no#
+	</select>
+	
+	<select id="queryPerson" parameterClass="cmainPolicyINSPersonVOMModel"  resultClass="cmainPolicyINSPersonVOMModel">
+		select distinct se.person_name owner_name,
+		 		 se.person_no owner_no
+		 from sys_employee se
+		 join sys_branch sb on sb.branch_id=se.team_id
+		 join sys_agent_info sai on sai.person_no = se.person_no   
+		 where 1=1 
+		 	and sai.IS_PRACTICE = '1'
+		 	and sb.status = '1'
+		 	and se.status = '1'
+		 	<!-- and se.person_status = '1' -->
+		 <!-- <isNotEmpty property="vaild_data">
+		  	and #vaild_data# >= sai.practice_startdate
+		  	and sai.practice_enddate >= #vaild_data#
+   	     </isNotEmpty> -->
+		 <isNotEmpty property="channel_no">
+          and sb.branch_id in (
+          select branch_id from sys_branch where status = '1' 
+          start with channelcode = #channel_no# connect by prior branch_id = branch_parentid)
+         </isNotEmpty>
+         <isNotEmpty property="owner_name">
+          and se.person_name like '%'||#owner_name#||'%'
+         </isNotEmpty>
+         <isNotEmpty property="owner_no">
+          and se.person_no = #owner_no#
+         </isNotEmpty>
+	</select>
+	
+	<select id="queryCmainPolicyINSVOMModel"  parameterClass="cmainPolicyINSVOMModel"  resultClass="cmainPolicyINSVOMModel">
+		select *
+		from ins_cmain 
+		WHERE POLICY_NO = #policy_no#
+	   <isNotEmpty property="endor_no">
+	  		 AND ENDOR_NO	= #endor_no#
+   	   </isNotEmpty>	
+   	   <isEmpty property="endor_no">
+			AND ENDOR_NO is null 
+	   </isEmpty> 
+	   order by settle_time desc
+	</select>
+	
+	<select id="" parameterClass="cmainPolicyINSPersonVOMModel" resultClass="cmainPolicyINSPersonVOMModel">
+		select * from INS_CMAIN_PERSON
+		WHERE POLICY_NO = #policy_no#
+	   <isNotEmpty property="endor_no">
+	  		 AND ENDOR_NO	= #endor_no#
+   	   </isNotEmpty>	
+   	   <isEmpty property="endor_no">
+			AND ENDOR_NO is null 
+	   </isEmpty>  
+	</select>
+	
+</sqlMap>

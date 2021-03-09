@@ -1,0 +1,16 @@
+@CHARSET "UTF-8";
+
+label.error {
+	color: red;
+/* 	width: 220px; */
+	line-height: 20px;
+	padding-left: 5px;
+	white-space: nowrap;
+}
+
+
+input.error {
+	border: red solid 1px;
+	outline: 1px solid #FFC1C1;
+	color: red;
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="library"> 
+	<typeAlias alias="commonStatusModel" type="com.ca.cacore.manage.model.bo.CommonStatusModel" />
+	<typeAlias alias="genderModel" type="com.ca.cacore.manage.model.bo.GenderModel" />
+	<typeAlias alias="approvalStatusModel" type="com.ca.cacore.manage.model.bo.ApprovalStatusModel" />
+	<typeAlias alias="contractTypeModel" type="com.ca.cacore.manage.model.bo.ContractTypeModel" />
+	<typeAlias alias="certiTypeModel" type="com.ca.cacore.manage.model.bo.CertiTypeModel" />
+	<typeAlias alias="degreeTypeModel" type="com.ca.cacore.manage.model.bo.DegreeTypeModel" />
+	<typeAlias alias="nationModel" type="com.ca.cacore.manage.model.bo.NationModel" />
+	<typeAlias alias="educationModel" type="com.ca.cacore.manage.model.bo.EducationModel" />
+	<typeAlias alias="politicalModel" type="com.ca.cacore.manage.model.bo.PoliticalModel" />
+	<typeAlias alias="maritalModel" type="com.ca.cacore.manage.model.bo.MaritalModel" />
+	<typeAlias alias="nationalityModel" type="com.ca.cacore.manage.model.bo.NationalityModel" />
+	<typeAlias alias="healthModel" type="com.ca.cacore.manage.model.bo.HealthModel" />
+	<typeAlias alias="jobTypeModel" type="com.ca.cacore.manage.model.bo.JobTypeModel" />
+	<typeAlias alias="payModeModel" type="com.ca.cacore.ibs.model.bo.PayModeModel" />
+	<typeAlias alias="invoiceType" type="com.ca.cacore.manage.model.bo.InvoiceType" />
+	
+	
+	<!-- 查询通用状态 -->
+	<select id="queryCommonStatus" resultClass="commonStatusModel">
+		select * from sys_library_commonstatus
+	</select>
+
+	<!-- 查询性别 -->
+	<select id="queryGender" resultClass="genderModel">
+		select * from sys_library_gender
+	</select>
+	
+	<!-- 查询审批状态 -->
+	<select id="queryApprovalStatus" resultClass="approvalStatusModel">
+		select * from SYS_Library_Approval_Status
+	</select>
+	
+	<!--查询合同类型  -->
+	<select id="queryContractType" resultClass="contractTypeModel">
+		select * from sys_library_contract_type
+	</select>
+	
+	<!-- 查询证件类型 -->
+	<select id="queryCertiType" resultClass="certiTypeModel">
+		select * from  sys_library_certi_type
+	</select>
+	
+	<!--查询学位类型字典信息  -->
+	<select id="queryDegreeType" resultClass="degreeTypeModel">
+		select * from  sys_library_degree_type
+	</select>
+	
+	<!--查询民族字典信息  -->
+	<select id="queryNation" resultClass="nationModel">
+		select * from  sys_library_nation
+	</select>
+	
+	<!-- 查询教育程度字典信息 -->
+	<select id="queryEducation" resultClass="educationModel">
+		select * from  sys_library_education
+	</select>
+	
+	<!-- 查询政治面貌字典信息 -->
+	<select id="queryPolitical" resultClass="politicalModel">
+		select * from  sys_library_political
+	</select>
+	
+	<!-- 查询婚姻状况字典信息 -->
+	<select id="queryMarital" resultClass="maritalModel">
+		select * from   sys_library_marital
+	</select>
+	
+	<!-- 查询国籍字典信息 -->
+	<select id="queryNationality" resultClass="nationalityModel">
+		select * from  sys_library_nationality
+	</select>
+	
+	<!-- 查询健康状况字典信息 -->
+	<select id="queryHealth" resultClass="healthModel">
+		select * from  sys_library_health
+	</select>
+	
+	<!-- 查询职业类别字典信息 -->
+	<select id="queryJobType" resultClass="jobTypeModel">
+		select * from sys_library_jobtype
+	</select>
+	
+	<!-- 查询付款方式字典信息 -->
+	<select id="queryPayMode" resultClass="payModeModel">
+		select * from sys_library_pay_mode
+	</select>
+	
+	<!-- 查询发票类型字典信息 -->
+	<select id="queryInvoice" resultClass="invoiceType">
+		select * from sys_library_invoice
+	</select>
+</sqlMap>

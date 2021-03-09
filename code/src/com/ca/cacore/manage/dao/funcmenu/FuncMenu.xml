@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="FuncMenu">
+   <typeAlias alias="FuncMenuModel" type="com.ca.cacore.manage.model.bo.FuncMenuModel"/>
+   <typeAlias alias="FuncMenuVOModel" type="com.ca.cacore.manage.model.vo.FuncMenuVOModel"/>
+   <typeAlias alias="FuncButtonVOModel" type="com.ca.cacore.manage.model.vo.FuncButtonVOModel"/>
+   
+   <sql id="queryFuncMenu_head">
+	SELECT *
+	  	  FROM (SELECT row_.*, rownum rownum_ 
+	  	          FROM (
+	</sql>
+	
+	<sql id="queryFuncMenu_foot">
+    	<![CDATA[
+				) row_ 
+		WHERE rownum < #limit#)
+		WHERE rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  
+	<sql id="queryFuncMenu_all">
+		SELECT               seq_id,
+                menu_id,
+                menu_name,
+                (case
+                        when t.menu_type = '1' then
+                         '管理员'
+                        when t.menu_type = '2' then
+                          '普通用户'
+                        when t.menu_type = '3' then
+                        '来宾'
+                      end) as menu_type,
+                (case
+                        when t.menu_uritype = 'action' then
+                         '触发action'
+                        when t.menu_uritype = 'jsp' then
+                          '界面跳转'
+                      end) as menu_uritype,
+                menu_uri,
+                (case
+                        when t.menu_opentype = 'mainFrame' then
+                         '主框架打开'
+                        when t.menu_opentype = 'bank' then
+                          '新窗口打开'
+                      end) as menu_opentype,
+                menu_dispath,
+                  menu_disorder,
+                   (case
+                        when t.status = '1' then
+                         '有效'
+                        else
+                         '无效'
+                      end) as status,
+                remark,
+                createUser,
+                createDate,
+                modifyUser,
+                modifyDate
+                  
+     FROM SYS_FuncMenu t 
+    WHERE 1=1 
+		<isNotEmpty  property="menu_id">
+			AND t.menu_id = #menu_id#
+		</isNotEmpty>
+		<isNotEmpty  property="menu_name">
+			AND t.menu_name like '%$menu_name$%'
+		</isNotEmpty>
+		<isNotEmpty  property="menu_type">
+			AND t.menu_type = #menu_type#
+		</isNotEmpty>
+		<isNotEmpty  property="seq_id">
+			AND t.seq_id = #seq_id#
+		</isNotEmpty>
+		ORDER BY seq_id  DESC
+    </sql>
+    
+	
+	<!-- 查询FuncMenu信息 -->
+	<select id="queryFuncMenu" parameterClass="FuncMenuModel" resultClass="FuncMenuModel">
+		<include refid="queryFuncMenu_head"/>
+		<include refid="queryFuncMenu_all"/>
+		<include refid="queryFuncMenu_foot"/>
+	</select>
+	
+	<select id="queryFuncMenu_count" parameterClass="FuncMenuModel" resultClass="int">
+		select count(*) from (
+		<include refid="queryFuncMenu_all"/>
+		) WHERE 1=1
+	</select>
+
+ <!-- 新增FuncMenu信息 -->
+	<insert id="insertFuncMenu" parameterClass="FuncMenuModel" >
+		 insert into SYS_FuncMenu (seq_id,
+		 						   menu_id,
+		 						   menu_name,
+		 						   menu_allPath,
+		 						   menu_type,
+		 						   menu_uritype,
+		 						   menu_uri,
+		 						   menu_opentype,
+		 						   button_assign,
+		 						   menu_dispath,
+		 						   menu_disorder,
+		 						   remark,
+		 						   createUser,
+		 						   createDate,
+		 						   modifyUser,
+		 						   modifyDate) 
+		 				 values (seq_id.nextval,
+		 				 			#menu_id#,
+		 				 			#menu_name#,
+		 				 			#menu_allPath#,
+		 				 			#menu_type#,
+		 				 			#menu_uritype#,
+		 				 			#menu_uri#,
+		 				 			#menu_opentype#,
+		 				 			#button_assign#,
+		 				 			#menu_dispath#,
+		 				 			#menu_disorder#,
+		 				 			#remark#,
+		 				 			#createUser#,
+		 				 			sysdate,
+		 				 			#modifyUser#,
+		 				 			sysdate) 
+	</insert>
+ <!-- 修改FuncMenu信息 -->
+	<update id="updateFuncMenu" parameterClass="FuncMenuModel" >
+		update SYS_FuncMenu set 
+			menu_id=#menu_id#,
+			menu_name=#menu_name#,
+			menu_type=#menu_type#,
+			menu_uritype=#menu_uritype#,
+			menu_uri=#menu_uri#,
+			menu_opentype=#menu_opentype#,
+			menu_dispath=#menu_dispath#,
+			menu_disorder=#menu_disorder#,
+			status=#status#,
+			remark=#remark#,
+			modifyUser=#modifyUser#,
+			modifyDate=sysdate
+			where seq_id=#seq_id#
+	</update>
+	<!-- 删除FuncMenu信息 -->
+	<delete id="deleteFuncMenu" parameterClass="FuncMenuModel" >
+		delete from SYS_FuncMenu where seq_id=#seq_id#
+	</delete>
+	<!-- 查询FuncMenu信息 -->
+	<select id="queryFuncMenuBySeqId" parameterClass="FuncMenuModel" resultClass="FuncMenuModel">
+           SELECT * 
+		  FROM SYS_FuncMenu t
+		 WHERE 1=1                     
+		<isNotEmpty  property="seq_id">
+			AND t.seq_id = #seq_id#
+		</isNotEmpty>
+		<isNotEmpty  property="menu_name">
+			AND t.menu_name = #menu_name#
+		</isNotEmpty>
+		<isNotEmpty  property="menu_id">
+			AND t.menu_id = #menu_id#
+		</isNotEmpty>
+		
+	
+	</select>
+	<!-- 菜单树 -->
+	<select id="queryfuncmenuTree" resultClass="FuncMenuModel">
+           SELECT * 
+		  FROM SYS_FuncMenu t
+		 WHERE 1=1      order by menu_disorder                 
+	
+	</select>
+	
+	<!-- 菜单树 -->
+	<select id="queryAllFuncMenuPrior" parameterClass="FuncMenuVOModel" resultClass="FuncMenuVOModel">
+         select menu.*
+		       ,level menu_level
+		   from SYS_FuncMenu menu
+		  where menu.status = '1'
+		    and menu.menu_type = #menu_type#
+		  START WITH menu_allpath = '0'
+		CONNECT BY PRIOR menu.menu_id = menu.menu_parentid                
+	</select>
+	
+	<!-- 菜单树 -->
+	<select id="queryFuncMenuButtons" parameterClass="FuncButtonVOModel" resultClass="FuncButtonVOModel">
+         select distinct button.*
+		       ,nvl(auths.button_id,'0') isAuth
+		  from SYS_FuncButton button
+		       left join (select distinct rauth.button_id
+		                   from SYS_User_Auths uauth
+		                       ,SYS_Role_Auths rauth
+		                  where uauth.role_id = rauth.role_id
+		                    and uauth.username = 'sln'
+		                     ) auths on auths.button_id = button.button_id
+		 where button.menu_id=#menu_id#
+		   and button.status = '1'
+		 order by button.menu_idz
+	</select>
+	
+</sqlMap>

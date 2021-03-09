@@ -1,0 +1,33 @@
+* { margin:0; padding:0;}
+ul { list-style:none;}
+.clearfix:after {
+    display:block;
+    clear:both;
+    height:0;
+    font-size:0;
+    content:"."; color:#fff;
+}
+.clearfix { min-height:1%; }
+*html .clearfix { height:1%;}
+
+h1 { line-height:30px; font-size:14px; text-align:center; margin:50px auto 0; width:800px; color:#404040;}
+.info { margin-bottom:20px; color:#999;}
+.right {width:540px; text-align:right; margin:10px auto 0 auto;}
+.tips { line-height:24px; margin:10px auto 0 auto; width:530px; border:1px solid #dcdddd; background-color:#fffceb; padding:5px; color:#666;}
+
+
+
+/* 星级评分css */
+.selectStar { width:500px; margin:0 auto; border:1px solid #ddd;}
+.selectStar ul {margin: 0px;}
+.selectStar li { float:left; text-align:left; _display:inline; margin-right:8px; line-height:20px;}
+.selectStar li span.red { color:#d00; width:10px;}
+.selectStar li span.zi {}
+.selectStar li em { border:3px solid #f6b88e; height:24px; width:75px; background:url("../images/dpForm_1_0_0.gif") no-repeat 8px 6px; padding:0 8px; float: left;}
+.selectStar li em.selectS1 { background-position:8px -14px;}
+.selectStar li em.selectS2 { background-position:8px -34px;}
+.selectStar li em.selectS3 { background-position:8px -54px;}
+.selectStar li em.selectS4 { background-position:8px -74px;}
+.selectStar li em.selectS5 { background-position:8px -94px;}
+.selectStar li em a { text-indent:-999em; overflow:hidden; display:block; float:left; width:14px;}
+.dpCont { color:#f60;}

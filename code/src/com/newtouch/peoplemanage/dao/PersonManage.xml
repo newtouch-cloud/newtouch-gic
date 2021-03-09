@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="personManage">
+	<typeAlias alias="personVOModel" type="com.newtouch.peoplemanage.model.vo.PersonManageVOModel"/>
+	<typeAlias alias="empFamilyVOModel" type="com.newtouch.peoplemanage.model.po.EmpFamilyVOModel"/>
+	<typeAlias alias="educationVOModel" type="com.newtouch.peoplemanage.model.po.EducationVOModel"/>
+	<typeAlias alias="empNoteVOModel" type="com.newtouch.peoplemanage.model.po.EmpNoteVOModel"/>
+	<typeAlias alias="licenseInfoModel" type="com.newtouch.peoplemanage.model.po.LicenseInfoVOModel"/>
+	<typeAlias alias="branchModel" type="com.ca.cacore.manage.model.bo.BranchModel"/>
+	<typeAlias alias="gleaderInfoVOModel" type="com.newtouch.peoplemanage.model.po.GleaderInfoVOModel"/>
+	<typeAlias alias="enumInfoVOModel" type="com.newtouch.peoplemanage.model.po.EnumInfoVOModel"/>
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	<!-- 查询所有的人员信息     e1.work_relation, -->
+<!--	<sql id="query_all" >
+		select   DISTINCT  e1.seq_id,E1.PERSON_NO,e1.branch_id,E1.PERSON_NAME,
+		e1.org_name,e1.org_id,e1.belong_opt_no,e1.belong_opt_name,e1.belong_idcard,
+		se2.enum_name person_status,E1.entry_date,enum1.enum_name political, e1.work_nature,
+		e1.end_date,decode(e2.sex,'1','男','2','女') sex, e2.national, e2.birthday, e2.phone, e2.idcard, emp.position,
+		b.branch_name,t.branch_name team_name ,enum.enum_name person_type, e1.create_date, e2.retire_time, se1.enum_name person_class,
+		e2.bankcard_number, e2.bank_name, to_char(gl.approval_time,'yyyy-mm-dd') approval_time, gl.approval_file, to_char(gl.employment_term,'yyyy-mm-dd') employment_term,
+		decode(ag.is_practice,'1','是','0','否') is_practice, ag.practice_no, ag.practice_startdate, ag.practice_enddate, decode(ag.practice_status,'1','有效','0','无效') practice_status, b.branch_level, bl.branch_level_name, bl.branch_level_code
+		from SYS_EMPLOYEE e1 
+		LEFT JOIN SYS_EMPLOYEE_INFO  e2 ON E1.PERSON_NO = E2.PERSON_NO  and e2.status = '1'
+		LEFT JOIN SYS_BRANCH b ON e1.BRANCH_ID = b.BRANCH_ID and b.status = '1'
+		LEFT JOIN SYS_BRANCH t on e1.team_id = t.BRANCH_ID and t.status = '1'
+		LEFT JOIN SYS_ENUM enum ON e1.person_type=enum.enum_code and enum.up_enum = 'person_type'
+		LEFT JOIN SYS_ENUM enum1 on e2.political = enum1.enum_code and enum1.up_enum = 'political'
+		LEFT JOIN SYS_EMPLOYEE_POSITION emp on e1.person_no = emp.person_no and emp.data_flag = '1' and emp.PROFESSION_TYPE = '主要任职'
+		left join sys_education_info sei on sei.person_no =e1.person_no
+   		and sei.ishigh_degree='是' and sei.status ='1'
+		LEFT JOIN sys_agent_info ag on e1.person_no = ag.person_no
+		&lt;!&ndash;查询是否高管信息&ndash;&gt;
+		LEFT JOIN gleader_info gl on e1.person_no = gl.person_no
+		&lt;!&ndash;查询员工所在公司级别及级别名称&ndash;&gt;
+		left join sys_branch_level bl on bl.branch_level_code = b.branch_level
+		&lt;!&ndash;查询员工是高管人员、业务人员、还是非业务&ndash;&gt;
+		left join sys_enum se1 on e2.person_class = se1.enum_code and se1.up_enum = 'person_class'
+		&lt;!&ndash;查看员工状态在职、离职信息&ndash;&gt;
+		left join sys_enum se2 on e1.person_status = se2.enum_code and se2.up_enum = 'person_status'
+		&lt;!&ndash;查看数据来源信息v与k&ndash;&gt;
+		where 1=1 and E1.status = '1' and e1.source_sys='K'
+			and b.status = '1' and t.status = '1'
+		&lt;!&ndash;dept_list前端所传&ndash;&gt;
+		  and E1.team_id in $dept_list$
+		<isNotEmpty prepend="and" property="team_id">
+			e1.team_id in (  select sh.branch_id from  sys_branch sh where  1=1  and sh.status = '1'
+	                   start with sh.branch_id=#team_id#
+	            connect by prior sh.branch_id=sh.branch_parentid  
+	            )
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="political">
+			<isEqual property="political" compareValue="1">
+				enum1.enum_name = '党员'
+			</isEqual>
+			<isEqual property="political" compareValue="0">
+				enum1.enum_name ！= '党员'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_no">
+			e1.person_no = #person_no#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_name">
+			e1.person_name like '%$person_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_status">
+				e1.person_status = #person_status#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="idcard">
+				e2.idcard = #idcard#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="work_nature">
+				e1.work_nature = #work_nature#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="work_relation">
+				e1.work_relation = #work_relation#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="education">
+				sei.degree like '%$education$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="is_practice">
+				ag.is_practice = #is_practice#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_class">
+				e2.person_class = #person_class#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="entry_date1"> 
+            <![CDATA[ 
+                e1.entry_date >= #entry_date1# 
+                 ]]>
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="entry_date2"> 
+            <![CDATA[ 
+                  e1.entry_date <= #entry_date2# 
+                 ]]>
+        </isNotEmpty> 
+        <isNotEmpty prepend="and" property="end_date1"> 
+                 <![CDATA[ 
+                  e1.end_date >= #end_date1# 
+                 ]]> 
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="end_date2"> 
+                 <![CDATA[ 
+                  e1.end_date <= #end_date2# 
+                 ]]> 
+        </isNotEmpty>
+        <isNotEmpty prepend="and" property="retire_time"> 
+                 <![CDATA[ 
+                  e1.retire_time = #retire_time# 
+                 ]]> 
+        </isNotEmpty>
+        
+		order by e1.seq_id desc,e1.create_date desc
+	</sql>-->
+
+	<sql id="query_all" >
+		select   DISTINCT  e1.seq_id,E1.PERSON_NO,e1.branch_id,E1.PERSON_NAME,
+		e1.org_name,e1.org_id,e1.belong_opt_no,e1.belong_opt_name,e1.belong_idcard,
+		se2.enum_name person_status,E1.entry_date,enum1.enum_name political, e1.work_nature,
+		decode(e1.work_nature,'1','正式合同','2','试用期合同','3','个人代理','4','退休返聘','5','劳务派遣','6','实习员工','7','专职委派','8','兼职委派') work_nature_name ,
+		e1.end_date,decode(e2.sex,'1','男','2','女') sex,  slnt.nation_name national, e2.birthday, e2.phone, e2.idcard, emp.position,
+		b.branch_name,t.team_name ,enum.enum_name person_type, e1.create_date, e2.retire_time, se1.enum_name person_class,
+		e2.bankcard_number, e2.bank_name, to_char(gl.approval_time,'yyyy-mm-dd') approval_time, gl.approval_file, to_char(gl.employment_term,'yyyy-mm-dd') employment_term,
+		decode(ag.is_practice,'1','是','0','否') is_practice, ag.practice_no, ag.practice_startdate, ag.practice_enddate, decode(ag.practice_status,'1','有效','0','无效') practice_status, b.branch_level, bl.branch_level_name, bl.branch_level_code
+		from SYS_EMPLOYEE e1
+		LEFT JOIN SYS_EMPLOYEE_INFO  e2 ON E1.PERSON_NO = E2.PERSON_NO  and e2.status = '1'
+		LEFT JOIN SYS_BRANCH b ON e1.BRANCH_ID = b.BRANCH_ID and b.status = '1'
+		LEFT JOIN smis_team t on e1.team_id = t.team_id and t.status = '1'
+		LEFT JOIN SYS_ENUM enum ON e1.person_type=enum.enum_code and enum.up_enum = 'person_type'
+		LEFT JOIN SYS_ENUM enum1 on e2.political = enum1.enum_code and enum1.up_enum = 'political'
+		LEFT JOIN SYS_EMPLOYEE_POSITION emp on e1.person_no = emp.person_no and emp.data_flag = '1' and emp.PROFESSION_TYPE = '主要任职'
+		left join sys_education_info sei on sei.person_no =e1.person_no
+		and sei.ishigh_degree='是' and sei.status ='1'
+		LEFT JOIN sys_agent_info ag on e1.person_no = ag.person_no
+		left join sys_library_nation slnt on e2.national = slnt.nation_code
+		<!--查询是否高管信息-->
+		LEFT JOIN gleader_info gl on e1.person_no = gl.person_no
+		<!--查询员工所在公司级别及级别名称-->
+		left join sys_branch_level bl on bl.branch_level_code = b.branch_level
+		<!--查询员工是高管人员、业务人员、还是非业务-->
+		left join sys_enum se1 on e2.person_class = se1.enum_code and se1.up_enum = 'person_class'
+		<!--查看员工状态在职、离职信息-->
+		left join sys_enum se2 on e1.person_status = se2.enum_code and se2.up_enum = 'person_status'
+		<!--查看数据来源信息v与k-->
+		where 1=1 and E1.status = '1' and e1.source_sys='K'
+		and b.status = '1' and t.status = '1'
+		<!--dept_list前端所传-->
+		and E1.branch_id in $dept_list$
+		<isNotEmpty prepend="and" property="branch_id">
+			e1.branch_id in(  select sh1.branch_id from  sys_branch sh1 where  1=1  and sh1.status = '1'
+			start with sh1.branch_id=#branch_id#
+			connect by prior sh1.branch_id=sh1.branch_parentid)
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="team_id">
+			e1.team_id in (  select sh.team_id from  SMIS_TEAM sh where  1=1  and sh.status = '1'
+			start with sh.team_id=#team_id#
+			connect by prior sh.team_id=sh.PARENT_TEAM_ID
+			)
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_no">
+			e1.person_no = #person_no#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_name">
+			e1.person_name = #person_name#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_name">
+			e1.person_name like '%$person_name$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="person_status">
+			e1.person_status = #person_status#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="idcard">
+			e2.idcard = #idcard#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="work_nature">
+			e1.work_nature = #work_nature#
+		</isNotEmpty>
+		<!--<isNotEmpty prepend="and" property="work_relation">
+			e1.work_relation = #work_relation#
+		</isNotEmpty>-->
+		<isNotEmpty prepend="and" property="education">
+			e2.education = #education#
+		</isNotEmpty>
+		<!--<isNotEmpty prepend="and" property="is_practice">
+			ag.is_practice = #is_practice#
+		</isNotEmpty>-->
+		<isNotEmpty prepend="and" property="person_class">
+			e2.person_class = #person_class#
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="entry_date1">
+			<![CDATA[
+                e1.entry_date >= #entry_date1#
+                 ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="entry_date2">
+			<![CDATA[
+                  e1.entry_date <= #entry_date2#
+                 ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="end_date1">
+			<![CDATA[
+                  e1.end_date >= #end_date1#
+                 ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="end_date2">
+			<![CDATA[
+                  e1.end_date <= #end_date2#
+                 ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="retire_time">
+			<![CDATA[
+                  e1.retire_time = #retire_time#
+                 ]]>
+		</isNotEmpty>
+		order by e1.seq_id desc,e1.create_date desc
+	</sql>
+	
+	<!--查询人员信息 -->
+	<select id="queryPersonVOs" parameterClass="personVOModel" resultClass="personVOModel">
+		<include refid="query_head" />
+		<include refid="query_all" />
+		<include refid="query_foot" />
+		
+	</select>
+	<!-- 查询数据总条数 -->
+	<select id="queryPersonVO_Count" parameterClass="personVOModel" resultClass="int">
+		select count(*) from (
+			<include refid="query_all"/>
+		) 
+	</select>
+	
+	<select id="queryPersonVOById" parameterClass="String" resultClass="personVOModel">
+			select DISTINCT 
+      		e1.person_no, e1.person_name, e1.work_relation, decode(e2.sex,'1','男','2','女') sex,
+      		se2.enum_name person_status,
+				se1.MARITAL_STAT_NAME ismarrid,
+      e1.entry_date,e1.ENTRY_SOURCE,e2.birthday,se5.education_code educationid ,se5.education_name education,se.political_name political,e2.idcard,
+        decode(e2.card_type ,'1','城镇','2','农村') card_type,
+        b.branch_name,<!--原来的 e1.branch_name, m by liu_yn-->
+      e2.school,e2.phone,e2.tel,e2.email,e2.idcard_adress,e2.home_address,<!-- e2.ccityname practice_area, -->
+      e1.org_id,e1.org_name, e1.belong_opt_no, e1.belong_opt_name, e1.belong_idcard, t.team_name ,
+        decode(e1.work_nature,'1','正式合同','2','试用期员工','3','个人代理','4','退休返聘','5','劳务派遣','6','实习员工','7','专职委派','8','兼职委派') work_nature,
+        <!-- e2.business_scope, -->se3.nation_name national,<!-- e2.technology_number technology_no, -->
+      ag.contract_type, ag.practice_no, ag.practice_startdate, ag.practice_enddate, ag.practice_area, ag.channel_type, ag.business_scope, ag.technology_no, ag.practice_type, <!-- decode(ag.practice_status,'1','有效','0','无效') --> ag.practice_status,
+      e2.political_startdate, e2.political_joindate, e2.political_company, e2.party_org, e2.political_fee, e2.is_party_org,
+      e1.end_date, (to_char(sysdate,'YYYY')-to_char(e2.birthday, 'YYYY')) age,gl.gleader, to_char(gl.approval_time,'yyyy-mm-dd') approval_time, gl.approval_file, 
+      gl.upload_approval_file, to_char(gl.employment_term,'yyyy-mm-dd') employment_term, to_char(gl.gvalid_time,'yyyy-mm-dd') gvalid_time 
+        from sys_employee e1
+        left join sys_employee_info  e2 on e1.person_no = e2.person_no  and e2.status = '1'
+        LEFT JOIN SYS_BRANCH b ON e1.BRANCH_ID = b.BRANCH_ID  <!-- a by liu_yn -->
+        LEFT JOIN SMIS_TEAM t on e1.team_id = t.team_id and t.status = '1'
+        <!--left join   sys_enum se on e2.political=se.enum_code and se.up_enum = 'political'-->
+        <!--left join sys_enum se1 on e2.ismarrid = se1.enum_code and se1.up_enum = 'ismarried'-->
+   		LEFT JOIN sys_agent_info ag on e1.person_no = ag.person_no
+   		left join sys_enum se2 on e1.person_status = se2.enum_code and se2.up_enum = 'person_status'
+		left join sys_library_nation se3 on e2.NATIONAL = se3.nation_code
+		left join sys_library_political se on e2.political = se.political_code
+		left join sys_library_marital se1 on e2.ismarrid = se1.MARITAL_STAT_CODE
+		<!--left join sys_enum se4 on e1.work_nature = se4.enum_code and se4.up_enum = 'work_nature'-->
+		left join sys_library_education se5 on e2.education = se5.education_code
+		<!--left join sys_enum se6 on e2.card_type = se6.enum_code and se6.up_enum = 'card_type'-->
+   		left join gleader_info gl on gl.person_no = e1.person_no
+		where e1.person_no=#person_no# and e1.status='1'
+	</select>
+	<!-- 家庭成员 -->
+	<select id="queryPersonFamily" parameterClass="String" resultClass="empFamilyVOModel">
+		select fa.family_name,fa.family_sex,fa.family_birthday,fa.family_relation,
+		fa.family_position,enum.enum_name family_political 
+		from sys_emp_family fa
+		left join SYS_ENUM enum on fa.family_political = enum.enum_code
+		where person_no=#person_no#
+
+	</select>
+	<!-- 教育/工作经历 -->
+	<select id="queryPersonEducation" parameterClass="educationVOModel" resultClass="educationVOModel">
+		    
+		select e.person_no,e.START_DATE,e.GRADUATION_DATE,e.ADDRESS,e.MAJOR,
+		e.YEAR,e.DEGREE,e.APPROVE_PERSON,e.WORK_POSITION,e.TYPE ,
+		decode(e.ISHIGH_DEGREE,'1','是','2','否') ISHIGH_DEGREE
+		,decode(e.EDUCATION_TYPE,'1','全日制','2','在职') education_type,
+		e.DEGREE_TYPE, e.major_type
+		from sys_education_info e
+		where e.status = '1' and e.TYPE =#type# and e.person_no = #person_no#
+
+	</select>
+	<!-- 相关事项说明 -->
+	<select id="queryPersonNote" parameterClass="String" resultClass="empNoteVOModel">
+		select n.PERSON_NO,enum.ENUM_NAME CONTENT_CODE,n.FLAG 
+		from SYS_EMP_NOTE n
+		left join sys_enum enum on ENUM.ENUM_CODE = n.CONTENT_CODE
+		where enum.UP_ENUM = 'emp_note' and n.person_no = #person_no#
+
+	</select>
+	
+	<select id="queryEmpNoteInfo" parameterClass="String" resultClass="personVOModel">
+		select content_code from SYS_EMP_NOTE where person_no = #person_no#
+	</select>
+	<!-- 资格证书查询 -->
+	
+	<select id="queryLicenseInfo" parameterClass="String" resultClass="licenseInfoModel">
+		select PERSON_NO,LICENSE_NAME,LICENSE_CHANNEL,LICENSE_STARTDATE 
+		from SYS_LICENSE_INFO where person_no=#person_no#
+
+	</select>
+	<select id = "queryPositionInfo" parameterClass="String"  resultClass="personVOModel">
+		    select position_id,min(position) position,min(superior_position_name) superior_position_name,
+			min(ischarge) ischarge,min(profession_type) profession_type,count(*) from SYS_EMPLOYEE_POSITION
+			where data_flag = '1' and person_no=#person_no# group by position_id having count(*)>=1
+	</select>	
+	
+	<!-- 根据机构id查询机构级别 -->
+	<select id = "getbranch_level" parameterClass="String"  resultClass="String">
+		   select branch_level from sys_branch where branch_id=#branch_id#
+	</select>	
+	
+	<!-- 查询机构层级 -->
+	<select id="queryBranchLevel" resultClass="branchModel">
+		select distinct branch_level_code ,branch_level_name from sys_branch_level order by branch_level_code
+	</select>
+	
+	<!-- 将导入的excel的数据导入数据库-->
+	<!-- "person_no"	,//	员工编码
+				"person_name"	,//	员工姓名
+				//"person_status"	,//	员工状态
+				"bankcard_number"	,//	银行账号
+				"bank_name"	,//	开户行
+				//"retire_time"	,//  退休时间
+				"person_class"	,//	人员分类
+				"approval_time"	,//	高管批复时间
+				"approval_file"	,//	高管批复文号
+				"employment_term"	,//	高管聘期 -->
+	<update id="updatePersonInfo" parameterClass="personVOModel">
+		update sys_employee_info set person_name = #person_name#, person_status = decode(trim(#person_status#),'不在职','0','在职','1','离职','2','离退休','3','返聘','4'), bankcard_number = #bankcard_number#, bank_name = #bank_name#, retire_time = #retire_time#, person_class = decode(trim(#person_class#),'高管人员','1','业务人员','2','非业务人员','3') where person_no = #person_no#
+		<!-- insert into sys_employee_info (seq_id, person_no, person_name, bankcard_number, bank_name, person_class) values(seq_id.nextval, #person_no#, #person_name#, #bankcard_number#, #bank_name#, #person_class#) -->
+	</update>
+	<update id="updatePerson" parameterClass="personVOModel">
+		update sys_employee set person_name = #person_name#, person_status = decode(trim(#person_status#),'不在职','0','在职','1','离职','2','离退休','3','返聘','4') where person_no = #person_no#
+	</update>
+	
+	<update id="importUpdateGleaderInfo" parameterClass="personVOModel">
+		update gleader_info set gleader = #gleader#, approval_time = to_date(#approval_time#,'yyyy-mm-dd'), approval_file = #approval_file#, employment_term = to_date(#employment_term#,'yyyy-mm-dd') where person_no = #person_no#
+		<!-- (person_no, gleader, approval_time, approval_file, employment_term) values(#person_no#, #gleader#, to_date(#approval_time#,'yyyy-mm-dd'), #approval_file#, to_date(#employment_term#,'yyyy-mm-dd')) -->
+	</update>
+	
+	<select id="findPersonIsExist" parameterClass="String" resultClass="Integer">
+		select count(*) from sys_employee_info where person_no = #person_no# and status = '1'
+	</select>
+	
+	<!-- 修改金蝶中未存在的字段 -->
+	<update id="modifySysEmployee" parameterClass="personVOModel">
+		update sys_employee set org_id = #org_id#, org_name = #org_name#, belong_opt_no = #belong_opt_no#,
+		belong_opt_name = #belong_opt_name#, belong_idcard = #belong_idcard# where person_no = #person_no#
+	</update>
+	<update id="modifySysEmployee1" parameterClass="personVOModel">
+		update sys_employee set end_date = #end_date#,PERSON_STATUS = #person_status# where person_no = #person_no#
+	</update>
+	
+	<update id="modifySysEmployeeInfo" parameterClass="personVOModel">
+		update sys_employee_info set education = #education#, political_startdate = #political_startdate#, political_joindate = #political_joindate#,
+		political_company = #political_company#, party_org = #party_org#, political_fee = #political_fee# where person_no = #person_no#
+	</update>
+	
+	<update id="modifySysAgentInfo" parameterClass="personVOModel">
+		update sys_agent_info set technology_no = #technology_no#, practice_type = #practice_type#, practice_status = #practice_status#,
+		practice_no = #practice_no#, practice_startdate = #practice_startdate#, practice_enddate = #practice_enddate#, practice_area = #practice_area#,channel_type = #channel_type#,
+		business_scope = #business_scope#,is_practice = #is_practice# where person_no = #person_no#
+	</update>
+	
+	<update id="modifySysEmpNote" parameterClass="personVOModel">
+		update SYS_EMP_NOTE set content_code = #content_code#  where person_no = #person_no#
+	</update>
+	
+	<select id="querySelectList" parameterClass="String" resultClass="enumInfoVOModel">
+		select enum_code, enum_name from sys_enum where up_enum = #up_enum#
+	</select>
+	
+	<select id="queryGleaderInfo" parameterClass="String" resultClass="gleaderInfoVOModel">
+		select gl.person_no, gl.gleader, to_char(gl.approval_time,'yyyy-mm-dd') approval_time, gl.approval_file, gl.upload_approval_file, to_char(gl.employment_term,'yyyy-mm-dd') employment_term, 
+		to_char(gl.gvalid_time,'yyyy-mm-dd') gvalid_time from gleader_info gl where gl.person_no = #person_no# 
+	</select>
+	
+	<update id="updateApprovalFile" parameterClass="gleaderInfoVOModel">
+		update gleader_info set upload_approval_file = #upload_approval_file# where person_no = #person_no#
+	</update>
+	
+	<update id="updateGleaderInfo" parameterClass="gleaderInfoVOModel">
+		update gleader_info set gleader = #gleader#, approval_time = to_date(#approval_time#,'yyyy-mm-dd'),approval_file = #approval_file#,employment_term = to_date(#employment_term#,'yyyy-mm-dd'),
+		gvalid_time = to_date(#gvalid_time#,'yyyy-mm-dd') where person_no = #person_no#
+	</update>
+	<select id="queryGleaderPermission" parameterClass="personVOModel" resultClass="String">
+		select branch_level from sys_branch where branch_id in (select branch_id from sys_employee where person_no = #person_no#)
+	</select>
+	
+	<select id="queryUserDataAuth" parameterClass="personVOModel" resultClass="int">
+		select count(*) from sys_branch where status = '1' and branch_level in('0','1') and branch_id in $dept_list$
+	</select>
+	
+	<select id="findSysAgentInfo" parameterClass="personVOModel" resultClass="int">
+		select count(*) from sys_agent_info where person_no = #person_no#
+	</select>
+	
+	<select id="findSysEmpNote" parameterClass="personVOModel" resultClass="int">
+		select count(*) from SYS_EMP_NOTE where person_no = #person_no#
+	</select>
+	
+	<select id="findGleaderInfo" parameterClass="String" resultClass="int">
+		select count(*) from gleader_info where person_no = #person_no#
+	</select>
+	
+	<insert id="insertSysAgentInfo" parameterClass="personVOModel">	
+		insert into sys_agent_info(person_no,technology_no,practice_type,practice_status,practice_no,practice_startdate,practice_enddate,practice_area,channel_type,business_scope,is_practice,create_date)
+		values(#person_no#,#technology_no#,#practice_type#,#practice_status#,#practice_no#,#practice_startdate#,#practice_enddate#,#practice_area#,#channel_type#,#business_scope#,#is_practice#,sysdate)
+	</insert>
+	
+	<insert id="insertSysEmpNote" parameterClass="personVOModel">
+		insert into SYS_EMP_NOTE(person_no,content_code,create_date) values(#person_no#,#content_code#,sysdate)
+	</insert>
+	
+	<insert id="insertGleaderInfo" parameterClass="gleaderInfoVOModel">
+		insert into gleader_info(person_no,gleader,approval_time,approval_file,employment_term,gvalid_time) values(#person_no#,#gleader#,to_date(#approval_time#,'yyyy-mm-dd'),#approval_file#,to_date(#employment_term#,'yyyy-mm-dd'),to_date(#gvalid_time#,'yyyy-mm-dd'))
+	</insert>
+	
+	<insert id="importInsertGleaderInfo" parameterClass="personVOModel">
+		insert into gleader_info(person_no,gleader,approval_time,approval_file,employment_term) values(#person_no#,#gleader#,to_date(#approval_time#,'yyyy-mm-dd'),#approval_file#,to_date(#employment_term#,'yyyy-mm-dd'))
+	</insert>
+	
+	<update id="updatePersonClass" parameterClass="personVOModel">
+		update sys_employee_info set person_class = #person_class# where person_no = #person_no# and status = '1'
+	</update>
+	<!-- 添加 -->
+	<insert id="saveEmployeePosition" parameterClass="personVOModel">
+			insert into  sys_employee_position (
+				person_no,
+				position,
+				position_id,
+				superior_position_name,
+				superior_position_id,
+				ischarge,
+				profession_type,
+				data_flag
+			)
+			values(
+			 #person_no#,
+			 #position#,
+			 #position_id#,
+			 #superior_position_name#,
+			 #superior_position_id#,
+			 #ischarge#,
+			 #profession_type#,
+			 '1'
+			)		 
+      		 
+		</insert>
+		 <!--<insert id="saveEmployee" parameterClass="personVOModel">
+			insert into sys_employee
+			(
+			person_no,
+			person_name,
+			branch_id,
+			team_id,
+			entry_date,
+			end_date,
+			person_status,
+			create_date,
+			create_user,
+			entry_source,
+			status,
+			source_sys
+			)values(
+			#person_no#,
+			#person_name#,
+			#branch_id#,
+			#team_id#,
+			#entry_date#,
+			#end_date#,
+			#person_status#,
+			sysdate,
+			'admin',
+			#entry_source#,
+			'1',
+			'K'
+			)
+		</insert>-->
+    <insert id="saveEmployee" parameterClass="personVOModel">
+        insert into sys_employee
+        (
+        person_no,
+        person_name,
+        branch_id,
+        team_id,
+        entry_date,
+        end_date,
+        person_status,
+        create_date,
+        create_user,
+        entry_source,
+        status,
+        source_sys,
+        work_nature
+        )values(
+        #person_no#,
+        #person_name#,
+        #branch_id#,
+        #team_id#,
+        #entry_date#,
+        #end_date#,
+        #person_status#,
+        sysdate,
+        'admin',
+        #entry_source#,
+        '1',
+        'K',
+        #work_nature#
+        )
+    </insert>
+		<!--<insert id="saveEmployeeInfo" parameterClass="personVOModel">
+			insert into sys_employee_info 
+			( 
+			person_no,
+			person_name,
+			sex,
+			birthday,
+			national,
+			political,
+			idcard,
+			phone,
+			tel,
+			ismarrid,
+			home_address,
+			create_date,
+			create_user,
+			card_type,
+			email,
+			person_status,
+			is_party_org,
+			status
+			) 
+			values
+			(
+			#person_no#,
+			#person_name#,
+			#sex#,
+			#birthday#,
+			#national#,
+			#political#,
+			#idcard#,
+			#phone#,
+			#tel#,
+			#ismarrid#,
+			#home_address#,
+			sysdate,
+			'admin',
+			#card_type#,
+			#email#,
+			#person_status#,
+			#is_party_org#,
+			'1'
+			)
+		</insert>-->
+	<insert id="saveEmployeeInfo" parameterClass="personVOModel">
+		insert into sys_employee_info
+		(
+		person_no,
+		person_name,
+		sex,
+		birthday,
+		national,
+		political,
+		idcard,
+		phone,
+		tel,
+		ismarrid,
+		home_address,
+		create_date,
+		create_user,
+		card_type,
+		email,
+		person_status,
+		is_party_org,
+		status,
+		education
+		)
+		values
+		(
+		#person_no#,
+		#person_name#,
+		#sex#,
+		#birthday#,
+		#national#,
+		#political#,
+		#idcard#,
+		#phone#,
+		#tel#,
+		#ismarrid#,
+		#home_address#,
+		sysdate,
+		'admin',
+		#card_type#,
+		#email#,
+		#person_status#,
+		#is_party_org#,
+		'1',
+		#education#
+		)
+	</insert>
+		<insert id="saveEduction" parameterClass="personVOModel">
+			insert into sys_education_info
+			(
+			person_no,
+			ishigh_degree,
+			major_type,
+			address,
+			major,
+			degree,
+			type,
+			education_type,
+			graduation_date,
+			start_date,
+			status
+			)
+			values( 
+			#person_no#,
+			#ishigh_degree#,
+			#major_type#,
+			#address#,
+			#major#,
+			#degree#,
+			'E',
+			#education_type#,
+			#graduation_date#,
+			#start_date#,
+			'1'
+			)
+		</insert> 
+		
+		<!-- 根据组织代码查询组织名称和机构名称 -->
+	<select id="queryTeamNameBranchName" parameterClass="personVOModel" resultClass="personVOModel">
+		select
+       		team.team_name,
+       		team.basic_version_id,
+       		branch.branch_id,
+       		branch.branch_name
+		from smis_team team
+			left join SYS_Branch branch
+     	on team.branch_id=branch.branch_id
+     	where team.team_id=#team_id# and team.status !='0'
+	</select>
+	
+	<select id="findSysEmployor" parameterClass="String" resultClass="String">
+		select max(person_no)+1 from sys_employee where person_no  like '$person_id$%'
+	</select>
+</sqlMap>

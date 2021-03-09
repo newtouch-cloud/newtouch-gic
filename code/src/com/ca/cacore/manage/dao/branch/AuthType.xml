@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="authType">
+   <typeAlias alias="AuthTypeModel" type="com.ca.cacore.manage.model.bo.AuthTypeModel"/>
+   <!-- 查询权限类型信息标签所有内容 -->
+   <select id="getAuthTypeData"  resultClass="AuthTypeModel">
+		select * from sys_auth_type
+	</select>
+</sqlMap>

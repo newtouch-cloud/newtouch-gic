@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+                 
+<sqlMap namespace="customerLog">
+   <typeAlias alias="customerLogModel" type="com.ca.cacore.csm.model.bo.CustomerLogModel"/>
+
+	<insert id="addCustomerLog" parameterClass="customerLogModel" >
+		insert into CRM_Customer_Log(
+			seq_id
+			 ,customer_id
+			 ,customer_type
+			 ,name
+			 ,title
+			 ,gender
+			 ,birthday
+			 ,certi_type
+			 ,certi_no
+			 ,certi_validdate
+			 ,education
+			 ,nationality
+			 ,nation
+			 ,homeplace
+			 ,seat_address
+			 ,height
+			 ,weight
+			 ,political
+			 ,education2
+			 ,marital_stat
+			 ,health
+			 ,job_type
+			 ,job_code
+			 ,income_type
+			 ,bank_code
+			 ,bank_account_no
+			 ,bank_account_name
+			 ,is_telmsgservice
+			 ,status
+			 ,remark
+			 ,log_seq_id
+			 ,log_bustype
+			 ,log_busdate
+			 ,log_date
+			 ,log_remark
+			 ,createuser
+			 ,createdate
+			 ,modifyuser
+			 ,modifydate)
+			 values(
+			 seq_id.nextval
+			 ,#customer_id#
+			 ,#customer_type#
+			 ,#name#
+			 ,#title#
+			 ,#gender#
+			 ,#birthday#
+			 ,#certi_type#
+			 ,#certi_no#
+			 ,#certi_validdate#
+			 ,#education#
+			 ,#nationality#
+			 ,#nation#
+			 ,#homeplace#
+			 ,#seat_address#
+			 ,#height#
+			 ,#weight#
+			 ,#political#
+			 ,#education2#
+			 ,#marital_stat#
+			 ,#health#
+			 ,#job_type#
+			 ,#job_code#
+			 ,#income_type#
+			 ,#bank_code#
+			 ,#bank_account_no#
+			 ,#bank_account_name#
+			 ,#is_telmsgservice#
+			 ,#status#
+			 ,#remark#
+			 ,#log_seq_id#
+			 ,#log_bustype#
+			 ,sysdate
+			 ,sysdate
+			 ,#log_remark#
+			 ,#createuser#
+			 ,sysdate
+			 ,#modifyuser#
+			 ,sysdate)
+	</insert>
+	
+	
+
+</sqlMap>

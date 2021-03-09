@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--testdata表示测试数据， 一个XML下必须，并且只能存在一个testdate -->
+<data>
+	<!-- dataset表示针对的数据库，一个testdata下包含1到多个dataset。 -->
+	<!-- dataset存在datasource属性，表示要连接数据库的数据源。可以不输入，若为空表示连接默认数据源。若需要连接其他系统库可以写明数据源，一般在做接口测试时使用较多 -->
+	<dataset datasource="111">
+		<!-- sqls负责sql语句，例如crate、drop、alert、insert、delete等类型语句。一个dataset下包含0到1个sqls -->
+		<sqls>
+			<!-- sql表示需要执行的语句，一个sqls下可以包含0到多个sql -->
+			<ddlsql>drop table t_person</ddlsql>
+			<dmlsql>SELECT * FROM t_person</dmlsql>
+		</sqls>
+
+		<!-- table表示数据增加，使用标签表示表名，属性表示字段名，属性值表示需要插入的值。一个dataset下包含0到1个table -->
+		<tables>
+			<t_person PID='62010205' PSNNAME='翟俊凯' PSNTYPENO='M' DID='110001'
+				STARTDATE='2006-8-21' ENDDATE='2006-11-9' STATUS='1' />
+			<t_taskschedule DID='110101' BATCHITEMNO='0D'
+				DEALDATE='2008-1-1' STATUS='3' REQOPT='js' REQDATE='2008-2-3 18:57:49'
+				STARTDATE='2008-2-3 18:57:50' ENDDATE='2008-2-3 18:57:53' FLAG='Y' />
+		</tables>
+	</dataset>
+</data>

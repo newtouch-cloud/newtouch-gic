@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="contractAllot">
+   <typeAlias alias="ContractAllotHisVOModel" type="com.ca.cacore.ibs.model.vo.ContractAllotHisVOModel"/>
+   
+	<!-- 根据分配前服务人员代码查询所有寿险保单信息 -->
+	<select id="queryContList" parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+	SELECT 
+       cbsCL.policy_id,
+       cbsCL.service_id  bef_service_id, 
+       smisS.sales_name  bef_service_name, 
+       cbsCL.branch_id,
+       sysB.branch_name, 
+       sysIB.insbranch_name insBranch_name,
+       cbsCL.policy_code,
+       crmC.name   holder_name,
+       pdtPL.product_name,
+       cbsPLP.amount,
+       cbsPLP.period_prem, 
+       cbsCL.validate_date
+    FROM  CBS_ContractLife cbsCL
+        LEFT JOIN CBS_ContractLife_Product  cbsPLP on cbsCL.policy_code= cbsPLP.policy_id
+        LEFT JOIN SYS_Branch  sysB  on   cbsCL.Branch_Id=sysB.branch_id
+        LEFT JOIN SYS_InsBranch sysIB on  cbsCL.insbranch_id=sysIB.insbranch_id
+        LEFT JOIN Smis_Sales  smisS on  cbsCL.service_id=smisS.sales_id
+        LEFT JOIN CRM_Customer crmC on   crmC.customer_id=cbsCL.holder_id
+        LEFT JOIN PDT_Product_Llife pdtPL on cbsPLP.product_id=pdtPL.product_id
+      WHERE cbsCL.insbranch_id=#insBranch_id#
+	  	<isNotEmpty property="bef_service_id">
+			AND cbsCL.service_id=#bef_service_id#
+		</isNotEmpty>
+		<isNotEmpty property="bef_policy_code">
+			AND cbsPL.policy_code=#bef_policy_code#
+		</isNotEmpty>
+	</select>
+	<!-- 根据保单号查询分配前服务人员以及机构,保单等信息 -->
+	<select id="queryContInfo" parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+	SELECT
+		  cbsCL.policy_id,
+	      cbsCL.service_id  bef_service_id,
+	      smisS.sales_name  bef_service_name,
+	      cbsCL.branch_id,
+	      sysB.branch_name,
+	      crmC.name   bef_holder_name,
+	      cbsCL.insbranch_id insBranch_id,
+	      sysIB.insbranch_name insBranch_name,
+	      cbsCL.policy_code,
+	      crmC.name   holder_name,
+	      pdtPL.product_name,
+	      cbsPLP.amount,
+	      cbsPLP.period_prem, 
+	      cbsCL.validate_date
+      FROM CBS_ContractLife cbsCL
+        LEFT JOIN CBS_ContractLife_Product  cbsPLP on cbsCL.policy_code= cbsPLP.policy_id
+        LEFT JOIN Sys_Branch  sysB  on   cbsCL.branch_id=sysB.branch_id
+        LEFT JOIN SYS_InsBranch sysIB on  cbsCL.insbranch_id=sysIB.insbranch_id
+        LEFT JOIN Smis_Sales  smisS on  cbsCL.service_id=smisS.sales_id
+        LEFT JOIN CRM_Customer crmC on   crmC.customer_id=cbsCL.holder_id
+        LEFT JOIN PDT_Product_Llife pdtPL on cbsPLP.product_id=pdtPL.product_id
+    WHERE cbsCL.insbranch_id=#insBranch_id#
+    AND　cbsCL.policy_code=#bef_policy_code#
+	</select>
+	<!-- 根据分配前服务人员代码查询服务人员代码 -->
+	<select id="queryServiceId"  parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+	SELECT  distinct
+        cbsCL.service_id  bef_service_id
+      FROM CBS_ContractLife cbsCL
+      WHERE cbsCL.service_id=#bef_service_id#
+      AND   cbsCL.insbranch_id=#insBranch_id#
+	</select>
+	<!-- 根据保单号查询保单号和分配前服务人员代码-->
+	<select id="queryPCode"  parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+	 SELECT
+        cbsCL.policy_code bef_policy_code,
+        cbsCL.service_id  bef_service_id,
+        cbsCL.status policy_status
+      FROM CBS_ContractLife cbsCL
+      WHERE cbsCL.policy_code=#bef_policy_code#
+      AND cbsCL.insbranch_id=#insBranch_id#
+      <isNotEmpty property="bef_service_id">
+			AND cbsCL.service_id=#bef_service_id#
+	  </isNotEmpty>
+	</select>
+	<!-- 根据分配后服务人员代码查询服务人员姓名 -->
+	<select id="queryAftSName" parameterClass="ContractAllotHisVOModel" resultClass="ContractAllotHisVOModel">
+	 SELECT
+	     smisS.sales_name    aft_service_name,
+       	 smisS.sales_status  aft_service_status,
+	     sRank.post_code  service_post_code
+	    FROM Smis_Sales smisS 
+        LEFT JOIN SMIS_Rank sRank on smisS.rank_id = sRank.rank_id
+	    WHERE smisS.sales_id=#aft_service_id#
+	</select>
+	<!-- 根据保单ID更新服务人员 -->
+	<update id="updateContS" parameterClass="ContractAllotHisVOModel">
+	 UPDATE CBS_ContractLife
+			SET service_id=#aft_service_id#,
+				modifyUser=#modifyUser#,
+				modifyDate=sysDate
+	    WHERE policy_id=#policy_id#
+	</update>
+	<!-- 插入变更信息到保单服务人员变更历史表 -->
+	<insert id="addContHis" parameterClass="ContractAllotHisVOModel">
+	INSERT INTO CBS_Contract_Service_Change
+		(seq_id,
+		branch_id,
+		insBranch_id,
+		policy_id,
+		bef_service_id,
+		aft_service_id,
+		remark,
+		createUser,
+		createDate,
+		modifyUser,
+		modifyDate)
+		VALUES(
+		   seq_id.nextval,
+		   #branch_id#,
+		   #insBranch_id#,
+		   #policy_id#,
+		   #bef_service_id#,
+		   #aft_service_id#,
+		   #remark#,
+		   #createUser#,
+		   sysDate,
+		   #modifyUser#,
+		   sysDate
+		)
+	</insert>
+	
+ </sqlMap>

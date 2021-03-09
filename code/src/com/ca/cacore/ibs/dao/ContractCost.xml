@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<sqlMap namespace="contractCost">
+   <typeAlias alias="contractCostVOModel" type="com.ca.cacore.ibs.model.vo.ContractCostVOModel"/>
+ 
+   
+     
+ 	<sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+
+	<!-- 查询所有的保单 -->
+	<sql id="query_all">
+	select distinct fee.seq_id,
+		fee.branch_id,
+		branch.branch_name,
+		insbranch.insbranch_name,
+		fee.product_id,
+        prodli.product_name,
+        type1.product_type_name product_type1_name,
+		type2.product_type_name product_type2_name,
+		type3.product_type_name product_type3_name,
+		fee.policy_code,
+		sale.sales_name agent_name,
+		service.sales_name service_name,
+		holder.app_name,
+		insured.insurant_name,
+		instype.ins_type_name,
+		period.periodtype_name,
+		coverage.coverage_period_name,
+		sellway.sell_way_name,
+		charge.charge_type_name,
+		fee.coverage_year,
+		fee.policy_period,
+		feetype.feetype_name ,
+		fee.period_prem,
+		fee.actual_prem,
+		paymode.pay_mode_name,
+		(case when fee.money_id='1' 
+			  then '人民币'
+			  else '未说明的货币' 
+			  end ) money_id,
+		fee.hold_date,
+		fee.due_time,
+		fee.received_date,
+		  (case when fee.posted = 'N' then '否'
+                else '是' end)
+           posted,
+		fee.cred_id,
+		fee.post_time,
+		status.status_name
+	from cbs_contractLife_product_fee  fee	
+		left join sys_branch branch on branch.branch_id = fee.branch_id
+		left join sys_insbranch insbranch on insbranch.insbranch_id = fee.insbranch_id
+		left join pdt_product_llife prodli on prodli.product_id = fee.product_id
+		left join pdt_product_type1  type1 on type1.product_type_code = fee.product_type
+        left join pdt_product_type2  type2 on type2.product_type_code = fee.product_type2
+        left join pdt_product_type3  type3 on type3.product_type_code = fee.product_type3
+        left join smis_sales sale on sale.sales_id = fee.agent_id
+        left join smis_sales service on service.sales_id = fee.service_id
+        left join cbs_contractlife ccl on ccl.policy_id = fee.policy_id
+        left join cbs_contractlife_holder holder on holder.customer_id = ccl.holder_id
+        left join cbs_contractlife_insured insured on insured.policy_id = fee.policy_id
+        left join pdt_product_instype instype on instype.ins_type_code = fee.ins_type        
+        left join pdt_product_periodtype period on period.periodtype_code = fee.period_type
+        left join pdt_lib_coverageperiod coverage on coverage.coverage_period_code = fee.coverage_period 
+        left join cbs_sell_way sellway on sellway.sell_way_code = fee.sell_way
+        left join pdt_lib_chargetype charge on charge.charge_type_code = fee.charge_type
+        left join cbs_fee_status status on status.status_code = fee.fee_status 
+        left join sys_library_pay_mode paymode on paymode.pay_mode_code = fee.pay_mode
+        left join cbs_lib_feetype feetype on feetype.feetype_code = fee.fee_type
+       where  prodli.insbranch_id = fee.insbranch_id
+        and fee.insurant_id = insured.customer_id
+    	<isNotEmpty property="branch_id">
+			and fee.branch_id=#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			and fee.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			and fee.policy_code=#policy_code#
+		</isNotEmpty>
+		<isNotEmpty property="agent_name">
+			and sale.sales_name like '%$agent_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="app_name">
+			and holder.app_name like '%$app_name$%'
+		</isNotEmpty>
+		<isNotEmpty property="cred_id">
+			and fee.cred_id=#cred_id#
+		</isNotEmpty>    
+        <isNotEmpty property="fee_status">
+			and fee.fee_status=#fee_status#
+		</isNotEmpty>  
+        
+	</sql>	
+  	
+    <!-- 查询保单信息列表 -->
+	<select id="queryContractCost" parameterClass="contractCostVOModel" resultClass="contractCostVOModel">
+		<include refid="query_head"/> 
+		<include refid="query_all"/>
+		<include refid="query_foot"/> 
+	</select>
+	
+	
+
+	<!-- 查询保单总数 -->
+	<select id="queryContractCost_count" parameterClass="contractCostVOModel"
+		resultClass="int">
+		select count(seq_id) from (
+		<include refid="query_all" />
+		)
+	</select>
+</sqlMap>

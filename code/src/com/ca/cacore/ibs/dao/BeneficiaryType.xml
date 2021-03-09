@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="beneficiayType">
+	<typeAlias alias="beneficiaryTypeModel"	type="com.ca.cacore.ibs.model.bo.BeneficiaryTypeModel" />
+	<select id="queryBeneficiaryType" resultClass="beneficiaryTypeModel">
+		select * from CBS_Beneficiary_Type
+	</select>
+</sqlMap>

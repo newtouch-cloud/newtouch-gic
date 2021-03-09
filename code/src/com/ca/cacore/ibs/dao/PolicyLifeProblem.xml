@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd"> 
+<!-- 郭春华 -->                 
+<sqlMap namespace="policyLifeProblem">
+   <typeAlias alias="policyLifeProblemModel" type="com.ca.cacore.ibs.model.vo.PolicyLifeProblemModel"/>
+   
+   <sql id="query_head">
+		select *
+	  	  from (select row_.*, rownum rownum_ 
+	  	          from (
+	</sql>
+	
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>	
+	</sql>
+   
+  	<sql id="query_all">
+		SELECT 
+		cplp.seq_id,
+	    branch.branch_id,
+	    branch.branch_name,
+	    insbranch.insbranch_name,
+	    cpl.send_code,
+	    proType.Type_Name,
+	    originType.Origin_Type_Name,
+	    proStatus.status_name,
+	    cplp.notes,
+	    cplp.return_notes
+	    FROM Cbs_Policylife_Problem cplp
+	    left join sys_branch branch on cplp.branch_id=branch.branch_id
+	    left join sys_insbranch insbranch on cplp.insbranch_id=insbranch.insbranch_id
+	    left join cbs_policylife cpl on cplp.policy_id=cpl.policy_id
+	    left join cbs_problem_type proType on cplp.type=proType.Type_Code
+	    left join cbs_problem_origin_type originType on cplp.origin_type=originType.Origin_Type_Code
+	    left join cbs_problem_status proStatus on cplp.status=proStatus.status_code
+		WHERE 1=1
+		<isNotEmpty property="branch_id">
+			AND branch.branch_id =#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND cplp.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="type_code">
+			AND proType.type_code=#type_code#
+		</isNotEmpty>
+		<isNotEmpty property="origin_type_code">
+			AND cplp.origin_type=#origin_type_code#
+		</isNotEmpty>
+		<isNotEmpty property="status_code">
+			AND proStatus.status_code=#status_code#
+		</isNotEmpty>
+		<isNotEmpty property="send_code">
+			AND cpl.send_code=#send_code#
+		</isNotEmpty>
+  	</sql>
+  	
+  	<!--查询保全和理赔的问题件信息  -->
+  	<sql id="queryConserClaiList">
+	  	SELECT cplp.seq_id,
+	       branch.branch_id,
+	       branch.branch_name,
+	       insbranch.insbranch_name,
+	       cpl.send_code,
+	       cpl.policy_code,
+	       proType.Type_Name,
+	       originType.Origin_Type_Name,
+	       proStatus.status_name,
+	       cplp.notes,
+	       cplp.return_notes
+	  FROM Cbs_Policylife_Problem cplp
+	  left join sys_branch branch
+	    on cplp.branch_id = branch.branch_id
+	  left join sys_insbranch insbranch
+	    on cplp.insbranch_id = insbranch.insbranch_id
+	  left join cbs_contractlife cpl
+	    on cplp.policy_id = cpl.policy_id
+	  left join cbs_problem_type proType
+	    on cplp.type = proType.Type_Code
+	  left join cbs_problem_origin_type originType
+	    on cplp.origin_type = originType.Origin_Type_Code
+	  left join cbs_problem_status proStatus
+	    on cplp.status = proStatus.status_code
+	   WHERE 1 = 1
+	 	<isNotEmpty property="branch_id">
+			AND branch.branch_id =#branch_id#
+		</isNotEmpty>
+		<isNotEmpty property="insBranch_id">
+			AND cplp.insbranch_id=#insBranch_id#
+		</isNotEmpty>
+		<isNotEmpty property="type_code">
+			AND proType.type_code=#type_code#
+		</isNotEmpty>
+		<isNotEmpty property="origin_type_code">
+			AND cplp.origin_type=#origin_type_code#
+		</isNotEmpty>
+		<isNotEmpty property="status_code">
+			AND proStatus.status_code=#status_code#
+		</isNotEmpty>
+		<isNotEmpty property="policy_code">
+			AND cpl.policy_code=#policy_code#
+		</isNotEmpty>
+  	</sql>
+  	
+    <!-- 查询投保单的问题件信息 -->
+	<select id="queryPolicyLifeProblem" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		<include refid="query_head"/>
+		<include refid="query_all"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<!-- 查询保全和理赔的问题件信息 -->
+	<select id="queryConserClaiProblem" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		<include refid="query_head"/>
+		<include refid="queryConserClaiList"/>
+		<include refid="query_foot"/>
+	</select>
+	
+	<select id="queryPolicyLifeProblem_count" parameterClass="policyLifeProblemModel" resultClass="int">
+		select count(*) from(<include refid="query_all"/>)
+	</select>
+	
+	<select id="queryConserClaiProblem_count" parameterClass="policyLifeProblemModel" resultClass="int">
+		select count(*) from(<include refid="queryConserClaiList"/>)
+	</select>
+	
+	<!-- 查询要更新的问题件信息 -->
+	<select id="getPolicyLifeProblemInfo" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		SELECT 
+		cplp.seq_id,
+		cplp.insbranch_id,
+		cpl.send_code,
+	    cpl.policy_code,
+	    cpl.policy_id,
+		branch.branch_id,
+		branch.branch_name,
+		cplh.app_name,
+		cpot.origin_type_code,
+		cpot.origin_type_name,
+		cps.status_code,
+		cps.status_name,
+		cplp.notes,
+		cplp.return_notes,
+		cpt.type_code
+		FROM cbs_policylife_problem cplp
+		left join sys_branch branch on cplp.branch_id=branch.branch_id
+		left join cbs_policylife cpl on cplp.policy_id=cpl.policy_id
+		left join cbs_policylife_holder cplh on cplp.policy_id=cplh.policy_id
+		left join cbs_problem_origin_type cpot on cplp.origin_type=cpot.origin_type_code
+		left join cbs_problem_status cps on cplp.status=cps.status_code
+		left join cbs_problem_type cpt on cplp.type=cpt.type_code
+		WHERE cplp.seq_id=#seq_id#
+	</select>
+	
+		<!-- 查询要更新的保全和理赔问题件信息 -->
+	<select id="getConserClaiProblemInfo" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		SELECT 
+		cplp.seq_id,
+		cplp.insbranch_id,
+		cpl.send_code,
+		cpl.policy_code,
+		cpl.policy_id,
+		branch.branch_id,
+		branch.branch_name,
+		cplh.app_name,
+		cpot.origin_type_code,
+		cpot.origin_type_name,
+		cps.status_code,
+		cps.status_name,
+		cplp.notes,
+		cplp.return_notes,
+		cpt.type_code
+		FROM cbs_policylife_problem cplp
+		left join sys_branch branch on cplp.branch_id=branch.branch_id
+		left join cbs_contractlife cpl on cplp.policy_id=cpl.policy_id
+		left join cbs_contractlife_holder cplh on cplp.policy_id=cplh.policy_id
+		left join cbs_problem_origin_type cpot on cplp.origin_type=cpot.origin_type_code
+		left join cbs_problem_status cps on cplp.status=cps.status_code
+		left join cbs_problem_type cpt on cplp.type=cpt.type_code
+		WHERE cplp.seq_id=#seq_id#
+	</select>
+	
+	<!-- 问题件管理：状态更新 -->
+	<update id="modifyStatus" parameterClass="policyLifeProblemModel">
+		UPDATE 
+		cbs_policylife_problem 
+		SET status=#status_code#,
+		    modifyUser=#modifyUser#,
+		    modifyDate=sysdate
+		WHERE
+		seq_id=#seq_id#
+	</update>
+	
+	<!-- 问题件管理：修改 -->
+	<update id="modifyPolicyLifeProblem" parameterClass="policyLifeProblemModel">
+		UPDATE 
+		cbs_policylife_problem 
+		SET 
+		origin_type=#origin_type_code#,
+		notes=#notes#,
+		return_notes=#return_notes#,
+		modifyUser=#modifyUser#,
+		modifyDate=sysdate
+		
+		WHERE
+		seq_id=#seq_id#
+	</update>
+	
+	<!-- 问题件录入 -->
+	<insert id="addPolicyLifeProblem" parameterClass="policyLifeProblemModel">
+		insert into cbs_policylife_problem 
+	    (seq_id,
+	     branch_id,
+	     insBranch_id,
+	     policy_id,
+	     type,
+	     origin_type,
+	     notes,
+	     return_notes,
+	     status,
+	     remark,
+	     createUser,
+	     createDate,
+	     modifyUser,
+	     modifyDate
+	    )
+	    values
+	    (
+	      #seq_id#,
+	      #branch_id#,
+	      #insBranch_id#,
+	      #policy_id#,
+	      #type_code#,
+	      #origin_type#,
+	      #notes#,
+	      #return_notes#,
+	      #status#,
+	      #remark#,
+	      #createUser#,
+	      sysdate,
+	      #modifyUser#,
+	      sysdate
+	    )
+	</insert>
+	
+	<select id="getInfo" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		SELECT distinct
+		cpl.insbranch_id,
+		cpl.send_code,
+		branch.branch_id,
+		branch.branch_name,
+		holder.app_name,
+		cpl.policy_id,
+        cpl.status
+		FROM cbs_policyLife cpl
+		left join sys_branch branch on cpl.branch_id=branch.branch_id
+		left join Cbs_Policylife_Holder holder on cpl.policy_id=holder.policy_id
+		WHERE 
+		cpl.insBranch_id=#insBranch_id#
+		AND
+		cpl.send_code=#send_code#
+	</select>
+	<!-- 保全和理赔时候异步请求：带出信息 -->
+	<select id="getInfoForClaimsConser" parameterClass="policyLifeProblemModel" resultClass="policyLifeProblemModel">
+		 SELECT distinct cl.insbranch_id,
+                cl.send_code,
+                branch.branch_id,
+                branch.branch_name,
+                holder.app_name,
+		        cl.policy_id,
+                cl.status
+		 FROM cbs_contractLife cl
+		 left join sys_branch branch
+		    on cl.branch_id = branch.branch_id
+		 left join Cbs_contractlife_Holder holder
+		    on cl.policy_id = holder.policy_id
+		 WHERE cl.insBranch_id=#insBranch_id#
+		 AND cl.policy_code=#policy_code#
+	</select>
+	
+</sqlMap>

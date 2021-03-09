@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+    
+<sqlMap namespace="PersonalBusReport">
+		<typeAlias alias="PersonalBusReportModel" type="com.ca.cacore.rsss.model.vo.PersonalBusReportModel"/>
+		<typeAlias alias="AentLifeInsModel" type="com.ca.cacore.rsss.model.vo.AentLifeInsModel"/>
+		
+	<!--查询人身险公司业务报表-->
+	<select id="queryPersonalBusReport" parameterClass="PersonalBusReportModel" resultClass="PersonalBusReportModel">
+			select a.name name,
+		       a.code code,
+		       nvl(premium_n, 0.00) period_prem_new,
+		       nvl(premium_r, 0.00) rene_period_prem,
+		       0.00 payable_prem,
+		       nvl(bounty_n, 0.00) new_agent,
+		       nvl(bounty_r, 0.00) rene_agent
+		  from (select name, to_number(code) as code
+		          from ca_htpc_irc_rept_dic
+		         where type_code = '2' 
+		         order by to_number(code)) a
+		  left join (select branch_id,
+		                    rowno,
+		                    sum(premium_n) premium_n,
+		                    sum(premium_r) premium_r,
+		                    sum(bounty_n) bounty_n,
+		                    sum(bounty_r) bounty_r
+		               from ca_htpc_irc_rept
+		              where term_date =#firstDate#
+		                and branch_id like '$branch_id$%'
+		                and htpc_type = 'bjh2' 
+		              group by branch_id, rowno) b
+		    on a.code = b.rowno
+		 order by a.code
+	</select>
+	<!-- 导出人身险公司业务报表-->
+	<select id="exprotPersonalBusReport" parameterClass="PersonalBusReportModel" resultClass="PersonalBusReportModel">
+	select a.name name,
+		       a.code code,
+		       nvl(premium_n, 0.00) period_prem_new,
+		       nvl(premium_r, 0.00) rene_period_prem,
+		       0.00 payable_prem,
+		       nvl(bounty_n, 0.00) new_agent,
+		       nvl(bounty_r, 0.00) rene_agent
+		  from (select name, to_number(code) as code
+		          from ca_htpc_irc_rept_dic
+		         where type_code = '2' 
+		         order by to_number(code)) a
+		  left join (select branch_id,
+		                    rowno,
+		                    sum(premium_n) premium_n,
+		                    sum(premium_r) premium_r,
+		                    sum(bounty_n) bounty_n,
+		                    sum(bounty_r) bounty_r
+		               from ca_htpc_irc_rept
+		              where term_date =#firstDate#
+		                and branch_id like '$branch_id$%'
+		                and htpc_type = 'bjh2' 
+		              group by branch_id, rowno) b
+		    on a.code = b.rowno
+		 order by a.code
+	</select>
+	
+	
+	<sql id="query_head">
+		select *
+		from (select row_.*, rownum rownum_
+		from (
+	</sql>
+	
+	<sql id="query_all" >
+		select branch_id, risk_name, newpolicyfee, renewalfee, premium, newpolicy_agcommiss, renewal_agcommiss, autotro_newpolicyfee, autotro_renewalfee, autotro_newpolicy_agcommiss,
+        autotro_renewal_agcommiss, tdparty_newpolicyfee, tdparty_renewalfee, tdparty_newpolicy_agcommiss, tdparty_renewal_agcommiss, term from agentLifeIns
+        where 1=1 <!-- and branch in $dept_list$ -->
+        and branch_id = #branch_id#
+        and term = #term#
+        order by risk_id
+	</sql>
+
+	<sql id="query_foot">
+    	<![CDATA[
+				) row_ 
+		where rownum < #limit#)
+		where rownum_ >= #start#
+		]]>
+	</sql>
+	
+	<!-- 查询总条数 -->
+	<select id="queryAgentLifeIns_count" parameterClass="AentLifeInsModel" resultClass="Integer">
+		select count(*) from (<include refid="query_all" />)
+	</select>
+	
+	<!-- 查询代理人身险业务表数据 -->
+	<select id="queryAgentLifeIns" parameterClass="AentLifeInsModel" resultClass="AentLifeInsModel">
+		<!-- <include refid="query_head" /> -->
+		<include refid="query_all" />
+		<!-- <include refid="query_foot" /> -->
+	</select>
+	<!-- <select id="queryTotal" parameterClass="AentLifeInsModel" resultClass="AentLifeInsModel">
+		select sum(nvl(newpolicyfee,0)) total_newpolfee,
+			   sum(nvl(renewalfee,0)) total_renewfee,
+			   sum(nvl(premium,0)) total_permium,
+			   sum(nvl(newpolicy_agcommiss,0)) total_newagent,
+			   sum(nvl(renewal_agcommiss,0)) total_renewagent,
+			   sum(nvl(autotro_newpolicyfee,0)) total_autonewpolfee,
+			   sum(nvl(autotro_renewalfee,0)) total_auto_renewfee,
+			   sum(nvl(autotro_newpolicy_agcommiss,0)) total_newagcommiss,
+			   sum(nvl(autotro_renewal_agcommiss,0)) total_renewplofee,
+			   sum(nvl(tdparty_newpolicyfee,0)) total_tdnewplofee,
+			   sum(nvl(tdparty_renewalfee,0)) total_tdrenewfee,
+			   sum(nvl(tdparty_newpolicy_agcommiss,0)) total_newploagcommiss,
+			   sum(nvl(tdparty_renewal_agcommiss,0)) total_renewagcomiss
+			   from agentLifeIns where 1=1 and branch_id in $dept_list$
+        		    and branch_id = #branch_id#
+        		    and term = #term#
+	</select> -->
+	
+	<select id="queryByRisk" parameterClass="AentLifeInsModel" resultClass="AentLifeInsModel">
+		select risk_name,
+			   round(nvl(sum(nvl(newpolicyfee,0)),0.0),2) total_newpolfee,
+			   round(nvl(sum(nvl(renewalfee,0)),0.0),2) total_renewfee,
+			   round(nvl(sum(nvl(premium,0)),0.0),2) total_permium,
+			   round(nvl(sum(nvl(newpolicy_agcommiss,0)),0.0),2) total_newagent,
+			   round(nvl(sum(nvl(renewal_agcommiss,0)),0.0),2) total_renewagent,
+			   round(nvl(sum(nvl(autotro_newpolicyfee,0)),0.0),2) total_autonewpolfee,
+			   round(nvl(sum(nvl(autotro_renewalfee,0)),0.0),2) total_auto_renewfee,
+			   round(nvl(sum(nvl(autotro_newpolicy_agcommiss,0)),0.0),2) total_newagcommiss,
+			   round(nvl(sum(nvl(autotro_renewal_agcommiss,0)),0.0),2) total_renewplofee,
+			   round(nvl(sum(nvl(tdparty_newpolicyfee,0)),0.0),2) total_tdnewplofee,
+			   round(nvl(sum(nvl(tdparty_renewalfee,0)),0.0),2) total_tdrenewfee,
+			   round(nvl(sum(nvl(tdparty_newpolicy_agcommiss,0)),0.0),2) total_newploagcommiss,
+			   round(nvl(sum(nvl(tdparty_renewal_agcommiss,0)),0.0),2) total_renewagcomiss
+			   from agentLifeIns where 1=1 and branch_id in $dept_list$
+        		    and branch_id = #branch_id#
+        		    and term = #term#
+        		    and risk_id not in('1010100','1010200','10500','10600')
+        		    and risk_id like '$risk_id$%'
+        		    group by risk_id,risk_name order by risk_id
+        		    
+	</select>
+	<select id="queryTotal" parameterClass="AentLifeInsModel" resultClass="AentLifeInsModel">
+		select nvl(sum(nvl(policy_count,0)),0) total_policy_count,
+			   round(nvl(sum(nvl(amount,0)),0.0),2) total_amount,
+			   round(nvl(sum(nvl(newpolicyfee,0)),0.0),2) total_newpolfee,
+			   round(nvl(sum(nvl(renewalfee,0)),0.0),2) total_renewfee,
+			   round(nvl(sum(nvl(premium,0)),0.0),2) total_permium,
+			   round(nvl(sum(nvl(newpolicy_agcommiss,0)),0.0),2) total_newagent,
+			   round(nvl(sum(nvl(renewal_agcommiss,0)),0.0),2) total_renewagent,
+			   round(nvl(sum(nvl(autotro_newpolicyfee,0)),0.0),2) total_autonewpolfee,
+			   round(nvl(sum(nvl(autotro_renewalfee,0)),0.0),2) total_auto_renewfee,
+			   round(nvl(sum(nvl(autotro_newpolicy_agcommiss,0)),0.0),2) total_newagcommiss,
+			   round(nvl(sum(nvl(autotro_renewal_agcommiss,0)),0.0),2) total_renewplofee,
+			   round(nvl(sum(nvl(tdparty_newpolicyfee,0)),0.0),2) total_tdnewplofee,
+			   round(nvl(sum(nvl(tdparty_renewalfee,0)),0.0),2) total_tdrenewfee,
+			   round(nvl(sum(nvl(tdparty_newpolicy_agcommiss,0)),0.0),2) total_newploagcommiss,
+			   round(nvl(sum(nvl(tdparty_renewal_agcommiss,0)),0.0),2) total_renewagcomiss,
+			   nvl(sum(nvl(policy_count_sum,0)),0) total_policycount_sum,
+			   round(nvl(sum(nvl(amount_sum,0)),0.0),2) total_amount_sum,
+			   round(nvl(sum(nvl(newpolicyfee_sum,0)),0.0),2) total_newpolicyfee_sum,
+			   round(nvl(sum(nvl(renewalfee_sum,0)),0.0),2) total_renewalfee_sum,
+			   round(nvl(sum(nvl(premium_sum,0)),0.0),2) total_premium_sum,
+			   round(nvl(sum(nvl(newpolicy_agcommiss_sum,0)),0.0),2) total_new_agcommiss_sum,
+			   round(nvl(sum(nvl(renewal_agcommiss_sum,0)),0.0),2) total_renew_agcommiss_sum,
+			   round(nvl(sum(nvl(autotro_newpolicyfee_sum,0)),0.0),2) total_autonewfee_sum,
+			   round(nvl(sum(nvl(autotro_renewalfee_sum,0)),0.0),2) total_autorenewfee_sum,
+			   round(nvl(sum(nvl(auto_newpolicy_agcommiss_sum,0)),0.0),2) total_autonew_agcommiss_sum,
+			   round(nvl(sum(nvl(auto_renewal_agcommiss_sum,0)),0.0),2) total_autorenew_agcommiss_sum,
+			   round(nvl(sum(nvl(td_newpolicyfee_sum,0)),0.0),2) total_tdnewfee_sum,
+			   round(nvl(sum(nvl(td_renewalfee_sum,0)),0.0),2) total_tdrenew_sum,
+			   round(nvl(sum(nvl(td_newpolicy_agcommiss_sum,0)),0.0),2) total_tdnew_agcommiss_sum,
+			   round(nvl(sum(nvl(td_renewal_agcommiss_sum,0)),0.0),2) total_tdrenew_agcommiss_sum
+			   from agentLifeIns ins left join sys_branch sys on ins.branch_id = sys.branch_id 
+			   left join (SELECT DISTINCT BRANCH_ID,status FROM CPY_BRANCH WHERE STATUS = '1')  cpy on ins.org_id = cpy.branch_id
+			   where 1=1 
+			   and sys.status = '1'
+			   and cpy.status = '1'
+			   and ins.branch_id in $dept_list$
+        	   and ins.risk_id like '$risk_id$%'
+        	   <isNotEmpty prepend="and" property="branch_id">
+					ins.branch_id = #branch_id#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="branch_id">
+					ins.branch_id = '0001'
+			   </isEmpty>
+			   <isNotEmpty prepend="and" property="term">
+					ins.term = #term#
+			   </isNotEmpty>
+			   <isEmpty prepend="and" property="term">
+					ins.term = to_char(sysdate,'yyyy/mm')
+			   </isEmpty>
+               <isNotEmpty prepend="and" property="org_id">
+					ins.org_id in (select distinct branch_id from cpy_branch cpy where cpy.status = '1' start with cpy.branch_id=#org_id# 
+                    connect by nocycle prior cpy.branch_id=cpy.branch_parentid) 
+			   </isNotEmpty>
+			   <!-- <isNotEmpty prepend="and" property="sign_path">
+					ins.sign_path = #sign_path#
+			   </isNotEmpty> -->
+	</select>
+
+</sqlMap>

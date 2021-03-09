@@ -1,0 +1,13 @@
+[
+	{ id:14, pId:0, name:"机构管理",open_url:"/Branch/queryBranch.do"},
+	{ id:15, pId:0, name:"机构变更轨迹",open_url:"/Branch/queryAllBranchStatusHis.do"},
+	{ id:16, pId:0, name:"角色管理",open_url:"/goRoleMgmtQueryPage.do"},
+	{ id:17, pId:0, name:"菜单管理",open_url:"/goMenuMgmtQueryPage.do"},
+	{ id:18, pId:0, name:"用户管理",open_url:"/goUserMgmtQueryPage.do"},
+	{ id:100602, pId:1006, name:"审批管理"},
+		{ id:10060201, pId:100602, name:"审批处理", open_url:"/sms/salesApproval/querySalesList.do"},
+		{ id:10060202, pId:100602, name:"审批明细查询", open_url:"/sms/salesApproval/apprViewQuery.do"},
+	{ id:19, pId:0, name:"功能菜单管理",open_url:"/FuncMenu/queryFuncMenu.do"},
+	{ id:20, pId:0, name:"功能按钮管理",open_url:"/FuncButton/queryFuncButton.do"},
+    { id:21, pId:0, name:"机构代码搜索",open_url:"/Branch/getBranchId.do"}
+]

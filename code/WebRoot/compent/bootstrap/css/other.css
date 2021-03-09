@@ -1,0 +1,6 @@
+@CHARSET "UTF-8";
+
+.not-null {
+	color: #f00;
+	font: bold;
+}
